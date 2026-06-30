@@ -38,7 +38,6 @@ import {
   Truck,
   AlertCircle,
   ChevronRight,
-  ChevronDown,
   Copy,
   KeyRound,
   ReceiptText,
@@ -111,8 +110,8 @@ const STORE_INFO = {
   name: 'Ayam Geprek Sambal Ijo',
   tagline: 'Sambal Ijo Khas Aceh',
   address: 'Jl. Medan - Banda Aceh, Simpang Camat, Gampong Tijue, Kec. Pidie, Kab. Pidie, 24151',
-  phone: '081234567890',
-  whatsapp: '6281234567890',
+  phone: '085260812758',
+  whatsapp: '6285260812758',
   hours: '10:00 - 22:00',
   timezone: 'WIB',
   openHour: 10,
@@ -145,19 +144,16 @@ function TopBar() {
   const cartCount = useAppStore(getCartCount)
   const showBack = currentPage !== 'home'
   const storeStatus = getStoreStatus()
-  const [infoExpanded, setInfoExpanded] = useState(false)
 
   return (
     <header className="sticky top-0 z-50">
-      {/* ═══ ROW 1: Brand Bar ═══ */}
+      {/* ═══ ROW 1: Brand Bar with Address ═══ */}
       <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 relative overflow-hidden">
-        {/* Aceh ornament overlay */}
         <div className="absolute inset-0 aceh-pattern opacity-20" />
         
-        <div className="relative max-w-5xl mx-auto px-3 sm:px-4">
-          {/* Main brand row */}
-          <div className="h-12 sm:h-14 flex items-center justify-between gap-2">
-            {/* Left: Back + Brand */}
+        <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-2">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Back + Logo + Name + Address */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {showBack && (
                 <button
@@ -172,31 +168,44 @@ function TopBar() {
                 onClick={() => setPage('home')}
                 className="flex items-center gap-2 hover:opacity-90 transition-opacity min-w-0"
               >
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
-                  <ChefHat className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                  <ChefHat className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="font-extrabold text-[11px] sm:text-xs text-white uppercase tracking-wider leading-tight truncate">
                     {STORE_INFO.name}
                   </h1>
-                  <p className="text-[9px] sm:text-[10px] text-orange-100/80 leading-tight hidden sm:block">
-                    {STORE_INFO.tagline}
-                  </p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-100/70 flex-shrink-0" />
+                    <p className="text-[8px] sm:text-[10px] text-orange-100/80 leading-tight truncate">
+                      {STORE_INFO.address}
+                    </p>
+                  </div>
                 </div>
               </button>
             </div>
 
-            {/* Right: Status + Cart */}
+            {/* Right: Status + Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              {/* Open/Closed Status Badge */}
-              <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+              {/* Open/Closed Status */}
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border ${
                 storeStatus.open
-                  ? 'bg-green-500/20 text-green-100 border border-green-400/30'
-                  : 'bg-red-500/20 text-red-100 border border-red-400/30'
+                  ? 'bg-green-500/20 text-green-100 border-green-400/30'
+                  : 'bg-red-500/20 text-red-100 border-red-400/30'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${storeStatus.open ? 'bg-green-300 animate-pulse' : 'bg-red-300'}`} />
-                {storeStatus.label}
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${storeStatus.open ? 'bg-green-300 animate-pulse' : 'bg-red-300'}`} />
+                <span className="hidden sm:inline">{storeStatus.label}</span>
+                <span className="sm:hidden">{storeStatus.open ? 'Buka' : 'Tutup'}</span>
               </div>
+
+              {/* Phone Shortcut */}
+              <a
+                href={`tel:${STORE_INFO.phone}`}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                aria-label="Telepon"
+              >
+                <Phone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              </a>
 
               {/* Notification Bell */}
               <button
@@ -204,7 +213,7 @@ function TopBar() {
                 className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
                 aria-label="Notifikasi"
               >
-                <Bell className="w-4.5 h-4.5" />
+                <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full" />
               </button>
 
@@ -214,7 +223,7 @@ function TopBar() {
                 className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
                 aria-label="Keranjang"
               >
-                <ShoppingCart className="w-4.5 h-4.5" />
+                <ShoppingCart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
                     {cartCount > 99 ? '99+' : cartCount}
@@ -226,89 +235,40 @@ function TopBar() {
         </div>
       </div>
 
-      {/* ═══ ROW 2: Info Strip (Store Details) ═══ */}
+      {/* ═══ ROW 2: Quick Action Strip ═══ */}
       <div className="bg-white border-b border-orange-100 shadow-sm">
-        <div className="max-w-5xl mx-auto">
-          {/* Clickable toggle for mobile */}
-          <button
-            onClick={() => setInfoExpanded(!infoExpanded)}
-            className="w-full px-3 sm:px-4 py-1.5 flex items-center justify-between"
-          >
-            {/* Primary info: Address */}
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <MapPin className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
-              <p className="text-[10px] sm:text-xs text-gray-600 truncate">
-                {STORE_INFO.address}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-              {/* Status dot for mobile */}
-              <div className="flex sm:hidden items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${storeStatus.open ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className={`text-[9px] font-bold ${storeStatus.open ? 'text-green-600' : 'text-red-500'}`}>
-                  {storeStatus.open ? 'Buka' : 'Tutup'}
-                </span>
-              </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 sm:hidden ${infoExpanded ? 'rotate-180' : ''}`} />
-            </div>
-          </button>
-
-          {/* Expanded info on mobile / Always visible on desktop */}
-          <div className={`${infoExpanded ? 'block' : 'hidden'} sm:block`}>
-            <div className="px-3 sm:px-4 pb-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-              {/* Phone */}
-              <a
-                href={`tel:${STORE_INFO.phone}`}
-                className="flex items-center gap-1.5 text-gray-500 hover:text-orange-600 transition-colors group"
-              >
-                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                  <Phone className="w-3 h-3" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.phone}</span>
-              </a>
-
-              {/* Hours */}
-              <div className="flex items-center gap-1.5 text-gray-500">
-                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center">
-                  <Clock className="w-3 h-3" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
-              </div>
-
-              {/* WhatsApp */}
-              <a
-                href={`https://wa.me/${STORE_INFO.whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-gray-500 hover:text-green-600 transition-colors group"
-              >
-                <div className="w-6 h-6 rounded-lg bg-green-50 text-green-500 flex items-center justify-center group-hover:bg-green-100 transition-colors">
-                  <Phone className="w-3 h-3" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium">WhatsApp</span>
-              </a>
-
-              {/* Share */}
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: STORE_INFO.name,
-                      text: `${STORE_INFO.name} - ${STORE_INFO.tagline}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
-                    }).catch(() => {})
-                  } else {
-                    navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
-                  }
-                }}
-                className="flex items-center gap-1.5 text-gray-500 hover:text-orange-600 transition-colors group"
-              >
-                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                  <Share2 className="w-3 h-3" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-medium">Bagikan</span>
-              </button>
-            </div>
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-x-3 sm:gap-x-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 text-gray-500 flex-shrink-0">
+            <Clock className="w-3 h-3 text-orange-500" />
+            <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
           </div>
+          <div className="w-px h-3.5 bg-orange-200/60 flex-shrink-0" />
+          <a
+            href={`https://wa.me/${STORE_INFO.whatsapp}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-gray-500 hover:text-green-600 transition-colors flex-shrink-0"
+          >
+            <Phone className="w-3 h-3" />
+            <span className="text-[10px] sm:text-xs font-medium">WhatsApp</span>
+          </a>
+          <div className="w-px h-3.5 bg-orange-200/60 flex-shrink-0" />
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: STORE_INFO.name,
+                  text: `${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
+                }).catch(() => {})
+              } else {
+                navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
+              }
+            }}
+            className="flex items-center gap-1 text-gray-500 hover:text-orange-600 transition-colors flex-shrink-0"
+          >
+            <Share2 className="w-3 h-3" />
+            <span className="text-[10px] sm:text-xs font-medium">Bagikan</span>
+          </button>
         </div>
       </div>
 
@@ -394,48 +354,6 @@ function BottomNav() {
         </div>
       </div>
     </nav>
-  )
-}
-
-/* ─────────────────────── FOOTER ─────────────────────── */
-function Footer() {
-  return (
-    <footer className="bg-orange-600 text-white relative overflow-hidden">
-      <div className="absolute inset-0 aceh-pattern opacity-10" />
-      <div className="relative max-w-5xl mx-auto px-4 py-5 pb-24">
-        {/* Brand */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-            <ChefHat className="w-4 h-4" />
-          </div>
-          <span className="font-bold text-xs uppercase tracking-wider">{STORE_INFO.name}</span>
-        </div>
-        <p className="text-orange-100 text-[11px] text-justify max-w-md mx-auto leading-relaxed mb-3">
-          Menyajikan ayam geprek sambal ijo khas Aceh dengan cita rasa autentik. Pesan online mudah, cepat, dan terpercaya untuk pengalaman kuliner terbaik Anda.
-        </p>
-
-        <Separator className="my-3 bg-orange-400/30" />
-
-        {/* Store Info */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto mb-3">
-          <div className="flex items-start gap-2 justify-center">
-            <MapPin className="w-3.5 h-3.5 text-orange-200 flex-shrink-0 mt-0.5" />
-            <p className="text-orange-200 text-[10px] text-justify leading-relaxed">{STORE_INFO.address}</p>
-          </div>
-          <div className="flex items-center gap-2 justify-center">
-            <Phone className="w-3.5 h-3.5 text-orange-200 flex-shrink-0" />
-            <span className="text-orange-200 text-[10px]">{STORE_INFO.phone}</span>
-          </div>
-          <div className="flex items-center gap-2 justify-center">
-            <Clock className="w-3.5 h-3.5 text-orange-200 flex-shrink-0" />
-            <span className="text-orange-200 text-[10px]">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
-          </div>
-        </div>
-
-        <Separator className="my-3 bg-orange-400/30" />
-        <p className="text-orange-300 text-[10px] text-center">&copy; {new Date().getFullYear()} {STORE_INFO.name}. Hak Cipta Dilindungi.</p>
-      </div>
-    </footer>
   )
 }
 
@@ -1566,7 +1484,7 @@ function ProfilePage() {
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="sticky top-[108px] z-40 bg-orange-500 shadow-sm">
+      <div className="sticky top-[104px] z-40 bg-orange-500 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
           <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
@@ -2104,7 +2022,6 @@ export default function AppPage() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <Footer />
         <BottomNav />
       </div>
       <ToastContainer />
