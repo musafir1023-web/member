@@ -1982,7 +1982,7 @@ export default function AppPage() {
       <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
         <TopBar />
-        <main className="flex-1">
+        <main className="flex-1 pb-24">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPage}
