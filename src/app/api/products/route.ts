@@ -1,11 +1,19 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const tag = searchParams.get('tag')
+
+    const where: Record<string, unknown> = { available: true }
+    if (tag && tag !== 'semua') {
+      where.tag = tag
+    }
+
     const products = await db.product.findMany({
-      where: { available: true },
-      orderBy: { createdAt: 'desc' },
+      where,
+      orderBy: { createdAt: tag === 'terbaru' ? 'desc' : 'asc' },
     })
     return NextResponse.json(products)
   } catch (error) {
@@ -24,8 +32,10 @@ export async function POST(request: Request) {
         name: body.name,
         description: body.description,
         price: body.price,
+        originalPrice: body.originalPrice || null,
         image: body.image,
         category: body.category,
+        tag: body.tag || null,
       },
     })
     return NextResponse.json(product)
@@ -46,8 +56,10 @@ export async function PUT(request: Request) {
         name: body.name,
         description: body.description,
         price: body.price,
+        originalPrice: body.originalPrice !== undefined ? (body.originalPrice || null) : undefined,
         image: body.image,
         category: body.category,
+        tag: body.tag !== undefined ? (body.tag || null) : undefined,
         available: body.available,
       },
     })

@@ -53,6 +53,10 @@ import {
   HelpCircle,
   Info,
   Share2,
+  Flame,
+  Sparkles,
+  Crown,
+  Percent,
 } from 'lucide-react'
 
 /* ─────────────────────── FORMATTERS ─────────────────────── */
@@ -331,64 +335,98 @@ function BottomNav() {
 }
 
 /* ─────────────────────── HOME PAGE ─────────────────────── */
+interface HomeProduct {
+  id: string
+  name: string
+  description: string
+  price: number
+  originalPrice?: number | null
+  image: string
+  category: string
+  tag?: string | null
+  available: boolean
+}
+
 function HomePage() {
   const setPage = useAppStore((s) => s.setPage)
+  const addToCart = useAppStore((s) => s.addToCart)
+  const addToast = useAppStore((s) => s.addToast)
+  const [products, setProducts] = useState<HomeProduct[]>([])
+  const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
+  const [activeTab, setActiveTab] = useState<'terbaru' | 'terlaris' | 'promo'>('terbaru')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/products').then((r) => r.json()),
+      fetch('/api/products?tag=promo').then((r) => r.json()),
+    ])
+      .then(([all, promo]) => {
+        setProducts(all)
+        setPromoProducts(promo)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+        addToast('Gagal memuat produk', 'error')
+      })
+  }, [addToast])
+
+  const handleAdd = (p: HomeProduct) => {
+    addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
+    addToast(`${p.name} ditambahkan ke keranjang`)
+  }
+
+  const getDiscount = (p: HomeProduct) => {
+    if (!p.originalPrice || p.originalPrice <= p.price) return 0
+    return Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+  }
+
+  const filteredProducts = products.filter((p) => p.tag === activeTab)
+
+  const tabItems = [
+    { id: 'terbaru' as const, label: 'Terbaru', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'terlaris' as const, label: 'Terlaris', icon: <Flame className="w-4 h-4" /> },
+    { id: 'promo' as const, label: 'Promo', icon: <Percent className="w-4 h-4" /> },
+  ]
 
   return (
     <div>
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
-        {/* Aceh ornament overlay */}
         <div className="absolute inset-0 aceh-pattern" />
-        <div className="relative max-w-5xl mx-auto px-4 py-12 sm:py-20">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-1 text-center md:text-left">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
-                  <ChefHat className="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
-                </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
-                  AYAM GEPREK<br />SAMBAL IJO
-                </h2>
-                <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto md:mx-0 leading-relaxed">
-                  Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center md:justify-start">
-                  <Button
-                    onClick={() => setPage('menu')}
-                    size="lg"
-                    className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg hover:shadow-xl transition-all px-8"
-                  >
-                    <UtensilsCrossed className="w-4 h-4 mr-2" />
-                    Pesan Sekarang
-                  </Button>
-                  <Button
-                    onClick={() => setPage('menu')}
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8"
-                  >
-                    Lihat Menu
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </motion.div>
+        <div className="relative max-w-3xl mx-auto px-4 py-12 sm:py-20 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <ChefHat className="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
             </div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex-shrink-0 w-64 h-64 sm:w-80 sm:h-80 rounded-2xl overflow-hidden shadow-2xl"
-            >
-              <img
-                src="/images/hero-banner.png"
-                alt="Ayam Geprek Sambal Ijo"
-                className="w-full h-full object-cover"
-              />
-            </motion.div>
-          </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
+              AYAM GEPREK<br />SAMBAL IJO
+            </h2>
+            <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+              Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+              <Button
+                onClick={() => setPage('menu')}
+                size="lg"
+                className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg hover:shadow-xl transition-all px-8"
+              >
+                <UtensilsCrossed className="w-4 h-4 mr-2" />
+                Pesan Sekarang
+              </Button>
+              <Button
+                onClick={() => setPage('menu')}
+                size="lg"
+                variant="outline"
+                className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8"
+              >
+                Lihat Menu
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </motion.div>
         </div>
-        {/* Wave separator */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0 60L48 54C96 48 192 36 288 30C384 24 480 24 576 28C672 32 768 40 864 42C960 44 1056 40 1152 36C1248 32 1344 28 1392 26L1440 24V60H0Z" fill="#F97316" />
@@ -396,40 +434,205 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="bg-orange-500 py-10 sm:py-14 relative">
+      {/* ═══ PROMO BANNER ═══ */}
+      <section className="bg-orange-500 py-6 sm:py-8 relative">
+        <div className="absolute inset-0 aceh-pattern opacity-30" />
+        <div className="relative max-w-5xl mx-auto px-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shadow-md">
+              <Percent className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">Promo Spesial</h2>
+              <p className="text-orange-100 text-[10px] sm:text-xs">Penawaran terbatas, jangan sampai ketinggalan!</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+            {loading ? (
+              <div className="flex gap-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="w-72 h-40 sm:h-44 rounded-2xl flex-shrink-0" />
+                ))}
+              </div>
+            ) : promoProducts.length === 0 ? (
+              <p className="text-orange-100 text-sm">Belum ada promo saat ini</p>
+            ) : (
+              promoProducts.map((p, i) => {
+                const disc = getDiscount(p)
+                return (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl shadow-xl overflow-hidden relative group cursor-pointer"
+                    onClick={() => handleAdd(p)}
+                  >
+                    {/* Discount Badge */}
+                    {disc > 0 && (
+                      <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
+                        <Flame className="w-3 h-3" /> HEMAT {disc}%
+                      </div>
+                    )}
+                    <div className="flex h-40 sm:h-44">
+                      <div className="w-28 sm:w-32 flex-shrink-0 bg-orange-50 flex items-center justify-center p-2 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 to-amber-100/50" />
+                        <img src={p.image} alt={p.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
+                        <div>
+                          <p className="text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-wide">{p.category}</p>
+                          <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight mt-0.5 line-clamp-2">{p.name}</h3>
+                        </div>
+                        <div>
+                          <div className="flex items-baseline gap-1.5 mb-2">
+                            <span className="text-base sm:text-lg font-extrabold text-orange-600">{fmt(p.price)}</span>
+                            {p.originalPrice && p.originalPrice > p.price && (
+                              <span className="text-[10px] sm:text-xs text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 w-fit text-[10px] sm:text-xs font-bold group-hover:bg-orange-600 transition-colors shadow-sm">
+                            <Plus className="w-3 h-3" />
+                            Tambah
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FEATURES ═══ */}
+      <section className="bg-orange-500 py-8 sm:py-10 relative">
         <div className="absolute inset-0 aceh-pattern opacity-50" />
         <div className="relative max-w-5xl mx-auto px-4">
-          <h2 className="text-center text-xl sm:text-2xl font-bold text-white mb-8">Kenapa Memilih Kami?</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {[
-              { icon: <Star className="w-8 h-8" />, title: 'Rasa Autentik', desc: 'Sambal ijo khas Aceh dengan resep turun-temurun yang menjaga cita rasa asli dan kualitas bahan pilihan terbaik.' },
-              { icon: <Truck className="w-8 h-8" />, title: 'Pengiriman Cepat', desc: 'Pesanan diproses dengan cepat dan diantarkan langsung ke lokasi Anda dalam waktu singkat dengan kemasan yang rapi.' },
-              { icon: <CreditCard className="w-8 h-8" />, title: 'Pembayaran Mudah', desc: 'Tersedia berbagai metode pembayaran mulai dari COD hingga transfer bank untuk kemudahan dan kenyamanan bertransaksi Anda.' },
+              { icon: <Star className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Rasa Autentik' },
+              { icon: <Truck className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Pengiriman Cepat' },
+              { icon: <CreditCard className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Bayar Mudah' },
             ].map((f, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * i }}
-                className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow"
+                transition={{ delay: 0.08 * i }}
+                className="bg-white/95 rounded-xl p-3 sm:p-4 text-center shadow-lg"
               >
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-100 text-orange-500 mb-3">
+                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 text-orange-500 mb-1.5 sm:mb-2">
                   {f.icon}
                 </div>
-                <h3 className="font-bold text-gray-800 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 text-justify leading-relaxed">{f.desc}</p>
+                <p className="text-[11px] sm:text-sm font-bold text-gray-800">{f.title}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-orange-500 py-10 relative">
+      {/* ═══ PRODUCT GRID BY TAB ═══ */}
+      <section className="bg-orange-500 py-6 sm:py-8 relative">
+        <div className="relative max-w-5xl mx-auto px-4">
+          {/* Tab Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-yellow-300" />
+              <h2 className="text-lg sm:text-xl font-bold text-white">Rekomendasi</h2>
+            </div>
+            <button onClick={() => setPage('menu')} className="text-orange-100 hover:text-white text-xs sm:text-sm font-medium flex items-center gap-0.5 transition-colors">
+              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1.5 mb-5 bg-orange-400/40 p-1 rounded-xl">
+            {tabItems.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Product Grid */}
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-52 sm:h-56 rounded-xl" />)}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="bg-white rounded-xl p-8 text-center shadow-md">
+              <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm">Belum ada produk</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {filteredProducts.map((p, i) => {
+                const disc = getDiscount(p)
+                return (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow group"
+                  >
+                    {/* Image */}
+                    <div className="relative h-28 sm:h-36 bg-orange-50 flex items-center justify-center p-3">
+                      {disc > 0 && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10">
+                          -{disc}%
+                        </div>
+                      )}
+                      {p.tag === 'terlaris' && (
+                        <div className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10 flex items-center gap-0.5">
+                          <Flame className="w-2.5 h-2.5" /> Laris
+                        </div>
+                      )}
+                      <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    {/* Info */}
+                    <div className="p-3">
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">{p.category}</p>
+                      <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight line-clamp-2 mb-2 min-h-[2rem] sm:min-h-[2.5rem]">{p.name}</h3>
+                      <div className="flex items-baseline gap-1 mb-2">
+                        <span className="text-sm sm:text-base font-extrabold text-orange-600">{fmt(p.price)}</span>
+                        {p.originalPrice && p.originalPrice > p.price && (
+                          <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-xs h-8"
+                        onClick={() => handleAdd(p)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> Tambah
+                      </Button>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══ CTA ═══ */}
+      <section className="bg-orange-500 py-8 sm:py-10 relative">
         <div className="absolute inset-0 aceh-pattern opacity-30" />
         <div className="relative max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Siap Memesan?</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white mb-3">Siap Memesan?</h2>
           <p className="text-orange-100 text-sm text-justify max-w-lg mx-auto mb-5 leading-relaxed">
             Jangan tunggu lagi! Pesan ayam geprek sambal ijo favorit Anda sekarang juga. Pilih menu, tambahkan ke keranjang, dan selesaikan pesanan dalam beberapa langkah mudah.
           </p>
@@ -453,8 +656,10 @@ interface Product {
   name: string
   description: string
   price: number
+  originalPrice?: number | null
   image: string
   category: string
+  tag?: string | null
   available: boolean
 }
 
@@ -541,12 +746,27 @@ function MenuPage() {
                 <div className="relative h-48 overflow-hidden">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                   <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-xs">{p.category}</Badge>
+                  {p.originalPrice && p.originalPrice > p.price && (
+                    <Badge className="absolute top-3 right-3 bg-red-500 text-white text-xs">
+                      -{Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}%
+                    </Badge>
+                  )}
+                  {p.tag === 'terlaris' && !p.originalPrice && (
+                    <Badge className="absolute top-3 right-3 bg-amber-500 text-white text-xs flex items-center gap-0.5">
+                      <Flame className="w-3 h-3" /> Laris
+                    </Badge>
+                  )}
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
                   <h3 className="font-bold text-gray-800 mb-1 text-sm leading-snug">{p.name}</h3>
                   <p className="text-xs text-gray-500 text-justify leading-relaxed flex-1 line-clamp-3">{p.description}</p>
                   <div className="flex items-center justify-between mt-3">
-                    <span className="font-extrabold text-orange-600 text-base">{fmt(p.price)}</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-extrabold text-orange-600 text-base">{fmt(p.price)}</span>
+                      {p.originalPrice && p.originalPrice > p.price && (
+                        <span className="text-xs text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+                      )}
+                    </div>
                     <Button
                       size="sm"
                       className="bg-orange-500 hover:bg-orange-600 text-white shadow-md"

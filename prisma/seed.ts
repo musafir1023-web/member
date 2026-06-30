@@ -1,14 +1,20 @@
 import { db } from '../src/lib/db'
 
 async function seed() {
-  // Seed products
+  // Clear existing products
+  await db.orderItem.deleteMany()
+  await db.order.deleteMany()
+  await db.product.deleteMany()
+
   const products = [
     {
       name: 'Ayam Geprek Sambal Ijo Original',
       description: 'Ayam geprek dengan sambal ijo khas Aceh yang segar dan pedas. Dibuat dari ayam pilihan yang digoreng renyah kemudian digeprek dan disiram sambal ijo homemade. Rasa gurih dan pedas yang pas membuat menu ini menjadi favorit pelanggan kami.',
-      price: 18000,
+      price: 15000,
+      originalPrice: 18000,
       image: '/images/products/geprek-original.png',
       category: 'Makanan',
+      tag: 'promo',
       available: true,
     },
     {
@@ -17,6 +23,7 @@ async function seed() {
       price: 20000,
       image: '/images/products/geprek-pedas.png',
       category: 'Makanan',
+      tag: 'terlaris',
       available: true,
     },
     {
@@ -25,14 +32,17 @@ async function seed() {
       price: 22000,
       image: '/images/products/geprek-keju.png',
       category: 'Makanan',
+      tag: 'terlaris',
       available: true,
     },
     {
       name: 'Ayam Geprek Sambal Ijo Mozarella',
       description: 'Menu premium dengan keju mozarella yang bisa di-pull membuat pengalaman makan semakin seru. Ayam geprek renyah disiram sambal ijo dan ditaburi keju mozarella leleh. Pilihan tepat untuk pecinta keju sejati.',
-      price: 25000,
+      price: 20000,
+      originalPrice: 25000,
       image: '/images/products/geprek-mozarella.png',
       category: 'Makanan',
+      tag: 'promo',
       available: true,
     },
     {
@@ -41,6 +51,7 @@ async function seed() {
       price: 28000,
       image: '/images/products/nasi-komplit.png',
       category: 'Paket',
+      tag: 'terlaris',
       available: true,
     },
     {
@@ -49,14 +60,17 @@ async function seed() {
       price: 22000,
       image: '/images/products/geprek-telur.png',
       category: 'Makanan',
+      tag: 'terbaru',
       available: true,
     },
     {
       name: 'Es Teh Manis',
       description: 'Minuman segar berupa teh manis dingin yang sempurna menemani hidangan ayam geprek Anda. Dibuat dari teh pilihan dengan takaran gula yang pas, disajikan dengan es batu segar. Menjadi pelengkap ideal untuk menyeimbangkan pedasnya sambal ijo.',
-      price: 5000,
+      price: 3000,
+      originalPrice: 5000,
       image: '/images/products/es-teh.png',
       category: 'Minuman',
+      tag: 'promo',
       available: true,
     },
     {
@@ -65,13 +79,14 @@ async function seed() {
       price: 7000,
       image: '/images/products/es-jeruk.png',
       category: 'Minuman',
+      tag: 'terbaru',
       available: true,
     },
   ]
 
   for (const product of products) {
     await db.product.create({ data: product })
-    console.log(`✓ Seeded: ${product.name}`)
+    console.log(`✓ Seeded: ${product.name} [${product.tag || '-'}]`)
   }
 
   // Seed admin user
@@ -82,7 +97,7 @@ async function seed() {
         name: 'Admin Geprek',
         email: 'admin@geprek.com',
         password: 'admin123',
-        phone: '081234567890',
+        phone: '085260812758',
         role: 'admin',
       },
     })
