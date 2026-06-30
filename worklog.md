@@ -74,3 +74,34 @@ Stage Summary:
 - Admin gets expanded 6-stat grid + order management with cancel action
 - Mobile responsive: tabs show icons only on small screens
 - No lint errors, no runtime errors
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Build super complete header with store address, phone, hours, cart shortcut
+
+Work Log:
+- Created STORE_INFO constant with all store details (name, tagline, address, phone, whatsapp, hours, timezone)
+- Added address: "Jl. Medan - Banda Aceh, Simpang Camat, Gampong Tijue, Kec. Pidie, Kab. Pidie, 24151"
+- Built 3-row super complete header:
+  - Row 1 (Brand Bar): Gradient orange with Aceh ornament overlay, brand logo in glassmorphism box, name + tagline, open/closed status badge (green pulse when open), notification bell with red dot, cart icon with count badge
+  - Row 2 (Info Strip): Clickable toggle on mobile (expand/collapse), always visible on desktop. Shows: MapPin + full address, Phone link, Clock + hours, WhatsApp link, Share button (uses Web Share API or clipboard fallback)
+  - Row 3 (Page Title Bar): Only on non-home pages. Shows page title on left, breadcrumb navigation (Beranda > Current Page) on right
+- Added getStoreStatus() function with Asia/Jakarta timezone-aware open/closed detection (10:00-22:00 WIB)
+- Added pageLabels map for all page titles in Indonesian
+- Updated Footer: Added Aceh ornament overlay, brand icon box, store address with MapPin, phone, hours in 3-column grid
+- Fixed duplicate h1 in HomePage hero (changed to h2)
+- Removed duplicate h1 in MenuPage hero mini section
+- Updated ProfilePage sticky tab offset from top-12 to top-[108px] for new header height
+- Added new icon imports: ChevronDown, Navigation, Share2
+- Removed unused Zap import
+
+Stage Summary:
+- Super complete 3-row header implemented and verified on mobile (iPhone 14) and desktop (1440x900)
+- Store address prominently displayed in header info strip
+- Expandable info strip on mobile with phone, hours, WhatsApp, share
+- Open/closed status indicator with green pulse animation
+- Cart and notification shortcuts in header
+- Breadcrumb navigation on sub-pages
+- Footer updated with full store info grid
+- No lint errors, no runtime errors

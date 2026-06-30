@@ -38,6 +38,7 @@ import {
   Truck,
   AlertCircle,
   ChevronRight,
+  ChevronDown,
   Copy,
   KeyRound,
   ReceiptText,
@@ -52,6 +53,8 @@ import {
   Bell,
   HelpCircle,
   Info,
+  Navigation,
+  Share2,
 } from 'lucide-react'
 
 /* ─────────────────────── FORMATTERS ─────────────────────── */
@@ -103,43 +106,228 @@ function ToastContainer() {
   )
 }
 
-/* ─────────────────────── TOP BAR (minimal brand) ─────────────────────── */
+/* ─────────────────────── STORE INFO ─────────────────────── */
+const STORE_INFO = {
+  name: 'Ayam Geprek Sambal Ijo',
+  tagline: 'Sambal Ijo Khas Aceh',
+  address: 'Jl. Medan - Banda Aceh, Simpang Camat, Gampong Tijue, Kec. Pidie, Kab. Pidie, 24151',
+  phone: '081234567890',
+  whatsapp: '6281234567890',
+  hours: '10:00 - 22:00',
+  timezone: 'WIB',
+  openHour: 10,
+  closeHour: 22,
+} as const
+
+function getStoreStatus(): { open: boolean; label: string } {
+  const now = new Date()
+  const jakartaStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })
+  const jakartaDate = new Date(jakartaStr)
+  const hour = jakartaDate.getHours()
+  // Open every day 10:00 - 22:00 WIB
+  const isOpen = hour >= STORE_INFO.openHour && hour < STORE_INFO.closeHour
+  return { open: isOpen, label: isOpen ? 'Buka Sekarang' : 'Tutup' }
+}
+
+const pageLabels: Record<string, string> = {
+  menu: 'Menu Kami',
+  cart: 'Keranjang Belanja',
+  orders: 'Riwayat Pesanan',
+  profile: 'Profil Saya',
+  login: 'Masuk ke Akun',
+  register: 'Daftar Akun Baru',
+  receipt: 'Struk Pembelian',
+}
+
+/* ─────────────────────── TOP BAR (SUPER COMPLETE) ─────────────────────── */
 function TopBar() {
-  const { currentPage, setPage } = useAppStore()
-  const showBack = !['home'].includes(currentPage)
+  const { currentPage, setPage, getCartCount } = useAppStore()
+  const cartCount = useAppStore(getCartCount)
+  const showBack = currentPage !== 'home'
+  const storeStatus = getStoreStatus()
+  const [infoExpanded, setInfoExpanded] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {showBack && (
-            <button
-              onClick={() => setPage('home')}
-              className="p-1.5 -ml-1 text-gray-600 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
-              aria-label="Kembali ke Beranda"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-          <button onClick={() => setPage('home')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ChefHat className="w-5 h-5 text-orange-500" />
-            <span className="font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wide">
-              Ayam Geprek Sambal Ijo
-            </span>
-          </button>
+    <header className="sticky top-0 z-50">
+      {/* ═══ ROW 1: Brand Bar ═══ */}
+      <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 relative overflow-hidden">
+        {/* Aceh ornament overlay */}
+        <div className="absolute inset-0 aceh-pattern opacity-20" />
+        
+        <div className="relative max-w-5xl mx-auto px-3 sm:px-4">
+          {/* Main brand row */}
+          <div className="h-12 sm:h-14 flex items-center justify-between gap-2">
+            {/* Left: Back + Brand */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {showBack && (
+                <button
+                  onClick={() => setPage('home')}
+                  className="p-1.5 -ml-1 text-white/80 hover:text-white hover:bg-white/10 transition-all rounded-lg flex-shrink-0"
+                  aria-label="Kembali ke Beranda"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={() => setPage('home')}
+                className="flex items-center gap-2 hover:opacity-90 transition-opacity min-w-0"
+              >
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                  <ChefHat className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-extrabold text-[11px] sm:text-xs text-white uppercase tracking-wider leading-tight truncate">
+                    {STORE_INFO.name}
+                  </h1>
+                  <p className="text-[9px] sm:text-[10px] text-orange-100/80 leading-tight hidden sm:block">
+                    {STORE_INFO.tagline}
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            {/* Right: Status + Cart */}
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              {/* Open/Closed Status Badge */}
+              <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                storeStatus.open
+                  ? 'bg-green-500/20 text-green-100 border border-green-400/30'
+                  : 'bg-red-500/20 text-red-100 border border-red-400/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${storeStatus.open ? 'bg-green-300 animate-pulse' : 'bg-red-300'}`} />
+                {storeStatus.label}
+              </div>
+
+              {/* Notification Bell */}
+              <button
+                onClick={() => setPage('orders')}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                aria-label="Notifikasi"
+              >
+                <Bell className="w-4.5 h-4.5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full" />
+              </button>
+
+              {/* Cart Shortcut */}
+              <button
+                onClick={() => setPage('cart')}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                aria-label="Keranjang"
+              >
+                <ShoppingCart className="w-4.5 h-4.5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-        {showBack && (
-          <span className="text-xs text-gray-400 font-medium">
-            {currentPage === 'menu' && 'Menu'}
-            {currentPage === 'cart' && 'Keranjang'}
-            {currentPage === 'orders' && 'Pesanan'}
-            {currentPage === 'profile' && 'Profile'}
-            {currentPage === 'login' && 'Login'}
-            {currentPage === 'register' && 'Daftar'}
-            {currentPage === 'receipt' && 'Struk'}
-          </span>
-        )}
       </div>
+
+      {/* ═══ ROW 2: Info Strip (Store Details) ═══ */}
+      <div className="bg-white border-b border-orange-100 shadow-sm">
+        <div className="max-w-5xl mx-auto">
+          {/* Clickable toggle for mobile */}
+          <button
+            onClick={() => setInfoExpanded(!infoExpanded)}
+            className="w-full px-3 sm:px-4 py-1.5 flex items-center justify-between"
+          >
+            {/* Primary info: Address */}
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <MapPin className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
+              <p className="text-[10px] sm:text-xs text-gray-600 truncate">
+                {STORE_INFO.address}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+              {/* Status dot for mobile */}
+              <div className="flex sm:hidden items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${storeStatus.open ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className={`text-[9px] font-bold ${storeStatus.open ? 'text-green-600' : 'text-red-500'}`}>
+                  {storeStatus.open ? 'Buka' : 'Tutup'}
+                </span>
+              </div>
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 sm:hidden ${infoExpanded ? 'rotate-180' : ''}`} />
+            </div>
+          </button>
+
+          {/* Expanded info on mobile / Always visible on desktop */}
+          <div className={`${infoExpanded ? 'block' : 'hidden'} sm:block`}>
+            <div className="px-3 sm:px-4 pb-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              {/* Phone */}
+              <a
+                href={`tel:${STORE_INFO.phone}`}
+                className="flex items-center gap-1.5 text-gray-500 hover:text-orange-600 transition-colors group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                  <Phone className="w-3 h-3" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.phone}</span>
+              </a>
+
+              {/* Hours */}
+              <div className="flex items-center gap-1.5 text-gray-500">
+                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center">
+                  <Clock className="w-3 h-3" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
+              </div>
+
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/${STORE_INFO.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-gray-500 hover:text-green-600 transition-colors group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-green-50 text-green-500 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                  <Phone className="w-3 h-3" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-medium">WhatsApp</span>
+              </a>
+
+              {/* Share */}
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: STORE_INFO.name,
+                      text: `${STORE_INFO.name} - ${STORE_INFO.tagline}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
+                    }).catch(() => {})
+                  } else {
+                    navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
+                  }
+                }}
+                className="flex items-center gap-1.5 text-gray-500 hover:text-orange-600 transition-colors group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                  <Share2 className="w-3 h-3" />
+                </div>
+                <span className="text-[10px] sm:text-xs font-medium">Bagikan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ ROW 3: Page Title Bar (non-home pages only) ═══ */}
+      {showBack && (
+        <div className="bg-white/95 backdrop-blur-sm border-b border-orange-50">
+          <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            <h2 className="text-sm sm:text-base font-bold text-gray-800">
+              {pageLabels[currentPage] || 'Halaman'}
+            </h2>
+            <div className="flex items-center gap-1 text-[10px] text-gray-400">
+              <Navigation className="w-3 h-3" />
+              <span className="hidden sm:inline">Beranda</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-orange-500 font-medium">{pageLabels[currentPage] || ''}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
@@ -212,19 +400,40 @@ function BottomNav() {
 /* ─────────────────────── FOOTER ─────────────────────── */
 function Footer() {
   return (
-    <footer className="bg-orange-600 text-white">
-      <div className="max-w-5xl mx-auto px-4 py-4 pb-24">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-1.5">
+    <footer className="bg-orange-600 text-white relative overflow-hidden">
+      <div className="absolute inset-0 aceh-pattern opacity-10" />
+      <div className="relative max-w-5xl mx-auto px-4 py-5 pb-24">
+        {/* Brand */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <ChefHat className="w-4 h-4" />
-            <span className="font-bold text-xs uppercase tracking-wider">Ayam Geprek Sambal Ijo</span>
           </div>
-          <p className="text-orange-100 text-[11px] text-justify max-w-md mx-auto leading-relaxed">
-            Menyajikan ayam geprek sambal ijo khas Aceh dengan cita rasa autentik. Pesan online mudah, cepat, dan terpercaya untuk pengalaman kuliner terbaik Anda.
-          </p>
-          <Separator className="my-2 bg-orange-400/30" />
-          <p className="text-orange-200 text-[10px]">&copy; {new Date().getFullYear()} Ayam Geprek Sambal Ijo. Hak Cipta Dilindungi.</p>
+          <span className="font-bold text-xs uppercase tracking-wider">{STORE_INFO.name}</span>
         </div>
+        <p className="text-orange-100 text-[11px] text-justify max-w-md mx-auto leading-relaxed mb-3">
+          Menyajikan ayam geprek sambal ijo khas Aceh dengan cita rasa autentik. Pesan online mudah, cepat, dan terpercaya untuk pengalaman kuliner terbaik Anda.
+        </p>
+
+        <Separator className="my-3 bg-orange-400/30" />
+
+        {/* Store Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto mb-3">
+          <div className="flex items-start gap-2 justify-center">
+            <MapPin className="w-3.5 h-3.5 text-orange-200 flex-shrink-0 mt-0.5" />
+            <p className="text-orange-200 text-[10px] text-justify leading-relaxed">{STORE_INFO.address}</p>
+          </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Phone className="w-3.5 h-3.5 text-orange-200 flex-shrink-0" />
+            <span className="text-orange-200 text-[10px]">{STORE_INFO.phone}</span>
+          </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Clock className="w-3.5 h-3.5 text-orange-200 flex-shrink-0" />
+            <span className="text-orange-200 text-[10px]">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
+          </div>
+        </div>
+
+        <Separator className="my-3 bg-orange-400/30" />
+        <p className="text-orange-300 text-[10px] text-center">&copy; {new Date().getFullYear()} {STORE_INFO.name}. Hak Cipta Dilindungi.</p>
       </div>
     </footer>
   )
@@ -247,9 +456,9 @@ function HomePage() {
                 <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                   <ChefHat className="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
                 </div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
                   AYAM GEPREK<br />SAMBAL IJO
-                </h1>
+                </h2>
                 <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto md:mx-0 leading-relaxed">
                   Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
                 </p>
@@ -389,10 +598,9 @@ function MenuPage() {
   return (
     <div className="min-h-screen">
       {/* Hero mini */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
         <div className="absolute inset-0 aceh-pattern opacity-30" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Menu Kami</h1>
           <p className="text-orange-50 text-sm max-w-lg mx-auto text-justify leading-relaxed">
             Pilih berbagai varian ayam geprek sambal ijo dan minuman segar yang kami sediakan. Semua menu dibuat dari bahan pilihan dengan kualitas terbaik untuk kepuasan Anda.
           </p>
@@ -1358,7 +1566,7 @@ function ProfilePage() {
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="sticky top-12 z-40 bg-orange-500 shadow-sm">
+      <div className="sticky top-[108px] z-40 bg-orange-500 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
           <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (

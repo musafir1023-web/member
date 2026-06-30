@@ -1,0 +1,1905 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { useAppStore, type CartItem, type OrderData, type Page } from '@/lib/store'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Label } from '@/components/ui/label'
+     9→import { Textarea } from '@/components/ui/textarea'
+    10→import { Badge } from '@/components/ui/badge'
+    11→import { Separator } from '@/components/ui/separator'
+    12→import { Skeleton } from '@/components/ui/skeleton'
+    13→import {
+    14→  ChefHat,
+    15→  Home,
+    16→  UtensilsCrossed,
+    17→  ShoppingCart,
+    18→  Package,
+    19→  LogIn,
+    20→  LayoutDashboard,
+    21→  Plus,
+    22→  Minus,
+    23→  Trash2,
+    24→  ArrowLeft,
+    25→  Phone,
+    26→  MapPin,
+    27→  CreditCard,
+    28→  Banknote,
+    29→  Clock,
+    30→  CheckCircle2,
+    31→  XCircle,
+    32→  Eye,
+    33→  UserPlus,
+    34→  Lock,
+    35→  Mail,
+    36→  User,
+    37→  Star,
+    38→  Truck,
+    39→  AlertCircle,
+    40→  ChevronRight,
+    41→  Copy,
+    42→  KeyRound,
+    43→  ReceiptText,
+    44→  UserCircle,
+    45→  Settings,
+    46→  Edit3,
+    47→  LogOut,
+    48→  Shield,
+    49→  TrendingUp,
+    50→  Calendar,
+    51→  BadgeCheck,
+    52→  Bell,
+    53→  HelpCircle,
+    54→  Info,
+    55→} from 'lucide-react'
+    56→
+    57→/* ─────────────────────── FORMATTERS ─────────────────────── */
+    58→const fmt = (n: number) =>
+    59→  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n)
+    60→
+    61→const fmtDate = (d: string) =>
+    62→  new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    63→
+    64→const statusColor: Record<string, string> = {
+    65→  pending: 'bg-yellow-100 text-yellow-800',
+    66→  confirmed: 'bg-blue-100 text-blue-800',
+    67→  preparing: 'bg-orange-100 text-orange-800',
+    68→  delivered: 'bg-green-100 text-green-800',
+    69→  cancelled: 'bg-red-100 text-red-800',
+    70→}
+    71→
+    72→const statusLabel: Record<string, string> = {
+    73→  pending: 'Menunggu',
+    74→  confirmed: 'Dikonfirmasi',
+    75→  preparing: 'Diproses',
+    76→  delivered: 'Selesai',
+    77→  cancelled: 'Dibatalkan',
+    78→}
+    79→
+    80→/* ─────────────────────── TOAST COMPONENT ─────────────────────── */
+    81→function ToastContainer() {
+    82→  const toasts = useAppStore((s) => s.toasts)
+    83→  const removeToast = useAppStore((s) => s.removeToast)
+    84→
+    85→  return (
+    86→    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+    87→      <AnimatePresence>
+    88→        {toasts.map((t) => (
+    89→          <motion.div
+    90→            key={t.id}
+    91→            initial={{ opacity: 0, x: 50 }}
+    92→            animate={{ opacity: 1, x: 0 }}
+    93→            exit={{ opacity: 0, x: 50 }}
+    94→            className={`pointer-events-auto px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${
+    95→              t.type === 'success' ? 'bg-green-500' : t.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    96→            }`}
+    97→          >
+    98→            {t.message}
+    99→          </motion.div>
+   100→        ))}
+   101→      </AnimatePresence>
+   102→    </div>
+   103→  )
+   104→}
+   105→
+   106→/* ─────────────────────── TOP BAR (minimal brand) ─────────────────────── */
+   107→function TopBar() {
+   108→  const { currentPage, setPage } = useAppStore()
+   109→  const showBack = !['home'].includes(currentPage)
+   110→
+   111→  return (
+   112→    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+   113→      <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between">
+   114→        <div className="flex items-center gap-2">
+   115→          {showBack && (
+   116→            <button
+   117→              onClick={() => setPage('home')}
+   118→              className="p-1.5 -ml-1 text-gray-600 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
+   119→              aria-label="Kembali ke Beranda"
+   120→            >
+   121→              <ArrowLeft className="w-5 h-5" />
+   122→            </button>
+   123→          )}
+   124→          <button onClick={() => setPage('home')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+   125→            <ChefHat className="w-5 h-5 text-orange-500" />
+   126→            <span className="font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wide">
+   127→              Ayam Geprek Sambal Ijo
+   128→            </span>
+   129→          </button>
+   130→        </div>
+   131→        {showBack && (
+   132→          <span className="text-xs text-gray-400 font-medium">
+   133→            {currentPage === 'menu' && 'Menu'}
+   134→            {currentPage === 'cart' && 'Keranjang'}
+   135→            {currentPage === 'orders' && 'Pesanan'}
+   136→            {currentPage === 'profile' && 'Profile'}
+   137→            {currentPage === 'login' && 'Login'}
+   138→            {currentPage === 'register' && 'Daftar'}
+   139→            {currentPage === 'receipt' && 'Struk'}
+   140→          </span>
+   141→        )}
+   142→      </div>
+   143→    </header>
+   144→  )
+   145→}
+   146→
+   147→/* ─────────────────────── BOTTOM NAVIGATION ─────────────────────── */
+   148→function BottomNav() {
+   149→  const { currentPage, setPage, user, logout, getCartCount } = useAppStore()
+   150→  const cartCount = useAppStore(getCartCount)
+   151→
+   152→  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean }[] = [
+   153→    { page: 'home', label: 'Beranda', icon: <Home className="w-5 h-5" />, show: true },
+   154→    { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
+   155→    { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
+   156→    { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
+   157→    { page: user ? 'profile' : 'login', label: user ? 'Profile' : 'Login', icon: user ? <UserCircle className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
+   158→  ]
+   159→
+   160→  const handleNav = (page: Page) => {
+   161→    if (user && page === 'login') {
+   162→      logout()
+   163→      return
+   164→    }
+   165→    setPage(page)
+   166→  }
+   167→
+   168→  return (
+   169→    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-orange-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+   170→      {/* Safe area for iOS */}
+   171→      <div className="pb-[env(safe-area-inset-bottom)]">
+   172→        <div className="max-w-lg mx-auto flex items-center justify-around px-1 py-1.5">
+   173→          {navItems.map((item) => {
+   174→            const isActive = currentPage === item.page
+   175→            return (
+   176→              <button
+   177→                key={item.label}
+   178→                onClick={() => handleNav(item.page)}
+   179→                className={`relative flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl min-w-[56px] transition-all duration-200 ${
+   180→                  isActive
+   181→                    ? 'text-orange-500'
+   182→                    : 'text-gray-400 hover:text-gray-600 active:scale-95'
+   183→                }`}
+   184→              >
+   185→                {isActive && (
+   186→                  <motion.div
+   187→                    layoutId="bottomNavIndicator"
+   188→                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-1 bg-orange-500 rounded-full"
+   189→                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+   190→                  />
+   191→                )}
+   192→                <div className="relative">
+   193→                  {item.icon}
+   194→                  {item.page === 'cart' && cartCount > 0 && (
+   195→                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+   196→                      {cartCount}
+   197→                    </span>
+   198→                  )}
+   199→                </div>
+   200→                <span className={`text-[10px] leading-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
+   201→                  {item.label}
+   202→                </span>
+   203→              </button>
+   204→            )
+   205→          })}
+   206→        </div>
+   207→      </div>
+   208→    </nav>
+   209→  )
+   210→}
+   211→
+   212→/* ─────────────────────── FOOTER ─────────────────────── */
+   213→function Footer() {
+   214→  return (
+   215→    <footer className="bg-orange-600 text-white">
+   216→      <div className="max-w-5xl mx-auto px-4 py-4 pb-24">
+   217→        <div className="text-center">
+   218→          <div className="flex items-center justify-center gap-2 mb-1.5">
+   219→            <ChefHat className="w-4 h-4" />
+   220→            <span className="font-bold text-xs uppercase tracking-wider">Ayam Geprek Sambal Ijo</span>
+   221→          </div>
+   222→          <p className="text-orange-100 text-[11px] text-justify max-w-md mx-auto leading-relaxed">
+   223→            Menyajikan ayam geprek sambal ijo khas Aceh dengan cita rasa autentik. Pesan online mudah, cepat, dan terpercaya untuk pengalaman kuliner terbaik Anda.
+   224→          </p>
+   225→          <Separator className="my-2 bg-orange-400/30" />
+   226→          <p className="text-orange-200 text-[10px]">&copy; {new Date().getFullYear()} Ayam Geprek Sambal Ijo. Hak Cipta Dilindungi.</p>
+   227→        </div>
+   228→      </div>
+   229→    </footer>
+   230→  )
+   231→}
+   232→
+   233→/* ─────────────────────── HOME PAGE ─────────────────────── */
+   234→function HomePage() {
+   235→  const setPage = useAppStore((s) => s.setPage)
+   236→
+   237→  return (
+   238→    <div>
+   239→      {/* Hero Section */}
+   240→      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
+   241→        {/* Aceh ornament overlay */}
+   242→        <div className="absolute inset-0 aceh-pattern" />
+   243→        <div className="relative max-w-5xl mx-auto px-4 py-12 sm:py-20">
+   244→          <div className="flex flex-col md:flex-row items-center gap-8">
+   245→            <div className="flex-1 text-center md:text-left">
+   246→              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+   247→                <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+   248→                  <ChefHat className="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
+   249→                </div>
+   250→                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
+   251→                  AYAM GEPREK<br />SAMBAL IJO
+   252→                </h1>
+   253→                <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto md:mx-0 leading-relaxed">
+   254→                  Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
+   255→                </p>
+   256→                <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center md:justify-start">
+   257→                  <Button
+   258→                    onClick={() => setPage('menu')}
+   259→                    size="lg"
+   260→                    className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg hover:shadow-xl transition-all px-8"
+   261→                  >
+   262→                    <UtensilsCrossed className="w-4 h-4 mr-2" />
+   263→                    Pesan Sekarang
+   264→                  </Button>
+   265→                  <Button
+   266→                    onClick={() => setPage('menu')}
+   267→                    size="lg"
+   268→                    variant="outline"
+   269→                    className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8"
+   270→                  >
+   271→                    Lihat Menu
+   272→                    <ChevronRight className="w-4 h-4 ml-1" />
+   273→                  </Button>
+   274→                </div>
+   275→              </motion.div>
+   276→            </div>
+   277→            <motion.div
+   278→              initial={{ opacity: 0, scale: 0.8 }}
+   279→              animate={{ opacity: 1, scale: 1 }}
+   280→              transition={{ duration: 0.6, delay: 0.2 }}
+   281→              className="flex-shrink-0 w-64 h-64 sm:w-80 sm:h-80 rounded-2xl overflow-hidden shadow-2xl"
+   282→            >
+   283→              <img
+   284→                src="/images/hero-banner.png"
+   285→                alt="Ayam Geprek Sambal Ijo"
+   286→                className="w-full h-full object-cover"
+   287→              />
+   288→            </motion.div>
+   289→          </div>
+   290→        </div>
+   291→        {/* Wave separator */}
+   292→        <div className="absolute bottom-0 left-0 right-0">
+   293→          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+   294→            <path d="M0 60L48 54C96 48 192 36 288 30C384 24 480 24 576 28C672 32 768 40 864 42C960 44 1056 40 1152 36C1248 32 1344 28 1392 26L1440 24V60H0Z" fill="#F97316" />
+   295→          </svg>
+   296→        </div>
+   297→      </section>
+   298→
+   299→      {/* Features */}
+   300→      <section className="bg-orange-500 py-10 sm:py-14 relative">
+   301→        <div className="absolute inset-0 aceh-pattern opacity-50" />
+   302→        <div className="relative max-w-5xl mx-auto px-4">
+   303→          <h2 className="text-center text-xl sm:text-2xl font-bold text-white mb-8">Kenapa Memilih Kami?</h2>
+   304→          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+   305→            {[
+   306→              { icon: <Star className="w-8 h-8" />, title: 'Rasa Autentik', desc: 'Sambal ijo khas Aceh dengan resep turun-temurun yang menjaga cita rasa asli dan kualitas bahan pilihan terbaik.' },
+   307→              { icon: <Truck className="w-8 h-8" />, title: 'Pengiriman Cepat', desc: 'Pesanan diproses dengan cepat dan diantarkan langsung ke lokasi Anda dalam waktu singkat dengan kemasan yang rapi.' },
+   308→              { icon: <CreditCard className="w-8 h-8" />, title: 'Pembayaran Mudah', desc: 'Tersedia berbagai metode pembayaran mulai dari COD hingga transfer bank untuk kemudahan dan kenyamanan bertransaksi Anda.' },
+   309→            ].map((f, i) => (
+   310→              <motion.div
+   311→                key={i}
+   312→                initial={{ opacity: 0, y: 20 }}
+   313→                animate={{ opacity: 1, y: 0 }}
+   314→                transition={{ delay: 0.1 * i }}
+   315→                className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow"
+   316→              >
+   317→                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-orange-100 text-orange-500 mb-3">
+   318→                  {f.icon}
+   319→                </div>
+   320→                <h3 className="font-bold text-gray-800 mb-2">{f.title}</h3>
+   321→                <p className="text-sm text-gray-500 text-justify leading-relaxed">{f.desc}</p>
+   322→              </motion.div>
+   323→            ))}
+   324→          </div>
+   325→        </div>
+   326→      </section>
+   327→
+   328→      {/* CTA */}
+   329→      <section className="bg-orange-500 py-10 relative">
+   330→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   331→        <div className="relative max-w-3xl mx-auto px-4 text-center">
+   332→          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Siap Memesan?</h2>
+   333→          <p className="text-orange-100 text-sm text-justify max-w-lg mx-auto mb-5 leading-relaxed">
+   334→            Jangan tunggu lagi! Pesan ayam geprek sambal ijo favorit Anda sekarang juga. Pilih menu, tambahkan ke keranjang, dan selesaikan pesanan dalam beberapa langkah mudah.
+   335→          </p>
+   336→          <Button
+   337→            onClick={() => setPage('menu')}
+   338→            size="lg"
+   339→            className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg px-10"
+   340→          >
+   341→            <UtensilsCrossed className="w-4 h-4 mr-2" />
+   342→            Pesan Sekarang
+   343→          </Button>
+   344→        </div>
+   345→      </section>
+   346→    </div>
+   347→  )
+   348→}
+   349→
+   350→/* ─────────────────────── MENU PAGE ─────────────────────── */
+   351→interface Product {
+   352→  id: string
+   353→  name: string
+   354→  description: string
+   355→  price: number
+   356→  image: string
+   357→  category: string
+   358→  available: boolean
+   359→}
+   360→
+   361→function MenuPage() {
+   362→  const [products, setProducts] = useState<Product[]>([])
+   363→  const [loading, setLoading] = useState(true)
+   364→  const [activeCategory, setActiveCategory] = useState('Semua')
+   365→  const addToCart = useAppStore((s) => s.addToCart)
+   366→  const addToast = useAppStore((s) => s.addToast)
+   367→
+   368→  useEffect(() => {
+   369→    fetch('/api/products')
+   370→      .then((r) => r.json())
+   371→      .then((data) => {
+   372→        setProducts(data)
+   373→        setLoading(false)
+   374→      })
+   375→      .catch(() => {
+   376→        setLoading(false)
+   377→        addToast('Gagal memuat menu', 'error')
+   378→      })
+   379→  }, [addToast])
+   380→
+   381→  const categories = ['Semua', ...Array.from(new Set(products.map((p) => p.category)))]
+   382→  const filtered = activeCategory === 'Semua' ? products : products.filter((p) => p.category === activeCategory)
+   383→
+   384→  const handleAdd = (p: Product) => {
+   385→    addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
+   386→    addToast(`${p.name} ditambahkan ke keranjang`)
+   387→  }
+   388→
+   389→  return (
+   390→    <div className="min-h-screen">
+   391→      {/* Hero mini */}
+   392→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+   393→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   394→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+   395→          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Menu Kami</h1>
+   396→          <p className="text-orange-50 text-sm max-w-lg mx-auto text-justify leading-relaxed">
+   397→            Pilih berbagai varian ayam geprek sambal ijo dan minuman segar yang kami sediakan. Semua menu dibuat dari bahan pilihan dengan kualitas terbaik untuk kepuasan Anda.
+   398→          </p>
+   399→        </div>
+   400→      </div>
+   401→
+   402→      <div className="max-w-5xl mx-auto px-4 py-6">
+   403→        {/* Category filter */}
+   404→        <div className="flex flex-wrap gap-2 mb-6 justify-center">
+   405→          {categories.map((cat) => (
+   406→            <Button
+   407→              key={cat}
+   408→              size="sm"
+   409→              variant={activeCategory === cat ? 'default' : 'outline'}
+   410→              className={activeCategory === cat ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-orange-200 text-gray-600 hover:bg-orange-50'}
+   411→              onClick={() => setActiveCategory(cat)}
+   412→            >
+   413→              {cat}
+   414→            </Button>
+   415→          ))}
+   416→        </div>
+   417→
+   418→        {/* Product grid */}
+   419→        {loading ? (
+   420→          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   421→            {[...Array(6)].map((_, i) => (
+   422→              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-md">
+   423→                <Skeleton className="w-full h-48" />
+   424→                <div className="p-4 space-y-2">
+   425→                  <Skeleton className="h-5 w-3/4" />
+   426→                  <Skeleton className="h-4 w-full" />
+   427→                  <Skeleton className="h-4 w-1/2" />
+   428→                </div>
+   429→              </div>
+   430→            ))}
+   431→          </div>
+   432→        ) : (
+   433→          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+   434→            {filtered.map((p) => (
+   435→              <motion.div
+   436→                key={p.id}
+   437→                initial={{ opacity: 0, y: 10 }}
+   438→                animate={{ opacity: 1, y: 0 }}
+   439→                whileHover={{ y: -4 }}
+   440→                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow flex flex-col"
+   441→              >
+   442→                <div className="relative h-48 overflow-hidden">
+   443→                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+   444→                  <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-xs">{p.category}</Badge>
+   445→                </div>
+   446→                <div className="p-4 flex-1 flex flex-col">
+   447→                  <h3 className="font-bold text-gray-800 mb-1 text-sm leading-snug">{p.name}</h3>
+   448→                  <p className="text-xs text-gray-500 text-justify leading-relaxed flex-1 line-clamp-3">{p.description}</p>
+   449→                  <div className="flex items-center justify-between mt-3">
+   450→                    <span className="font-extrabold text-orange-600 text-base">{fmt(p.price)}</span>
+   451→                    <Button
+   452→                      size="sm"
+   453→                      className="bg-orange-500 hover:bg-orange-600 text-white shadow-md"
+   454→                      onClick={() => handleAdd(p)}
+   455→                    >
+   456→                      <Plus className="w-4 h-4 mr-1" />
+   457→                      Tambah
+   458→                    </Button>
+   459→                  </div>
+   460→                </div>
+   461→              </motion.div>
+   462→            ))}
+   463→          </div>
+   464→        )}
+   465→      </div>
+   466→    </div>
+   467→  )
+   468→}
+   469→
+   470→/* ─────────────────────── CART PAGE ─────────────────────── */
+   471→function CartPage() {
+   472→  const { cart, updateQuantity, removeFromCart, getCartTotal, setPage, addToast } = useAppStore()
+   473→  const total = useAppStore(getCartTotal)
+   474→  const [checkingOut, setCheckingOut] = useState(false)
+   475→
+   476→  const handleCheckout = () => {
+   477→    if (cart.length === 0) {
+   478→      addToast('Keranjang masih kosong', 'error')
+   479→      return
+   480→    }
+   481→    setCheckingOut(true)
+   482→  }
+   483→
+   484→  if (checkingOut) {
+   485→    return <CheckoutForm onCancel={() => setCheckingOut(false)} />
+   486→  }
+   487→
+   488→  return (
+   489→    <div className="min-h-screen">
+   490→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+   491→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   492→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+   493→          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+   494→            <ShoppingCart className="w-8 h-8 inline-block mr-2 -mt-1" />
+   495→            Keranjang
+   496→          </h1>
+   497→          <p className="text-orange-50 text-sm">Kelola pesanan Anda sebelum melakukan pemesanan.</p>
+   498→        </div>
+   499→      </div>
+   500→
+   501→      <div className="max-w-3xl mx-auto px-4 py-6">
+   502→        {cart.length === 0 ? (
+   503→          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+   504→            <ShoppingCart className="w-16 h-16 text-white/40 mx-auto mb-4" />
+   505→            <p className="text-white/70 font-medium mb-2">Keranjang Anda masih kosong</p>
+   506→            <p className="text-white/50 text-sm text-justify max-w-sm mx-auto leading-relaxed">
+   507→              Silakan pilih menu dari halaman Menu dan tambahkan item yang Anda inginkan ke keranjang untuk melanjutkan pemesanan.
+   508→            </p>
+   509→            <Button className="mt-6 bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-md" onClick={() => setPage('menu')}>
+   510→              <UtensilsCrossed className="w-4 h-4 mr-2" />
+   511→              Lihat Menu
+   512→            </Button>
+   513→          </motion.div>
+   514→        ) : (
+   515→          <>
+   516→            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+   517→              {cart.map((item) => (
+   518→                <motion.div
+   519→                  key={item.productId}
+   520→                  layout
+   521→                  initial={{ opacity: 0, x: -20 }}
+   522→                  animate={{ opacity: 1, x: 0 }}
+   523→                  exit={{ opacity: 0, x: 20 }}
+   524→                  className="bg-white rounded-xl p-4 shadow-md flex items-center gap-4"
+   525→                >
+   526→                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
+   527→                    <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
+   528→                  </div>
+   529→                  <div className="flex-1 min-w-0">
+   530→                    <h3 className="font-bold text-gray-800 text-sm truncate">{item.productName}</h3>
+   531→                    <p className="text-orange-600 font-semibold text-sm mt-0.5">{fmt(item.price)}</p>
+   532→                    <div className="flex items-center gap-3 mt-2">
+   533→                      <div className="flex items-center bg-orange-50 rounded-lg">
+   534→                        <button
+   535→                          className="p-1.5 hover:bg-orange-100 rounded-l-lg transition-colors"
+   536→                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+   537→                        >
+   538→                          <Minus className="w-3.5 h-3.5 text-orange-600" />
+   539→                        </button>
+   540→                        <span className="w-8 text-center text-sm font-bold text-gray-700">{item.quantity}</span>
+   541→                        <button
+   542→                          className="p-1.5 hover:bg-orange-100 rounded-r-lg transition-colors"
+   543→                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+   544→                        >
+   545→                          <Plus className="w-3.5 h-3.5 text-orange-600" />
+   546→                        </button>
+   547→                      </div>
+   548→                      <span className="text-sm font-bold text-gray-700">{fmt(item.price * item.quantity)}</span>
+   549→                    </div>
+   550→                  </div>
+   551→                  <button
+   552→                    onClick={() => removeFromCart(item.productId)}
+   553→                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex-shrink-0"
+   554→                  >
+   555→                    <Trash2 className="w-4 h-4" />
+   556→                  </button>
+   557→                </motion.div>
+   558→              ))}
+   559→            </div>
+   560→
+   561→            {/* Total & Checkout */}
+   562→            <div className="bg-white rounded-xl p-5 shadow-lg mt-4">
+   563→              <div className="flex justify-between items-center mb-4">
+   564→                <span className="text-gray-600 font-medium">Total Pembayaran</span>
+   565→                <span className="text-xl font-extrabold text-orange-600">{fmt(total)}</span>
+   566→              </div>
+   567→              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg py-6 text-base" onClick={handleCheckout}>
+   568→                <CreditCard className="w-4 h-4 mr-2" />
+   569→                Lanjut ke Pemesanan
+   570→              </Button>
+   571→            </div>
+   572→          </>
+   573→        )}
+   574→      </div>
+   575→    </div>
+   576→  )
+   577→}
+   578→
+   579→/* ─────────────────────── CHECKOUT FORM ─────────────────────── */
+   580→function CheckoutForm({ onCancel }: { onCancel: () => void }) {
+   581→  const { cart, getCartTotal, clearCart, setPage, addToast, user, setReceipt } = useAppStore()
+   582→  const total = useAppStore(getCartTotal)
+   583→  const [submitting, setSubmitting] = useState(false)
+   584→  const [form, setForm] = useState({
+   585→    customerName: user?.name || '',
+   586→    customerPhone: user?.phone || '',
+   587→    customerAddress: '',
+   588→    notes: '',
+   589→    paymentMethod: 'COD',
+   590→  })
+   591→
+   592→  const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
+   593→
+   594→  const handleSubmit = async (e: React.FormEvent) => {
+   595→    e.preventDefault()
+   596→    if (!form.customerName || !form.customerPhone || !form.customerAddress) {
+   597→      addToast('Mohon lengkapi semua data yang diperlukan', 'error')
+   598→      return
+   599→    }
+   600→    setSubmitting(true)
+   601→
+   602→    try {
+   603→      const items = cart.map((c) => ({
+   604→        productId: c.productId,
+   605→        productName: c.productName,
+   606→        quantity: c.quantity,
+   607→        price: c.price,
+   608→        subtotal: c.price * c.quantity,
+   609→      }))
+   610→
+   611→      const res = await fetch('/api/orders', {
+   612→        method: 'POST',
+   613→        headers: { 'Content-Type': 'application/json' },
+   614→        body: JSON.stringify({
+   615→          userId: user?.id || null,
+   616→          items,
+   617→          customerName: form.customerName,
+   618→          customerPhone: form.customerPhone,
+   619→          customerAddress: form.customerAddress,
+   620→          notes: form.notes,
+   621→          paymentMethod: form.paymentMethod,
+   622→        }),
+   623→      })
+   624→
+   625→      const data = await res.json()
+   626→      if (!res.ok) throw new Error(data.error || 'Gagal membuat pesanan')
+   627→
+   628→      setReceipt(data)
+   629→      clearCart()
+   630→      addToast('Pesanan berhasil dibuat!', 'success')
+   631→      setPage('receipt')
+   632→    } catch {
+   633→      addToast('Gagal membuat pesanan. Silakan coba lagi.', 'error')
+   634→    } finally {
+   635→      setSubmitting(false)
+   636→    }
+   637→  }
+   638→
+   639→  return (
+   640→    <div className="min-h-screen">
+   641→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
+   642→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   643→        <div className="relative max-w-5xl mx-auto px-4">
+   644→          <button onClick={onCancel} className="text-white hover:text-orange-100 flex items-center gap-1 text-sm font-medium mb-3 transition-colors">
+   645→            <ArrowLeft className="w-4 h-4" />
+   646→            Kembali ke Keranjang
+   647→          </button>
+   648→          <h1 className="text-2xl font-extrabold text-white text-center">Formulir Pemesanan</h1>
+   649→        </div>
+   650→      </div>
+   651→
+   652→      <div className="max-w-2xl mx-auto px-4 py-6">
+   653→        <form onSubmit={handleSubmit} className="space-y-4">
+   654→          <div className="bg-white rounded-xl p-5 shadow-lg space-y-4">
+   655→            <h2 className="font-bold text-gray-800 flex items-center gap-2">
+   656→              <User className="w-4 h-4 text-orange-500" />
+   657→              Data Pemesan
+   658→            </h2>
+   659→            <div>
+   660→              <Label htmlFor="name" className="text-sm text-gray-600">Nama Lengkap *</Label>
+   661→              <Input id="name" value={form.customerName} onChange={(e) => updateField('customerName', e.target.value)} placeholder="Masukkan nama lengkap Anda" className="mt-1" required />
+   662→            </div>
+   663→            <div>
+   664→              <Label htmlFor="phone" className="text-sm text-gray-600">Nomor Telepon *</Label>
+   665→              <Input id="phone" value={form.customerPhone} onChange={(e) => updateField('customerPhone', e.target.value)} placeholder="Contoh: 081234567890" className="mt-1" required />
+   666→            </div>
+   667→            <div>
+   668→              <Label htmlFor="address" className="text-sm text-gray-600">Alamat Pengiriman *</Label>
+   669→              <Textarea id="address" value={form.customerAddress} onChange={(e) => updateField('customerAddress', e.target.value)} placeholder="Masukkan alamat lengkap pengiriman Anda" className="mt-1" rows={3} required />
+   670→            </div>
+   671→            <div>
+   672→              <Label htmlFor="notes" className="text-sm text-gray-600">Catatan (Opsional)</Label>
+   673→              <Textarea id="notes" value={form.notes} onChange={(e) => updateField('notes', e.target.value)} placeholder="Contoh: Jangan terlalu pedas, tambah sambal, dll" className="mt-1" rows={2} />
+   674→            </div>
+   675→          </div>
+   676→
+   677→          {/* Payment Method */}
+   678→          <div className="bg-white rounded-xl p-5 shadow-lg">
+   679→            <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
+   680→              <CreditCard className="w-4 h-4 text-orange-500" />
+   681→              Metode Pembayaran
+   682→            </h2>
+   683→            <p className="text-sm text-gray-500 text-justify leading-relaxed mb-3">
+   684→              Pilih metode pembayaran yang paling nyaman untuk Anda. Kami menyediakan opsi COD (bayar di tempat) dan transfer bank untuk kemudahan transaksi.
+   685→            </p>
+   686→            <div className="flex gap-3">
+   687→              <button
+   688→                type="button"
+   689→                onClick={() => updateField('paymentMethod', 'COD')}
+   690→                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+   691→                  form.paymentMethod === 'COD'
+   692→                    ? 'border-orange-500 bg-orange-50 text-orange-600'
+   693→                    : 'border-gray-200 text-gray-500 hover:border-orange-200'
+   694→                }`}
+   695→              >
+   696→                <Banknote className="w-5 h-5" />
+   697→                COD
+   698→              </button>
+   699→              <button
+   700→                type="button"
+   701→                onClick={() => updateField('paymentMethod', 'Transfer')}
+   702→                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+   703→                  form.paymentMethod === 'Transfer'
+   704→                    ? 'border-orange-500 bg-orange-50 text-orange-600'
+   705→                    : 'border-gray-200 text-gray-500 hover:border-orange-200'
+   706→                }`}
+   707→              >
+   708→                <CreditCard className="w-5 h-5" />
+   709→                Transfer
+   710→              </button>
+   711→            </div>
+   712→          </div>
+   713→
+   714→          {/* Order Summary */}
+   715→          <div className="bg-white rounded-xl p-5 shadow-lg">
+   716→            <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
+   717→              <ReceiptText className="w-4 h-4 text-orange-500" />
+   718→              Ringkasan Pesanan
+   719→            </h2>
+   720→            <div className="space-y-2 max-h-40 overflow-y-auto card-scrollbar">
+   721→              {cart.map((item) => (
+   722→                <div key={item.productId} className="flex justify-between text-sm">
+   723→                  <span className="text-gray-600">{item.productName} x{item.quantity}</span>
+   724→                  <span className="font-medium text-gray-800">{fmt(item.price * item.quantity)}</span>
+   725→                </div>
+   726→              ))}
+   727→            </div>
+   728→            <Separator className="my-3" />
+   729→            <div className="flex justify-between items-center">
+   730→              <span className="font-bold text-gray-700">Total</span>
+   731→              <span className="text-lg font-extrabold text-orange-600">{fmt(total)}</span>
+   732→            </div>
+   733→          </div>
+   734→
+   735→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg py-6 text-base disabled:opacity-50">
+   736→            {submitting ? (
+   737→              <span className="flex items-center gap-2">
+   738→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+   739→                Memproses...
+   740→              </span>
+   741→            ) : (
+   742→              <>
+   743→                <CheckCircle2 className="w-4 h-4 mr-2" />
+   744→                Konfirmasi Pesanan
+   745→              </>
+   746→            )}
+   747→          </Button>
+   748→        </form>
+   749→      </div>
+   750→    </div>
+   751→  )
+   752→}
+   753→
+   754→/* ─────────────────────── ORDERS PAGE ─────────────────────── */
+   755→function OrdersPage() {
+   756→  const { user, setPage, setReceipt, addToast } = useAppStore()
+   757→  const [orders, setOrders] = useState<OrderData[]>([])
+   758→  const [loading, setLoading] = useState(true)
+   759→
+   760→  const loadOrders = useCallback(async () => {
+   761→    try {
+   762→      const url = user?.id ? `/api/orders?userId=${user.id}` : '/api/orders'
+   763→      const res = await fetch(url)
+   764→      const data = await res.json()
+   765→      setOrders(data)
+   766→    } catch {
+   767→      addToast('Gagal memuat pesanan', 'error')
+   768→    } finally {
+   769→      setLoading(false)
+   770→    }
+   771→  }, [user, addToast])
+   772→
+   773→  useEffect(() => { loadOrders() }, [loadOrders])
+   774→
+   775→  return (
+   776→    <div className="min-h-screen">
+   777→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+   778→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   779→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+   780→          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+   781→            <Package className="w-8 h-8 inline-block mr-2 -mt-1" />
+   782→            Pesanan Saya
+   783→          </h1>
+   784→          <p className="text-orange-50 text-sm max-w-lg mx-auto text-justify leading-relaxed">
+   785→            Lihat riwayat dan status pesanan Anda di sini. Setiap pesanan akan menampilkan detail lengkap termasuk produk yang dipesan, total pembayaran, dan status pengiriman terkini.
+   786→          </p>
+   787→        </div>
+   788→      </div>
+   789→
+   790→      <div className="max-w-3xl mx-auto px-4 py-6">
+   791→        {loading ? (
+   792→          <div className="space-y-3">
+   793→            {[...Array(3)].map((_, i) => (
+   794→              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+   795→            ))}
+   796→          </div>
+   797→        ) : orders.length === 0 ? (
+   798→          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+   799→            <Package className="w-16 h-16 text-white/40 mx-auto mb-4" />
+   800→            <p className="text-white/70 font-medium mb-2">Belum ada pesanan</p>
+   801→            <p className="text-white/50 text-sm text-justify max-w-sm mx-auto leading-relaxed">
+   802→              Anda belum memiliki riwayat pesanan. Silakan lakukan pemesanan terlebih dahulu dari halaman Menu untuk melihat status pesanan Anda di sini.
+   803→            </p>
+   804→            <Button className="mt-6 bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-md" onClick={() => setPage('menu')}>
+   805→              <UtensilsCrossed className="w-4 h-4 mr-2" />
+   806→              Pesan Sekarang
+   807→            </Button>
+   808→          </motion.div>
+   809→        ) : (
+   810→          <div className="space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
+   811→            {orders.map((order) => (
+   812→              <motion.div
+   813→                key={order.id}
+   814→                initial={{ opacity: 0, y: 10 }}
+   815→                animate={{ opacity: 1, y: 0 }}
+   816→                className="bg-white rounded-xl p-4 shadow-md"
+   817→              >
+   818→                <div className="flex items-start justify-between mb-3">
+   819→                  <div>
+   820→                    <p className="text-xs text-gray-400 flex items-center gap-1">
+   821→                      <Clock className="w-3 h-3" />
+   822→                      {fmtDate(order.createdAt)}
+   823→                    </p>
+   824→                    <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
+   825→                  </div>
+   826→                  <Badge className={statusColor[order.status] || 'bg-gray-100 text-gray-600'}>
+   827→                    {statusLabel[order.status] || order.status}
+   828→                  </Badge>
+   829→                </div>
+   830→                <div className="space-y-1 mb-3">
+   831→                  {order.items.map((item) => (
+   832→                    <div key={item.id} className="flex justify-between text-xs text-gray-500">
+   833→                      <span>{item.productName} x{item.quantity}</span>
+   834→                      <span>{fmt(item.subtotal)}</span>
+   835→                    </div>
+   836→                  ))}
+   837→                </div>
+   838→                <Separator className="mb-3" />
+   839→                <div className="flex items-center justify-between">
+   840→                  <span className="text-sm text-gray-500">Total: <span className="font-bold text-orange-600">{fmt(order.total)}</span></span>
+   841→                  <Button
+   842→                    size="sm"
+   843→                    variant="outline"
+   844→                    className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+   845→                    onClick={() => { setReceipt(order); setPage('receipt') }}
+   846→                  >
+   847→                    <Eye className="w-3 h-3 mr-1" />
+   848→                    Detail
+   849→                  </Button>
+   850→                </div>
+   851→              </motion.div>
+   852→            ))}
+   853→          </div>
+   854→        )}
+   855→      </div>
+   856→    </div>
+   857→  )
+   858→}
+   859→
+   860→/* ─────────────────────── RECEIPT / STRUK PAGE ─────────────────────── */
+   861→function ReceiptPage() {
+   862→  const { currentReceipt, setPage, addToast } = useAppStore()
+   863→  const receipt = currentReceipt
+   864→
+   865→  if (!receipt) {
+   866→    return (
+   867→      <div className="min-h-screen flex items-center justify-center px-4">
+   868→        <div className="text-center">
+   869→          <AlertCircle className="w-12 h-12 text-white/40 mx-auto mb-3" />
+   870→          <p className="text-white/70 font-medium mb-4">Tidak ada struk untuk ditampilkan</p>
+   871→          <Button className="bg-white text-orange-600 hover:bg-orange-50 font-semibold" onClick={() => setPage('home')}>
+   872→            <Home className="w-4 h-4 mr-2" />
+   873→            Kembali ke Beranda
+   874→          </Button>
+   875→        </div>
+   876→      </div>
+   877→    )
+   878→  }
+   879→
+   880→  const handleCopy = () => {
+   881→    const text = `AYAM GEPREK SAMBAL IJO\nNo: #${receipt.id.slice(-6)}\n${fmtDate(receipt.createdAt)}\n\n${receipt.items.map((i) => `${i.productName} x${i.quantity}\t${fmt(i.subtotal)}`).join('\n')}\n\nTotal: ${fmt(receipt.total)}\nPembayaran: ${receipt.paymentMethod}`
+   882→    navigator.clipboard.writeText(text)
+   883→    addToast('Struk disalin ke clipboard', 'info')
+   884→  }
+   885→
+   886→  return (
+   887→    <div className="min-h-screen">
+   888→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
+   889→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   890→        <div className="relative max-w-5xl mx-auto px-4">
+   891→          <button onClick={() => setPage('orders')} className="text-white hover:text-orange-100 flex items-center gap-1 text-sm font-medium mb-3 transition-colors">
+   892→            <ArrowLeft className="w-4 h-4" />
+   893→            Kembali
+   894→          </button>
+   895→          <h1 className="text-2xl font-extrabold text-white text-center">Struk Pembelian</h1>
+   896→        </div>
+   897→      </div>
+   898→
+   899→      <div className="max-w-md mx-auto px-4 py-6">
+   900→        <motion.div
+   901→          initial={{ opacity: 0, scale: 0.95 }}
+   902→          animate={{ opacity: 1, scale: 1 }}
+   903→          className="bg-white rounded-xl shadow-xl overflow-hidden"
+   904→        >
+   905→          {/* Header struk */}
+   906→          <div className="bg-orange-500 p-5 text-center">
+   907→            <ChefHat className="w-10 h-10 text-white mx-auto mb-2" />
+   908→            <h2 className="text-lg font-extrabold text-white uppercase">Ayam Geprek Sambal Ijo</h2>
+   909→            <p className="text-orange-100 text-xs mt-1">Jl. Teuku Nyak Arief, Banda Aceh</p>
+   910→          </div>
+   911→
+   912→          <div className="p-5 space-y-4">
+   913→            {/* Order info */}
+   914→            <div className="text-justify text-xs text-gray-500 space-y-1 leading-relaxed">
+   915→              <p><span className="font-medium text-gray-700">No. Pesanan:</span> #{receipt.id.slice(-6)}</p>
+   916→              <p><span className="font-medium text-gray-700">Tanggal:</span> {fmtDate(receipt.createdAt)}</p>
+   917→              <p><span className="font-medium text-gray-700">Pemesan:</span> {receipt.customerName}</p>
+   918→              <p><span className="font-medium text-gray-700">Telepon:</span> {receipt.customerPhone}</p>
+   919→              <p><span className="font-medium text-gray-700">Alamat:</span> {receipt.customerAddress}</p>
+   920→              {receipt.notes && <p><span className="font-medium text-gray-700">Catatan:</span> {receipt.notes}</p>}
+   921→            </div>
+   922→
+   923→            <Separator />
+   924→
+   925→            {/* Items */}
+   926→            <div>
+   927→              <h3 className="font-bold text-gray-700 text-sm mb-2 text-center">Detail Pesanan</h3>
+   928→              <div className="space-y-2">
+   929→                {receipt.items.map((item) => (
+   930→                  <div key={item.id} className="flex justify-between text-sm text-justify">
+   931→                    <div className="flex-1">
+   932→                      <p className="text-gray-700">{item.productName}</p>
+   933→                      <p className="text-xs text-gray-400">{item.quantity} x {fmt(item.price)}</p>
+   934→                    </div>
+   935→                    <span className="font-medium text-gray-800 ml-4">{fmt(item.subtotal)}</span>
+   936→                  </div>
+   937→                ))}
+   938→              </div>
+   939→            </div>
+   940→
+   941→            <Separator />
+   942→
+   943→            {/* Total */}
+   944→            <div className="text-justify text-sm space-y-1 leading-relaxed">
+   945→              <div className="flex justify-between">
+   946→                <span className="text-gray-600">Subtotal</span>
+   947→                <span className="font-medium text-gray-700">{fmt(receipt.total)}</span>
+   948→              </div>
+   949→              <div className="flex justify-between">
+   950→                <span className="text-gray-600">Ongkos Kirim</span>
+   951→                <span className="font-medium text-green-600">GRATIS</span>
+   952→              </div>
+   953→              <Separator />
+   954→              <div className="flex justify-between text-base">
+   955→                <span className="font-bold text-gray-800">Total</span>
+   956→                <span className="font-extrabold text-orange-600">{fmt(receipt.total)}</span>
+   957→              </div>
+   958→              <div className="flex justify-between">
+   959→                <span className="text-gray-600">Pembayaran</span>
+   960→                <span className="font-medium text-gray-700">{receipt.paymentMethod}</span>
+   961→              </div>
+   962→            </div>
+   963→
+   964→            <Separator />
+   965→
+   966→            {/* Status */}
+   967→            <div className="text-center">
+   968→              <Badge className={`${statusColor[receipt.status]} text-sm px-4 py-1`}>
+   969→                {statusLabel[receipt.status]}
+   970→              </Badge>
+   971→            </div>
+   972→
+   973→            <p className="text-xs text-gray-400 text-center text-justify leading-relaxed">
+   974→              Terima kasih telah memesan di Ayam Geprek Sambal Ijo. Pesanan Anda sedang diproses dan akan segera diantarkan. Selamat menikmati!
+   975→            </p>
+   976→          </div>
+   977→
+   978→          {/* Actions */}
+   979→          <div className="border-t border-orange-100 p-4 flex gap-2">
+   980→            <Button variant="outline" className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm" onClick={handleCopy}>
+   981→              <Copy className="w-3.5 h-3.5 mr-1.5" />
+   982→              Salin Struk
+   983→            </Button>
+   984→            <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('home')}>
+   985→              <Home className="w-3.5 h-3.5 mr-1.5" />
+   986→              Kembali
+   987→            </Button>
+   988→          </div>
+   989→        </motion.div>
+   990→      </div>
+   991→    </div>
+   992→  )
+   993→}
+   994→
+   995→/* ─────────────────────── LOGIN PAGE ─────────────────────── */
+   996→function LoginPage() {
+   997→  const { setPage, setUser, addToast } = useAppStore()
+   998→  const [form, setForm] = useState({ email: '', password: '' })
+   999→  const [submitting, setSubmitting] = useState(false)
+  1000→
+  1001→  const handleLogin = async (e: React.FormEvent) => {
+  1002→    e.preventDefault()
+  1003→    if (!form.email || !form.password) {
+  1004→      addToast('Email dan password harus diisi', 'error')
+  1005→      return
+  1006→    }
+  1007→    setSubmitting(true)
+  1008→    try {
+  1009→      const res = await fetch('/api/auth/login', {
+  1010→        method: 'POST',
+  1011→        headers: { 'Content-Type': 'application/json' },
+  1012→        body: JSON.stringify({ email: form.email, password: form.password }),
+  1013→      })
+  1014→      const data = await res.json()
+  1015→      if (!res.ok) throw new Error(data.error)
+  1016→      setUser(data)
+  1017→      addToast(`Selamat datang, ${data.name}!`)
+  1018→      setPage('home')
+  1019→    } catch (err: unknown) {
+  1020→      addToast(err instanceof Error ? err.message : 'Login gagal', 'error')
+  1021→    } finally {
+  1022→      setSubmitting(false)
+  1023→    }
+  1024→  }
+  1025→
+  1026→  return (
+  1027→    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+  1028→      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  1029→      <motion.div
+  1030→        initial={{ opacity: 0, y: 20 }}
+  1031→        animate={{ opacity: 1, y: 0 }}
+  1032→        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm"
+  1033→      >
+  1034→        <div className="text-center mb-6">
+  1035→          <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+  1036→          <h1 className="text-xl font-extrabold text-gray-800 uppercase">Ayam Geprek Sambal Ijo</h1>
+  1037→          <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
+  1038→            Masuk ke akun Anda untuk melihat riwayat pesanan dan menikmati kemudahan pemesanan yang lebih cepat dan terpersonalisasi.
+  1039→          </p>
+  1040→        </div>
+  1041→
+  1042→        <form onSubmit={handleLogin} className="space-y-4">
+  1043→          <div>
+  1044→            <Label htmlFor="email" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1045→              <Mail className="w-3.5 h-3.5" /> Username / Email
+  1046→            </Label>
+  1047→            <Input
+  1048→              id="email"
+  1049→              type="email"
+  1050→              value={form.email}
+  1051→              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+  1052→              placeholder="Masukkan email Anda"
+  1053→              className="mt-1.5"
+  1054→            />
+  1055→          </div>
+  1056→          <div>
+  1057→            <Label htmlFor="password" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1058→              <Lock className="w-3.5 h-3.5" /> Password
+  1059→            </Label>
+  1060→            <Input
+  1061→              id="password"
+  1062→              type="password"
+  1063→              value={form.password}
+  1064→              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+  1065→              placeholder="Masukkan password Anda"
+  1066→              className="mt-1.5"
+  1067→            />
+  1068→          </div>
+  1069→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50">
+  1070→            {submitting ? (
+  1071→              <span className="flex items-center gap-2">
+  1072→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1073→                Memproses...
+  1074→              </span>
+  1075→            ) : (
+  1076→              'LOGIN'
+  1077→            )}
+  1078→          </Button>
+  1079→        </form>
+  1080→
+  1081→        <div className="mt-5 space-y-2 text-center">
+  1082→          <button onClick={() => addToast('Fitur lupa password akan segera hadir', 'info')} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 mx-auto transition-colors">
+  1083→            <KeyRound className="w-3 h-3" /> Lupa Password
+  1084→          </button>
+  1085→          <p className="text-xs text-gray-400">
+  1086→            Belum punya akun?{' '}
+  1087→            <button onClick={() => setPage('register')} className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+  1088→              Daftar Akun
+  1089→            </button>
+  1090→          </p>
+  1091→        </div>
+  1092→      </motion.div>
+  1093→    </div>
+  1094→  )
+  1095→}
+  1096→
+  1097→/* ─────────────────────── REGISTER PAGE ─────────────────────── */
+  1098→function RegisterPage() {
+  1099→  const { setPage, addToast } = useAppStore()
+  1100→  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
+  1101→  const [submitting, setSubmitting] = useState(false)
+  1102→
+  1103→  const handleRegister = async (e: React.FormEvent) => {
+  1104→    e.preventDefault()
+  1105→    if (!form.name || !form.email || !form.password) {
+  1106→      addToast('Nama, email, dan password harus diisi', 'error')
+  1107→      return
+  1108→    }
+  1109→    setSubmitting(true)
+  1110→    try {
+  1111→      const res = await fetch('/api/auth/register', {
+  1112→        method: 'POST',
+  1113→        headers: { 'Content-Type': 'application/json' },
+  1114→        body: JSON.stringify(form),
+  1115→      })
+  1116→      const data = await res.json()
+  1117→      if (!res.ok) throw new Error(data.error)
+  1118→      addToast('Registrasi berhasil! Silakan login.', 'success')
+  1119→      setPage('login')
+  1120→    } catch (err: unknown) {
+  1121→      addToast(err instanceof Error ? err.message : 'Registrasi gagal', 'error')
+  1122→    } finally {
+  1123→      setSubmitting(false)
+  1124→    }
+  1125→  }
+  1126→
+  1127→  return (
+  1128→    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+  1129→      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  1130→      <motion.div
+  1131→        initial={{ opacity: 0, y: 20 }}
+  1132→        animate={{ opacity: 1, y: 0 }}
+  1133→        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm"
+  1134→      >
+  1135→        <div className="text-center mb-6">
+  1136→          <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+  1137→          <h1 className="text-xl font-extrabold text-gray-800 uppercase">Daftar Akun Baru</h1>
+  1138→          <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
+  1139→            Buat akun baru untuk memudahkan proses pemesanan Anda. Dengan akun, Anda dapat melihat riwayat pesanan dan mendapatkan penawaran spesial.
+  1140→          </p>
+  1141→        </div>
+  1142→
+  1143→        <form onSubmit={handleRegister} className="space-y-3">
+  1144→          <div>
+  1145→            <Label htmlFor="reg-name" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1146→              <User className="w-3.5 h-3.5" /> Nama Lengkap
+  1147→            </Label>
+  1148→            <Input id="reg-name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nama lengkap" className="mt-1" />
+  1149→          </div>
+  1150→          <div>
+  1151→            <Label htmlFor="reg-email" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1152→              <Mail className="w-3.5 h-3.5" /> Email
+  1153→            </Label>
+  1154→            <Input id="reg-email" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="email@contoh.com" className="mt-1" />
+  1155→          </div>
+  1156→          <div>
+  1157→            <Label htmlFor="reg-phone" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1158→              <Phone className="w-3.5 h-3.5" /> Nomor Telepon
+  1159→            </Label>
+  1160→            <Input id="reg-phone" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="081234567890" className="mt-1" />
+  1161→          </div>
+  1162→          <div>
+  1163→            <Label htmlFor="reg-password" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1164→              <Lock className="w-3.5 h-3.5" /> Password
+  1165→            </Label>
+  1166→            <Input id="reg-password" type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="Minimal 6 karakter" className="mt-1" />
+  1167→          </div>
+  1168→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50 mt-2">
+  1169→            {submitting ? (
+  1170→              <span className="flex items-center gap-2">
+  1171→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1172→                Memproses...
+  1173→              </span>
+  1174→            ) : (
+  1175→              <><UserPlus className="w-4 h-4 mr-2" /> DAFTAR</>
+  1176→            )}
+  1177→          </Button>
+  1178→        </form>
+  1179→
+  1180→        <p className="text-xs text-gray-400 text-center mt-5">
+  1181→          Sudah punya akun?{' '}
+  1182→          <button onClick={() => setPage('login')} className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+  1183→            Login di sini
+  1184→          </button>
+  1185→        </p>
+  1186→      </motion.div>
+  1187→    </div>
+  1188→  )
+  1189→}
+  1190→
+  1191→/* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
+  1192→function ProfilePage() {
+  1193→  const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
+  1194→  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin'>('overview')
+  1195→  const [editing, setEditing] = useState(false)
+  1196→  const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
+  1197→  const [saving, setSaving] = useState(false)
+  1198→  const [orders, setOrders] = useState<OrderData[]>([])
+  1199→  const [allOrders, setAllOrders] = useState<OrderData[]>([])
+  1200→  const [loading, setLoading] = useState(true)
+  1201→
+  1202→  const isAdmin = user?.role === 'admin'
+  1203→
+  1204→  // Load orders on mount
+  1205→  const loadOrders = useCallback(async () => {
+  1206→    try {
+  1207→      if (isAdmin) {
+  1208→        const res = await fetch('/api/orders')
+  1209→        const data = await res.json()
+  1210→        setAllOrders(data)
+  1211→        setOrders(data)
+  1212→      } else if (user?.id) {
+  1213→        const res = await fetch(`/api/orders?userId=${user.id}`)
+  1214→        const data = await res.json()
+  1215→        setOrders(data)
+  1216→      }
+  1217→    } catch {
+  1218→      addToast('Gagal memuat data', 'error')
+  1219→    } finally {
+  1220→      setLoading(false)
+  1221→    }
+  1222→  }, [user, isAdmin, addToast])
+  1223→
+  1224→  useEffect(() => { loadOrders() }, [loadOrders])
+  1225→
+  1226→  // Computed stats
+  1227→  const customerStats = {
+  1228→    totalOrders: orders.length,
+  1229→    completed: orders.filter((o) => o.status === 'delivered').length,
+  1230→    pending: orders.filter((o) => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
+  1231→    totalSpent: orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+  1232→    firstOrder: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
+  1233→    lastOrder: orders.length > 0 ? orders[0].createdAt : null,
+  1234→  }
+  1235→
+  1236→  const adminStats = {
+  1237→    total: allOrders.length,
+  1238→    pending: allOrders.filter((o) => o.status === 'pending').length,
+  1239→    confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
+  1240→    preparing: allOrders.filter((o) => o.status === 'preparing').length,
+  1241→    delivered: allOrders.filter((o) => o.status === 'delivered').length,
+  1242→    cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
+  1243→    revenue: allOrders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+  1244→    avgOrder: allOrders.length > 0 ? Math.round(allOrders.reduce((s, o) => s + o.total, 0) / allOrders.length) : 0,
+  1245→  }
+  1246→
+  1247→  const startEdit = () => {
+  1248→    setEditForm({ name: user?.name || '', phone: user?.phone || '', password: '', confirmPassword: '' })
+  1249→    setEditing(true)
+  1250→  }
+  1251→
+  1252→  const saveProfile = async () => {
+  1253→    if (!editForm.name.trim()) {
+  1254→      addToast('Nama tidak boleh kosong', 'error')
+  1255→      return
+  1256→    }
+  1257→    if (editForm.password && editForm.password !== editForm.confirmPassword) {
+  1258→      addToast('Konfirmasi password tidak cocok', 'error')
+  1259→      return
+  1260→    }
+  1261→    if (editForm.password && editForm.password.length < 6) {
+  1262→      addToast('Password minimal 6 karakter', 'error')
+  1263→      return
+  1264→    }
+  1265→
+  1266→    setSaving(true)
+  1267→    try {
+  1268→      const body: Record<string, string> = { id: user!.id, name: editForm.name.trim() }
+  1269→      if (editForm.phone) body.phone = editForm.phone.trim()
+  1270→      if (editForm.password) body.password = editForm.password
+  1271→
+  1272→      const res = await fetch('/api/auth/profile', {
+  1273→        method: 'PUT',
+  1274→        headers: { 'Content-Type': 'application/json' },
+  1275→        body: JSON.stringify(body),
+  1276→      })
+  1277→      const data = await res.json()
+  1278→      if (!res.ok) throw new Error(data.error)
+  1279→
+  1280→      setUser({ ...user!, name: data.name, phone: data.phone })
+  1281→      setEditing(false)
+  1282→      addToast('Profil berhasil diperbarui', 'success')
+  1283→    } catch (err: unknown) {
+  1284→      addToast(err instanceof Error ? err.message : 'Gagal menyimpan', 'error')
+  1285→    } finally {
+  1286→      setSaving(false)
+  1287→    }
+  1288→  }
+  1289→
+  1290→  const updateStatus = async (id: string, status: string) => {
+  1291→    try {
+  1292→      const res = await fetch('/api/orders', {
+  1293→        method: 'PATCH',
+  1294→        headers: { 'Content-Type': 'application/json' },
+  1295→        body: JSON.stringify({ id, status }),
+  1296→      })
+  1297→      if (!res.ok) throw new Error()
+  1298→      addToast('Status pesanan berhasil diupdate', 'success')
+  1299→      loadOrders()
+  1300→    } catch {
+  1301→      addToast('Gagal mengupdate status', 'error')
+  1302→    }
+  1303→  }
+  1304→
+  1305→  const handleLogout = () => {
+  1306→    logout()
+  1307→    addToast('Anda telah keluar dari akun', 'info')
+  1308→  }
+  1309→
+  1310→  const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
+  1311→
+  1312→  // ─── Tab definitions ───
+  1313→  const tabs = isAdmin
+  1314→    ? [
+  1315→        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+  1316→        { id: 'admin' as const, label: 'Kelola Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
+  1317→        { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
+  1318→        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+  1319→      ]
+  1320→    : [
+  1321→        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+  1322→        { id: 'orders' as const, label: 'Pesanan Saya', icon: <Package className="w-4 h-4" /> },
+  1323→        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+  1324→      ]
+  1325→
+  1326→  return (
+  1327→    <div className="min-h-screen pb-4">
+  1328→      {/* ─── Profile Header ─── */}
+  1329→      <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 relative overflow-hidden">
+  1330→        <div className="absolute inset-0 aceh-pattern opacity-20" />
+  1331→        <div className="relative max-w-2xl mx-auto px-4 pt-8 pb-6">
+  1332→          <div className="flex items-center gap-4">
+  1333→            {/* Avatar */}
+  1334→            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border-2 border-white/30 flex-shrink-0">
+  1335→              {isAdmin ? (
+  1336→                <Shield className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+  1337→              ) : (
+  1338→                <User className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+  1339→              )}
+  1340→            </div>
+  1341→            <div className="flex-1 min-w-0">
+  1342→              <div className="flex items-center gap-2">
+  1343→                <h1 className="text-xl sm:text-2xl font-extrabold text-white truncate">{user?.name}</h1>
+  1344→                <Badge className={`${isAdmin ? 'bg-yellow-400 text-yellow-900' : 'bg-white/20 text-white'} text-[10px] border-0 flex-shrink-0`}>
+  1345→                  {isAdmin ? 'Admin' : 'Customer'}
+  1346→                </Badge>
+  1347→              </div>
+  1348→              <p className="text-orange-100 text-xs sm:text-sm truncate">{user?.email}</p>
+  1349→              {user?.phone && (
+  1350→                <p className="text-orange-200/70 text-xs flex items-center gap-1 mt-0.5">
+  1351→                  <Phone className="w-3 h-3" /> {user.phone}
+  1352→                </p>
+  1353→              )}
+  1354→              <p className="text-orange-200/50 text-[10px] mt-1">Bergabung sejak {memberSince}</p>
+  1355→            </div>
+  1356→          </div>
+  1357→        </div>
+  1358→      </div>
+  1359→
+  1360→      {/* ─── Tabs ─── */}
+  1361→      <div className="sticky top-12 z-40 bg-orange-500 shadow-sm">
+  1362→        <div className="max-w-2xl mx-auto px-2">
+  1363→          <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
+  1364→            {tabs.map((tab) => (
+  1365→              <button
+  1366→                key={tab.id}
+  1367→                onClick={() => setActiveTab(tab.id)}
+  1368→                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+  1369→                  activeTab === tab.id
+  1370→                    ? 'bg-white text-orange-600 shadow-md'
+  1371→                    : 'text-white/80 hover:text-white hover:bg-white/10'
+  1372→                }`}
+  1373→              >
+  1374→                {tab.icon}
+  1375→                <span className="hidden sm:inline">{tab.label}</span>
+  1376→              </button>
+  1377→            ))}
+  1378→          </div>
+  1379→        </div>
+  1380→      </div>
+  1381→
+  1382→      {/* ─── Tab Content ─── */}
+  1383→      <div className="max-w-2xl mx-auto px-4 mt-5 space-y-4">
+  1384→        {/* ═══ OVERVIEW TAB ═══ */}
+  1385→        {activeTab === 'overview' && (
+  1386→          <>
+  1387→            {/* Quick Stats */}
+  1388→            {loading ? (
+  1389→              <div className="grid grid-cols-2 gap-3">
+  1390→                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+  1391→              </div>
+  1392→            ) : isAdmin ? (
+  1393→              <div className="grid grid-cols-2 gap-3">
+  1394→                {[
+  1395→                  { label: 'Total Pesanan', value: adminStats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+  1396→                  { label: 'Menunggu', value: adminStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+  1397→                  { label: 'Selesai', value: adminStats.delivered, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+  1398→                  { label: 'Pendapatan', value: fmt(adminStats.revenue), icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+  1399→                ].map((s, i) => (
+  1400→                  <motion.div
+  1401→                    key={i}
+  1402→                    initial={{ opacity: 0, y: 10 }}
+  1403→                    animate={{ opacity: 1, y: 0 }}
+  1404→                    transition={{ delay: i * 0.05 }}
+  1405→                    className="bg-white rounded-xl p-4 shadow-md"
+  1406→                  >
+  1407→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+  1408→                      {s.icon}
+  1409→                    </div>
+  1410→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+  1411→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+  1412→                  </motion.div>
+  1413→                ))}
+  1414→              </div>
+  1415→            ) : (
+  1416→              <div className="grid grid-cols-2 gap-3">
+  1417→                {[
+  1418→                  { label: 'Total Pesanan', value: customerStats.totalOrders, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+  1419→                  { label: 'Sedang Proses', value: customerStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+  1420→                  { label: 'Selesai', value: customerStats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+  1421→                  { label: 'Total Belanja', value: fmt(customerStats.totalSpent), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+  1422→                ].map((s, i) => (
+  1423→                  <motion.div
+  1424→                    key={i}
+  1425→                    initial={{ opacity: 0, y: 10 }}
+  1426→                    animate={{ opacity: 1, y: 0 }}
+  1427→                    transition={{ delay: i * 0.05 }}
+  1428→                    className="bg-white rounded-xl p-4 shadow-md"
+  1429→                  >
+  1430→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+  1431→                      {s.icon}
+  1432→                    </div>
+  1433→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+  1434→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+  1435→                  </motion.div>
+  1436→                ))}
+  1437→              </div>
+  1438→            )}
+  1439→
+  1440→            {/* Info Cards */}
+  1441→            <div className="bg-white rounded-xl p-5 shadow-md">
+  1442→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+  1443→                <Info className="w-4 h-4 text-orange-500" />
+  1444→                Informasi Akun
+  1445→              </h3>
+  1446→              <div className="space-y-3">
+  1447→                {[
+  1448→                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Nama', value: user?.name || '-' },
+  1449→                  { icon: <Mail className="w-4 h-4 text-gray-400" />, label: 'Email', value: user?.email || '-' },
+  1450→                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Telepon', value: user?.phone || 'Belum diatur' },
+  1451→                  { icon: <Shield className="w-4 h-4 text-gray-400" />, label: 'Role', value: isAdmin ? 'Administrator' : 'Customer' },
+  1452→                  { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Bergabung', value: memberSince },
+  1453→                ].map((row, i) => (
+  1454→                  <div key={i} className="flex items-center gap-3">
+  1455→                    {row.icon}
+  1456→                    <div className="flex-1">
+  1457→                      <p className="text-[11px] text-gray-400">{row.label}</p>
+  1458→                      <p className="text-sm text-gray-700 font-medium">{row.value}</p>
+  1459→                    </div>
+  1460→                  </div>
+  1461→                ))}
+  1462→              </div>
+  1463→              <Button onClick={startEdit} variant="outline" className="w-full mt-4 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm">
+  1464→                <Edit3 className="w-4 h-4 mr-2" />
+  1465→                Edit Profil
+  1466→              </Button>
+  1467→            </div>
+  1468→
+  1469→            {/* Quick Actions */}
+  1470→            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+  1471→              {[
+  1472→                { icon: <Package className="w-5 h-5" />, label: 'Lihat Pesanan Saya', desc: 'Lihat riwayat dan status pesanan Anda', onClick: () => setActiveTab('orders') },
+  1473→                { icon: <UtensilsCrossed className="w-5 h-5" />, label: 'Jelajahi Menu', desc: 'Temukan varian ayam geprek favorit Anda', onClick: () => setPage('menu') },
+  1474→                { icon: <HelpCircle className="w-5 h-5" />, label: 'Bantuan', desc: 'Hubungi kami untuk pertanyaan dan bantuan', onClick: () => addToast('Fitur bantuan segera hadir', 'info') },
+  1475→              ].map((action, i) => (
+  1476→                <button
+  1477→                  key={i}
+  1478→                  onClick={action.onClick}
+  1479→                  className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left border-b border-orange-50 last:border-0"
+  1480→                >
+  1481→                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+  1482→                    {action.icon}
+  1483→                  </div>
+  1484→                  <div className="flex-1 min-w-0">
+  1485→                    <p className="text-sm font-semibold text-gray-800">{action.label}</p>
+  1486→                    <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{action.desc}</p>
+  1487→                  </div>
+  1488→                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+  1489→                </button>
+  1490→              ))}
+  1491→            </div>
+  1492→
+  1493→            {/* Logout */}
+  1494→            <button
+  1495→              onClick={handleLogout}
+  1496→              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+  1497→            >
+  1498→              <LogOut className="w-4 h-4" />
+  1499→              Keluar dari Akun
+  1500→            </button>
+  1501→          </>
+  1502→        )}
+  1503→
+  1504→        {/* ═══ ORDERS TAB (Customer) ═══ */}
+  1505→        {activeTab === 'orders' && !isAdmin && (
+  1506→          <>
+  1507→            <div className="bg-white rounded-xl p-4 shadow-md">
+  1508→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+  1509→                <Package className="w-4 h-4 text-orange-500" />
+  1510→                Riwayat Pesanan Saya
+  1511→              </h3>
+  1512→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+  1513→                Berikut adalah daftar semua pesanan yang pernah Anda buat. Klik detail untuk melihat informasi lengkap setiap pesanan termasuk produk yang dipesan dan status pengiriman saat ini.
+  1514→              </p>
+  1515→            </div>
+  1516→
+  1517→            {loading ? (
+  1518→              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+  1519→            ) : orders.length === 0 ? (
+  1520→              <div className="bg-white rounded-xl p-8 shadow-md text-center">
+  1521→                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+  1522→                <p className="text-gray-500 font-medium mb-1">Belum ada pesanan</p>
+  1523→                <p className="text-xs text-gray-400 text-justify max-w-xs mx-auto leading-relaxed">
+  1524→                  Anda belum pernah membuat pesanan. Mulai dengan menjelajahi menu kami dan tambahkan item favorit ke keranjang.
+  1525→                </p>
+  1526→                <Button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('menu')}>
+  1527→                  <UtensilsCrossed className="w-4 h-4 mr-2" /> Pesan Sekarang
+  1528→                </Button>
+  1529→              </div>
+  1530→            ) : (
+  1531→              <div className="space-y-3 max-h-[60vh] overflow-y-auto card-scrollbar pr-1">
+  1532→                {orders.map((order) => (
+  1533→                  <motion.div
+  1534→                    key={order.id}
+  1535→                    initial={{ opacity: 0, y: 10 }}
+  1536→                    animate={{ opacity: 1, y: 0 }}
+  1537→                    className="bg-white rounded-xl p-4 shadow-md"
+  1538→                  >
+  1539→                    <div className="flex items-start justify-between mb-2">
+  1540→                      <div>
+  1541→                        <p className="text-xs text-gray-400 flex items-center gap-1">
+  1542→                          <Clock className="w-3 h-3" /> {fmtDate(order.createdAt)}
+  1543→                        </p>
+  1544→                        <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
+  1545→                      </div>
+  1546→                      <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+  1547→                    </div>
+  1548→                    <div className="space-y-1 mb-2">
+  1549→                      {order.items.slice(0, 3).map((item) => (
+  1550→                        <div key={item.id} className="flex justify-between text-xs text-gray-500">
+  1551→                          <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+  1552→                          <span className="flex-shrink-0">{fmt(item.subtotal)}</span>
+  1553→                        </div>
+  1554→                      ))}
+  1555→                      {order.items.length > 3 && (
+  1556→                        <p className="text-[11px] text-gray-400">+{order.items.length - 3} item lainnya</p>
+  1557→                      )}
+  1558→                    </div>
+  1559→                    <Separator className="mb-2" />
+  1560→                    <div className="flex items-center justify-between">
+  1561→                      <div className="text-xs text-gray-400">
+  1562→                        <span>{order.items.length} item</span>
+  1563→                        <span className="mx-1">&middot;</span>
+  1564→                        <span>{order.paymentMethod}</span>
+  1565→                      </div>
+  1566→                      <div className="flex items-center gap-2">
+  1567→                        <span className="font-bold text-orange-600 text-sm">{fmt(order.total)}</span>
+  1568→                        <Button
+  1569→                          size="sm"
+  1570→                          variant="outline"
+  1571→                          className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+  1572→                          onClick={() => { setReceipt(order); setPage('receipt') }}
+  1573→                        >
+  1574→                          <Eye className="w-3 h-3 mr-1" /> Detail
+  1575→                        </Button>
+  1576→                      </div>
+  1577→                    </div>
+  1578→                  </motion.div>
+  1579→                ))}
+  1580→              </div>
+  1581→            )}
+  1582→          </>
+  1583→        )}
+  1584→
+  1585→        {/* ═══ ADMIN TAB ═══ */}
+  1586→        {activeTab === 'admin' && isAdmin && (
+  1587→          <>
+  1588→            {/* Admin Stats Expanded */}
+  1589→            {loading ? (
+  1590→              <div className="grid grid-cols-3 gap-2">
+  1591→                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+  1592→              </div>
+  1593→            ) : (
+  1594→              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+  1595→                {[
+  1596→                  { label: 'Pending', value: adminStats.pending, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  1597→                  { label: 'Dikonfirmasi', value: adminStats.confirmed, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  1598→                  { label: 'Diproses', value: adminStats.preparing, color: 'bg-orange-50 text-orange-700 border-orange-200' },
+  1599→                  { label: 'Selesai', value: adminStats.delivered, color: 'bg-green-50 text-green-700 border-green-200' },
+  1600→                  { label: 'Dibatalkan', value: adminStats.cancelled, color: 'bg-red-50 text-red-700 border-red-200' },
+  1601→                  { label: 'Rata-rata', value: fmt(adminStats.avgOrder), color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  1602→                ].map((s, i) => (
+  1603→                  <motion.div
+  1604→                    key={i}
+  1605→                    initial={{ opacity: 0, scale: 0.9 }}
+  1606→                    animate={{ opacity: 1, scale: 1 }}
+  1607→                    transition={{ delay: i * 0.03 }}
+  1608→                    className={`rounded-xl p-3 text-center border ${s.color}`}
+  1609→                  >
+  1610→                    <p className="text-lg sm:text-xl font-extrabold">{s.value}</p>
+  1611→                    <p className="text-[10px] sm:text-xs font-medium opacity-70">{s.label}</p>
+  1612→                  </motion.div>
+  1613→                ))}
+  1614→              </div>
+  1615→            )}
+  1616→
+  1617→            {/* Order Management */}
+  1618→            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+  1619→              <div className="p-4 border-b border-orange-100">
+  1620→                <h2 className="font-bold text-gray-800 flex items-center gap-2">
+  1621→                  <LayoutDashboard className="w-4 h-4 text-orange-500" />
+  1622→                  Kelola Semua Pesanan
+  1623→                </h2>
+  1624→                <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+  1625→                  Kelola semua pesanan yang masuk dari pelanggan. Anda dapat mengubah status pesanan sesuai tahap pemrosesan: konfirmasi, proses, hingga selesai dikirim ke pelanggan.
+  1626→                </p>
+  1627→              </div>
+  1628→              <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+  1629→                {loading ? (
+  1630→                  <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}</div>
+  1631→                ) : allOrders.length === 0 ? (
+  1632→                  <div className="p-8 text-center">
+  1633→                    <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+  1634→                    <p className="text-gray-400 text-sm">Belum ada pesanan masuk</p>
+  1635→                  </div>
+  1636→                ) : (
+  1637→                  <div className="divide-y divide-orange-50">
+  1638→                    {allOrders.map((order) => (
+  1639→                      <div key={order.id} className="p-4 hover:bg-orange-50/50 transition-colors">
+  1640→                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+  1641→                          <div className="flex-1 min-w-0">
+  1642→                            <div className="flex items-center gap-2 mb-1">
+  1643→                              <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+  1644→                              <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+  1645→                            </div>
+  1646→                            <p className="text-sm font-medium text-gray-700 truncate">{order.customerName}</p>
+  1647→                            <p className="text-xs text-gray-400 mt-0.5">
+  1648→                              {order.items.length} item &middot; {fmt(order.total)} &middot; {fmtDate(order.createdAt)}
+  1649→                            </p>
+  1650→                            <p className="text-xs text-gray-400 text-justify mt-0.5 leading-relaxed truncate">
+  1651→                              <MapPin className="w-3 h-3 inline mr-0.5" />{order.customerAddress}
+  1652→                            </p>
+  1653→                            <p className="text-xs text-gray-400">
+  1654→                              <Phone className="w-3 h-3 inline mr-0.5" />{order.customerPhone}
+  1655→                              {order.notes && <span className="ml-2"><Bell className="w-3 h-3 inline mr-0.5" />{order.notes}</span>}
+  1656→                            </p>
+  1657→                          </div>
+  1658→                          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+  1659→                            <Button
+  1660→                              size="sm"
+  1661→                              variant="outline"
+  1662→                              className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+  1663→                              onClick={() => { setReceipt(order); setPage('receipt') }}
+  1664→                            >
+  1665→                              <Eye className="w-3 h-3 mr-1" /> Detail
+  1666→                            </Button>
+  1667→                            {order.status === 'pending' && (
+  1668→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'confirmed')}>
+  1669→                                <CheckCircle2 className="w-3 h-3 mr-1" /> Konfirmasi
+  1670→                              </Button>
+  1671→                            )}
+  1672→                            {order.status === 'confirmed' && (
+  1673→                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs" onClick={() => updateStatus(order.id, 'preparing')}>
+  1674→                                <Clock className="w-3 h-3 mr-1" /> Proses
+  1675→                              </Button>
+  1676→                            )}
+  1677→                            {order.status === 'preparing' && (
+  1678→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'delivered')}>
+  1679→                                <Truck className="w-3 h-3 mr-1" /> Selesai
+  1680→                              </Button>
+  1681→                            )}
+  1682→                            {['pending', 'confirmed'].includes(order.status) && (
+  1683→                              <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-xs" onClick={() => updateStatus(order.id, 'cancelled')}>
+  1684→                                <XCircle className="w-3 h-3 mr-1" /> Batal
+  1685→                              </Button>
+  1686→                            )}
+  1687→                          </div>
+  1688→                        </div>
+  1689→                      </div>
+  1690→                    ))}
+  1691→                  </div>
+  1692→                )}
+  1693→              </div>
+  1694→            </div>
+  1695→          </>
+  1696→        )}
+  1697→
+  1698→        {/* ═══ ORDERS TAB (Admin — read-only history) ═══ */}
+  1699→        {activeTab === 'orders' && isAdmin && (
+  1700→          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+  1701→            <div className="p-4 border-b border-orange-100">
+  1702→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+  1703→                <ReceiptText className="w-4 h-4 text-orange-500" />
+  1704→                Riwayat Semua Pesanan
+  1705→              </h3>
+  1706→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+  1707→                Daftar lengkap semua pesanan yang pernah masuk termasuk yang sudah selesai dan dibatalkan. Data ini dapat digunakan untuk analisis penjualan dan evaluasi performa layanan.
+  1708→              </p>
+  1709→            </div>
+  1710→            <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+  1711→              {loading ? (
+  1712→                <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+  1713→              ) : allOrders.length === 0 ? (
+  1714→                <div className="p-8 text-center text-gray-400 text-sm">Belum ada data pesanan</div>
+  1715→              ) : (
+  1716→                <div className="divide-y divide-orange-50">
+  1717→                  {allOrders.map((order) => (
+  1718→                    <button
+  1719→                      key={order.id}
+  1720→                      onClick={() => { setReceipt(order); setPage('receipt') }}
+  1721→                      className="w-full p-3 hover:bg-orange-50 transition-colors text-left"
+  1722→                    >
+  1723→                      <div className="flex items-center justify-between mb-1">
+  1724→                        <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+  1725→                        <Badge className={`${statusColor[order.status]} text-[10px]`}>{statusLabel[order.status]}</Badge>
+  1726→                      </div>
+  1727→                      <p className="text-sm font-medium text-gray-700">{order.customerName}</p>
+  1728→                      <div className="flex justify-between items-center mt-1">
+  1729→                        <span className="text-xs text-gray-400">{fmtDate(order.createdAt)}</span>
+  1730→                        <span className="text-sm font-bold text-orange-600">{fmt(order.total)}</span>
+  1731→                      </div>
+  1732→                    </button>
+  1733→                  ))}
+  1734→                </div>
+  1735→              )}
+  1736→            </div>
+  1737→          </div>
+  1738→        )}
+  1739→
+  1740→        {/* ═══ SETTINGS TAB ═══ */}
+  1741→        {activeTab === 'settings' && (
+  1742→          <>
+  1743→            {/* Edit Profile */}
+  1744→            <div className="bg-white rounded-xl p-5 shadow-md">
+  1745→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-4">
+  1746→                <Edit3 className="w-4 h-4 text-orange-500" />
+  1747→                {editing ? 'Edit Profil' : 'Data Profil'}
+  1748→              </h3>
+  1749→
+  1750→              {editing ? (
+  1751→                <div className="space-y-3">
+  1752→                  <div>
+  1753→                    <Label htmlFor="edit-name" className="text-xs text-gray-600">Nama Lengkap</Label>
+  1754→                    <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="Nama lengkap" />
+  1755→                  </div>
+  1756→                  <div>
+  1757→                    <Label htmlFor="edit-phone" className="text-xs text-gray-600">Nomor Telepon</Label>
+  1758→                    <Input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1" placeholder="081234567890" />
+  1759→                  </div>
+  1760→                  <Separator />
+  1761→                  <div>
+  1762→                    <Label htmlFor="edit-pw" className="text-xs text-gray-600">Password Baru (Opsional)</Label>
+  1763→                    <Input id="edit-pw" type="password" value={editForm.password} onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))} className="mt-1" placeholder="Kosongkan jika tidak ingin diubah" />
+  1764→                  </div>
+  1765→                  {editForm.password && (
+  1766→                    <div>
+  1767→                      <Label htmlFor="edit-pw2" className="text-xs text-gray-600">Konfirmasi Password</Label>
+  1768→                      <Input id="edit-pw2" type="password" value={editForm.confirmPassword} onChange={(e) => setEditForm((p) => ({ ...p, confirmPassword: e.target.value }))} className="mt-1" placeholder="Ulangi password baru" />
+  1769→                    </div>
+  1770→                  )}
+  1771→                  <div className="flex gap-2 pt-1">
+  1772→                    <Button onClick={saveProfile} disabled={saving} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm disabled:opacity-50">
+  1773→                      {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><BadgeCheck className="w-4 h-4 mr-1" /> Simpan</>}
+  1774→                    </Button>
+  1775→                    <Button onClick={() => setEditing(false)} variant="outline" className="flex-1 border-orange-200 text-orange-600 text-sm hover:bg-orange-50">
+  1776→                      Batal
+  1777→                    </Button>
+  1778→                  </div>
+  1779→                </div>
+  1780→              ) : (
+  1781→                <div className="space-y-3">
+  1782→                  {[
+  1783→                    { label: 'Nama', value: user?.name || '-' },
+  1784→                    { label: 'Email', value: user?.email || '-' },
+  1785→                    { label: 'Telepon', value: user?.phone || 'Belum diatur' },
+  1786→                    { label: 'Password', value: '••••••••' },
+  1787→                  ].map((row, i) => (
+  1788→                    <div key={i} className="flex justify-between items-center py-1">
+  1789→                      <span className="text-xs text-gray-400">{row.label}</span>
+  1790→                      <span className="text-sm text-gray-700 font-medium">{row.value}</span>
+  1791→                    </div>
+  1792→                  ))}
+  1793→                  <Button onClick={startEdit} variant="outline" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50 text-sm mt-2">
+  1794→                    <Edit3 className="w-4 h-4 mr-2" /> Ubah Data Profil
+  1795→                  </Button>
+  1796→                </div>
+  1797→              )}
+  1798→            </div>
+  1799→
+  1800→            {/* App Info */}
+  1801→            <div className="bg-white rounded-xl p-5 shadow-md">
+  1802→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+  1803→                <Info className="w-4 h-4 text-orange-500" />
+  1804→                Tentang Aplikasi
+  1805→              </h3>
+  1806→              <div className="space-y-2.5">
+  1807→                {[
+  1808→                  { label: 'Nama Aplikasi', value: 'Ayam Geprek Sambal Ijo' },
+  1809→                  { label: 'Versi', value: '1.0.0' },
+  1810→                  { label: 'Developer', value: 'Z.ai Team' },
+  1811→                  { label: 'Deskripsi', value: 'Aplikasi pemesanan online ayam geprek sambal ijo khas Aceh dengan fitur lengkap untuk kemudahan pemesanan dan pengelolaan usaha kuliner Anda.' },
+  1812→                ].map((row, i) => (
+  1813→                  <div key={i}>
+  1814→                    <p className="text-[11px] text-gray-400">{row.label}</p>
+  1815→                    <p className={`text-sm text-gray-700 ${row.label === 'Deskripsi' ? 'text-justify leading-relaxed' : 'font-medium'}`}>{row.value}</p>
+  1816→                  </div>
+  1817→                ))}
+  1818→              </div>
+  1819→            </div>
+  1820→
+  1821→            {/* Preferences */}
+  1822→            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+  1823→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 p-4 pb-0">
+  1824→                <Settings className="w-4 h-4 text-orange-500" />
+  1825→                Preferensi
+  1826→              </h3>
+  1827→              <div className="divide-y divide-orange-50">
+  1828→                {[
+  1829→                  { icon: <Bell className="w-5 h-5" />, label: 'Notifikasi Pesanan', desc: 'Terima notifikasi ketika status pesanan diperbarui', onClick: () => addToast('Notifikasi aktif', 'success') },
+  1830→                  { icon: <ReceiptText className="w-5 h-5" />, label: 'Struk Digital', desc: 'Simpan struk pembelian secara otomatis di riwayat pesanan', onClick: () => addToast('Struk digital aktif', 'success') },
+  1831→                  { icon: <Star className="w-5 h-5" />, label: 'Favorit', desc: 'Atur menu favorit untuk akses cepat saat pemesanan', onClick: () => addToast('Fitur favorit segera hadir', 'info') },
+  1832→                ].map((item, i) => (
+  1833→                  <button key={i} onClick={item.onClick} className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left">
+  1834→                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+  1835→                      {item.icon}
+  1836→                    </div>
+  1837→                    <div className="flex-1 min-w-0">
+  1838→                      <p className="text-sm font-semibold text-gray-800">{item.label}</p>
+  1839→                      <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{item.desc}</p>
+  1840→                    </div>
+  1841→                    <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+  1842→                  </button>
+  1843→                ))}
+  1844→              </div>
+  1845→            </div>
+  1846→
+  1847→            {/* Logout */}
+  1848→            <button
+  1849→              onClick={handleLogout}
+  1850→              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+  1851→            >
+  1852→              <LogOut className="w-4 h-4" />
+  1853→              Keluar dari Akun
+  1854→            </button>
+  1855→          </>
+  1856→        )}
+  1857→      </div>
+  1858→    </div>
+  1859→  )
+  1860→}
+  1861→
+  1862→/* ─────────────────────── MAIN APP ─────────────────────── */
+  1863→export default function AppPage() {
+  1864→  const currentPage = useAppStore((s) => s.currentPage)
+  1865→
+  1866→  const renderPage = () => {
+  1867→    switch (currentPage) {
+  1868→      case 'home': return <HomePage />
+  1869→      case 'menu': return <MenuPage />
+  1870→      case 'cart': return <CartPage />
+  1871→      case 'orders': return <OrdersPage />
+  1872→      case 'login': return <LoginPage />
+  1873→      case 'register': return <RegisterPage />
+  1874→      case 'profile': return <ProfilePage />
+  1875→      case 'receipt': return <ReceiptPage />
+  1876→      default: return <HomePage />
+  1877→    }
+  1878→  }
+  1879→
+  1880→  return (
+  1881→    <div className="min-h-screen flex flex-col bg-orange-500">
+  1882→      {/* Aceh ornament on entire page */}
+  1883→      <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
+  1884→      <div className="relative z-10 flex flex-col min-h-screen">
+  1885→        <TopBar />
+  1886→        <main className="flex-1">
+  1887→          <AnimatePresence mode="wait">
+  1888→            <motion.div
+  1889→              key={currentPage}
+  1890→              initial={{ opacity: 0, y: 8 }}
+  1891→              animate={{ opacity: 1, y: 0 }}
+  1892→              exit={{ opacity: 0, y: -8 }}
+  1893→              transition={{ duration: 0.25 }}
+  1894→            >
+  1895→              {renderPage()}
+  1896→            </motion.div>
+  1897→          </AnimatePresence>
+  1898→        </main>
+  1899→        <Footer />
+  1900→        <BottomNav />
+  1901→      </div>
+  1902→      <ToastContainer />
+  1903→    </div>
+  1904→  )
+  1905→}
