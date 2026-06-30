@@ -43,3 +43,34 @@ Stage Summary:
   - Dashboard with order management
   - Mobile responsive layout
 - No lint errors, no runtime errors
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Move navigation to bottom bar, rename Dashboard to Profile, build super complete ProfilePage
+
+Work Log:
+- Moved navigation from top header to fixed bottom navigation bar
+- Top bar simplified to brand logo + back button + page label
+- Bottom nav: Beranda, Menu, Keranjang, Pesanan, Login/Profile (5 tabs)
+- Renamed "Dashboard" to "Profile" in store, TopBar, BottomNav, AppPage router
+- Replaced DashboardPage with comprehensive ProfilePage component
+- Created PUT /api/auth/profile route for editing user profile
+- ProfilePage has role-based tabs:
+  - Customer (3 tabs): Ringkasan, Pesanan Saya, Pengaturan
+  - Admin (4 tabs): Ringkasan, Kelola Pesanan, Riwayat, Pengaturan
+- Profile header with avatar, name, role badge, email, phone, join date
+- Customer stats: Total Pesanan, Sedang Proses, Selesai, Total Belanja
+- Admin expanded stats: 6-column grid (Pending, Dikonfirmasi, Diproses, Selesai, Dibatalkan, Rata-rata)
+- Admin order management with Konfirmasi/Proses/Selesai/Batal actions
+- Admin order detail shows address, phone, notes with icons
+- Settings tab: Edit profil (name, phone, password), Tentang Aplikasi, Preferensi, Logout
+- All verified via Agent Browser on desktop and mobile viewports
+
+Stage Summary:
+- Navigation successfully moved to bottom bar with smooth indicator animation
+- Profile page is role-aware and shows different tabs/content for customer vs admin
+- Edit profile form with validation (name required, password min 6 chars, confirm match)
+- Admin gets expanded 6-stat grid + order management with cancel action
+- Mobile responsive: tabs show icons only on small screens
+- No lint errors, no runtime errors

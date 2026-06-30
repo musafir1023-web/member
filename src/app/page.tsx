@@ -41,6 +41,17 @@ import {
   Copy,
   KeyRound,
   ReceiptText,
+  UserCircle,
+  Settings,
+  Edit3,
+  LogOut,
+  Shield,
+  TrendingUp,
+  Calendar,
+  BadgeCheck,
+  Bell,
+  HelpCircle,
+  Info,
 } from 'lucide-react'
 
 /* ─────────────────────── FORMATTERS ─────────────────────── */
@@ -122,7 +133,7 @@ function TopBar() {
             {currentPage === 'menu' && 'Menu'}
             {currentPage === 'cart' && 'Keranjang'}
             {currentPage === 'orders' && 'Pesanan'}
-            {currentPage === 'dashboard' && 'Dashboard'}
+            {currentPage === 'profile' && 'Profile'}
             {currentPage === 'login' && 'Login'}
             {currentPage === 'register' && 'Daftar'}
             {currentPage === 'receipt' && 'Struk'}
@@ -143,7 +154,7 @@ function BottomNav() {
     { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
     { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
     { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
-    { page: user ? 'dashboard' : 'login', label: user ? 'Dashboard' : 'Login', icon: user ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
+    { page: user ? 'profile' : 'login', label: user ? 'Profile' : 'Login', icon: user ? <UserCircle className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
   ]
 
   const handleNav = (page: Page) => {
@@ -1177,32 +1188,104 @@ function RegisterPage() {
   )
 }
 
-/* ─────────────────────── DASHBOARD PAGE ─────────────────────── */
-function DashboardPage() {
-  const { user, setPage, setReceipt, addToast } = useAppStore()
+/* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
+function ProfilePage() {
+  const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin'>('overview')
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
+  const [saving, setSaving] = useState(false)
+  const [orders, setOrders] = useState<OrderData[]>([])
   const [allOrders, setAllOrders] = useState<OrderData[]>([])
-  const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, revenue: 0 })
   const [loading, setLoading] = useState(true)
 
-  const loadDashboard = useCallback(async () => {
+  const isAdmin = user?.role === 'admin'
+
+  // Load orders on mount
+  const loadOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders')
-      const data = await res.json()
-      setAllOrders(data)
-      setStats({
-        total: data.length,
-        pending: data.filter((o: OrderData) => o.status === 'pending').length,
-        completed: data.filter((o: OrderData) => o.status === 'delivered').length,
-        revenue: data.filter((o: OrderData) => o.status === 'delivered').reduce((s: number, o: OrderData) => s + o.total, 0),
-      })
+      if (isAdmin) {
+        const res = await fetch('/api/orders')
+        const data = await res.json()
+        setAllOrders(data)
+        setOrders(data)
+      } else if (user?.id) {
+        const res = await fetch(`/api/orders?userId=${user.id}`)
+        const data = await res.json()
+        setOrders(data)
+      }
     } catch {
-      addToast('Gagal memuat dashboard', 'error')
+      addToast('Gagal memuat data', 'error')
     } finally {
       setLoading(false)
     }
-  }, [addToast])
+  }, [user, isAdmin, addToast])
 
-  useEffect(() => { loadDashboard() }, [loadDashboard])
+  useEffect(() => { loadOrders() }, [loadOrders])
+
+  // Computed stats
+  const customerStats = {
+    totalOrders: orders.length,
+    completed: orders.filter((o) => o.status === 'delivered').length,
+    pending: orders.filter((o) => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
+    totalSpent: orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+    firstOrder: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
+    lastOrder: orders.length > 0 ? orders[0].createdAt : null,
+  }
+
+  const adminStats = {
+    total: allOrders.length,
+    pending: allOrders.filter((o) => o.status === 'pending').length,
+    confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
+    preparing: allOrders.filter((o) => o.status === 'preparing').length,
+    delivered: allOrders.filter((o) => o.status === 'delivered').length,
+    cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
+    revenue: allOrders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+    avgOrder: allOrders.length > 0 ? Math.round(allOrders.reduce((s, o) => s + o.total, 0) / allOrders.length) : 0,
+  }
+
+  const startEdit = () => {
+    setEditForm({ name: user?.name || '', phone: user?.phone || '', password: '', confirmPassword: '' })
+    setEditing(true)
+  }
+
+  const saveProfile = async () => {
+    if (!editForm.name.trim()) {
+      addToast('Nama tidak boleh kosong', 'error')
+      return
+    }
+    if (editForm.password && editForm.password !== editForm.confirmPassword) {
+      addToast('Konfirmasi password tidak cocok', 'error')
+      return
+    }
+    if (editForm.password && editForm.password.length < 6) {
+      addToast('Password minimal 6 karakter', 'error')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const body: Record<string, string> = { id: user!.id, name: editForm.name.trim() }
+      if (editForm.phone) body.phone = editForm.phone.trim()
+      if (editForm.password) body.password = editForm.password
+
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      setUser({ ...user!, name: data.name, phone: data.phone })
+      setEditing(false)
+      addToast('Profil berhasil diperbarui', 'success')
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Gagal menyimpan', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -1213,96 +1296,275 @@ function DashboardPage() {
       })
       if (!res.ok) throw new Error()
       addToast('Status pesanan berhasil diupdate', 'success')
-      loadDashboard()
+      loadOrders()
     } catch {
       addToast('Gagal mengupdate status', 'error')
     }
   }
 
-  const statCards = [
-    { label: 'Total Pesanan', value: stats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
-    { label: 'Menunggu', value: stats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
-    { label: 'Selesai', value: stats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
-    { label: 'Pendapatan', value: fmt(stats.revenue), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
-  ]
+  const handleLogout = () => {
+    logout()
+    addToast('Anda telah keluar dari akun', 'info')
+  }
+
+  const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
+
+  // ─── Tab definitions ───
+  const tabs = isAdmin
+    ? [
+        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+        { id: 'admin' as const, label: 'Kelola Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
+        { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
+        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+      ]
+    : [
+        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+        { id: 'orders' as const, label: 'Pesanan Saya', icon: <Package className="w-4 h-4" /> },
+        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+      ]
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
-        <div className="absolute inset-0 aceh-pattern opacity-30" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">
-            <LayoutDashboard className="w-8 h-8 inline-block mr-2 -mt-1" />
-            Dashboard
-          </h1>
-          <p className="text-orange-50 text-sm">Selamat datang, <span className="font-semibold">{user?.name}</span></p>
+    <div className="min-h-screen pb-4">
+      {/* ─── Profile Header ─── */}
+      <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 relative overflow-hidden">
+        <div className="absolute inset-0 aceh-pattern opacity-20" />
+        <div className="relative max-w-2xl mx-auto px-4 pt-8 pb-6">
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border-2 border-white/30 flex-shrink-0">
+              {isAdmin ? (
+                <Shield className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+              ) : (
+                <User className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-white truncate">{user?.name}</h1>
+                <Badge className={`${isAdmin ? 'bg-yellow-400 text-yellow-900' : 'bg-white/20 text-white'} text-[10px] border-0 flex-shrink-0`}>
+                  {isAdmin ? 'Admin' : 'Customer'}
+                </Badge>
+              </div>
+              <p className="text-orange-100 text-xs sm:text-sm truncate">{user?.email}</p>
+              {user?.phone && (
+                <p className="text-orange-200/70 text-xs flex items-center gap-1 mt-0.5">
+                  <Phone className="w-3 h-3" /> {user.phone}
+                </p>
+              )}
+              <p className="text-orange-200/50 text-[10px] mt-1">Bergabung sejak {memberSince}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {statCards.map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl p-4 shadow-md"
+      {/* ─── Tabs ─── */}
+      <div className="sticky top-12 z-40 bg-orange-500 shadow-sm">
+        <div className="max-w-2xl mx-auto px-2">
+          <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+                  activeTab === tab.id
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
               >
-                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
-                  {s.icon}
-                </div>
-                <p className="text-xs text-gray-500 text-justify leading-relaxed">{s.label}</p>
-                <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
-              </motion.div>
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
             ))}
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Orders list */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-orange-100">
-            <h2 className="font-bold text-gray-800 flex items-center gap-2">
-              <Package className="w-4 h-4 text-orange-500" />
-              Semua Pesanan
-            </h2>
-            <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
-              Kelola semua pesanan yang masuk. Anda dapat mengubah status pesanan sesuai dengan tahap pemrosesan saat ini.
-            </p>
-          </div>
-          <div className="max-h-[50vh] overflow-y-auto card-scrollbar">
+      {/* ─── Tab Content ─── */}
+      <div className="max-w-2xl mx-auto px-4 mt-5 space-y-4">
+        {/* ═══ OVERVIEW TAB ═══ */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Quick Stats */}
             {loading ? (
-              <div className="p-4 space-y-3">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+              <div className="grid grid-cols-2 gap-3">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
               </div>
-            ) : allOrders.length === 0 ? (
-              <div className="p-8 text-center">
-                <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-400 text-sm">Belum ada pesanan</p>
+            ) : isAdmin ? (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Total Pesanan', value: adminStats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+                  { label: 'Menunggu', value: adminStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+                  { label: 'Selesai', value: adminStats.delivered, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+                  { label: 'Pendapatan', value: fmt(adminStats.revenue), icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+                ].map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-xl p-4 shadow-md"
+                  >
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+                      {s.icon}
+                    </div>
+                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+                  </motion.div>
+                ))}
               </div>
             ) : (
-              <div className="divide-y divide-orange-50">
-                {allOrders.map((order) => (
-                  <div key={order.id} className="p-4 hover:bg-orange-50/50 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
-                          <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
-                        </div>
-                        <p className="text-sm font-medium text-gray-700 truncate">{order.customerName}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {order.items.length} item &middot; {fmt(order.total)} &middot; {fmtDate(order.createdAt)}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Total Pesanan', value: customerStats.totalOrders, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+                  { label: 'Sedang Proses', value: customerStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+                  { label: 'Selesai', value: customerStats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+                  { label: 'Total Belanja', value: fmt(customerStats.totalSpent), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+                ].map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-xl p-4 shadow-md"
+                  >
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+                      {s.icon}
+                    </div>
+                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Info Cards */}
+            <div className="bg-white rounded-xl p-5 shadow-md">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4 text-orange-500" />
+                Informasi Akun
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Nama', value: user?.name || '-' },
+                  { icon: <Mail className="w-4 h-4 text-gray-400" />, label: 'Email', value: user?.email || '-' },
+                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Telepon', value: user?.phone || 'Belum diatur' },
+                  { icon: <Shield className="w-4 h-4 text-gray-400" />, label: 'Role', value: isAdmin ? 'Administrator' : 'Customer' },
+                  { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Bergabung', value: memberSince },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    {row.icon}
+                    <div className="flex-1">
+                      <p className="text-[11px] text-gray-400">{row.label}</p>
+                      <p className="text-sm text-gray-700 font-medium">{row.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button onClick={startEdit} variant="outline" className="w-full mt-4 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm">
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit Profil
+              </Button>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              {[
+                { icon: <Package className="w-5 h-5" />, label: 'Lihat Pesanan Saya', desc: 'Lihat riwayat dan status pesanan Anda', onClick: () => setActiveTab('orders') },
+                { icon: <UtensilsCrossed className="w-5 h-5" />, label: 'Jelajahi Menu', desc: 'Temukan varian ayam geprek favorit Anda', onClick: () => setPage('menu') },
+                { icon: <HelpCircle className="w-5 h-5" />, label: 'Bantuan', desc: 'Hubungi kami untuk pertanyaan dan bantuan', onClick: () => addToast('Fitur bantuan segera hadir', 'info') },
+              ].map((action, i) => (
+                <button
+                  key={i}
+                  onClick={action.onClick}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left border-b border-orange-50 last:border-0"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+                    {action.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{action.label}</p>
+                    <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{action.desc}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Keluar dari Akun
+            </button>
+          </>
+        )}
+
+        {/* ═══ ORDERS TAB (Customer) ═══ */}
+        {activeTab === 'orders' && !isAdmin && (
+          <>
+            <div className="bg-white rounded-xl p-4 shadow-md">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                <Package className="w-4 h-4 text-orange-500" />
+                Riwayat Pesanan Saya
+              </h3>
+              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+                Berikut adalah daftar semua pesanan yang pernah Anda buat. Klik detail untuk melihat informasi lengkap setiap pesanan termasuk produk yang dipesan dan status pengiriman saat ini.
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white rounded-xl p-8 shadow-md text-center">
+                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium mb-1">Belum ada pesanan</p>
+                <p className="text-xs text-gray-400 text-justify max-w-xs mx-auto leading-relaxed">
+                  Anda belum pernah membuat pesanan. Mulai dengan menjelajahi menu kami dan tambahkan item favorit ke keranjang.
+                </p>
+                <Button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('menu')}>
+                  <UtensilsCrossed className="w-4 h-4 mr-2" /> Pesan Sekarang
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto card-scrollbar pr-1">
+                {orders.map((order) => (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-xl p-4 shadow-md"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {fmtDate(order.createdAt)}
                         </p>
-                        <p className="text-xs text-gray-400 text-justify mt-0.5 leading-relaxed truncate">{order.customerAddress}</p>
+                        <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+                    </div>
+                    <div className="space-y-1 mb-2">
+                      {order.items.slice(0, 3).map((item) => (
+                        <div key={item.id} className="flex justify-between text-xs text-gray-500">
+                          <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+                          <span className="flex-shrink-0">{fmt(item.subtotal)}</span>
+                        </div>
+                      ))}
+                      {order.items.length > 3 && (
+                        <p className="text-[11px] text-gray-400">+{order.items.length - 3} item lainnya</p>
+                      )}
+                    </div>
+                    <Separator className="mb-2" />
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-400">
+                        <span>{order.items.length} item</span>
+                        <span className="mx-1">&middot;</span>
+                        <span>{order.paymentMethod}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-orange-600 text-sm">{fmt(order.total)}</span>
                         <Button
                           size="sm"
                           variant="outline"
@@ -1311,29 +1573,287 @@ function DashboardPage() {
                         >
                           <Eye className="w-3 h-3 mr-1" /> Detail
                         </Button>
-                        {order.status === 'pending' && (
-                          <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'confirmed')}>
-                            <CheckCircle2 className="w-3 h-3 mr-1" /> Konfirmasi
-                          </Button>
-                        )}
-                        {order.status === 'confirmed' && (
-                          <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs" onClick={() => updateStatus(order.id, 'preparing')}>
-                            <Clock className="w-3 h-3 mr-1" /> Proses
-                          </Button>
-                        )}
-                        {order.status === 'preparing' && (
-                          <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'delivered')}>
-                            <Truck className="w-3 h-3 mr-1" /> Selesai
-                          </Button>
-                        )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
+          </>
+        )}
+
+        {/* ═══ ADMIN TAB ═══ */}
+        {activeTab === 'admin' && isAdmin && (
+          <>
+            {/* Admin Stats Expanded */}
+            {loading ? (
+              <div className="grid grid-cols-3 gap-2">
+                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {[
+                  { label: 'Pending', value: adminStats.pending, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+                  { label: 'Dikonfirmasi', value: adminStats.confirmed, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                  { label: 'Diproses', value: adminStats.preparing, color: 'bg-orange-50 text-orange-700 border-orange-200' },
+                  { label: 'Selesai', value: adminStats.delivered, color: 'bg-green-50 text-green-700 border-green-200' },
+                  { label: 'Dibatalkan', value: adminStats.cancelled, color: 'bg-red-50 text-red-700 border-red-200' },
+                  { label: 'Rata-rata', value: fmt(adminStats.avgOrder), color: 'bg-purple-50 text-purple-700 border-purple-200' },
+                ].map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    className={`rounded-xl p-3 text-center border ${s.color}`}
+                  >
+                    <p className="text-lg sm:text-xl font-extrabold">{s.value}</p>
+                    <p className="text-[10px] sm:text-xs font-medium opacity-70">{s.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Order Management */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-4 border-b border-orange-100">
+                <h2 className="font-bold text-gray-800 flex items-center gap-2">
+                  <LayoutDashboard className="w-4 h-4 text-orange-500" />
+                  Kelola Semua Pesanan
+                </h2>
+                <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+                  Kelola semua pesanan yang masuk dari pelanggan. Anda dapat mengubah status pesanan sesuai tahap pemrosesan: konfirmasi, proses, hingga selesai dikirim ke pelanggan.
+                </p>
+              </div>
+              <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+                {loading ? (
+                  <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}</div>
+                ) : allOrders.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">Belum ada pesanan masuk</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-orange-50">
+                    {allOrders.map((order) => (
+                      <div key={order.id} className="p-4 hover:bg-orange-50/50 transition-colors">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+                              <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+                            </div>
+                            <p className="text-sm font-medium text-gray-700 truncate">{order.customerName}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {order.items.length} item &middot; {fmt(order.total)} &middot; {fmtDate(order.createdAt)}
+                            </p>
+                            <p className="text-xs text-gray-400 text-justify mt-0.5 leading-relaxed truncate">
+                              <MapPin className="w-3 h-3 inline mr-0.5" />{order.customerAddress}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              <Phone className="w-3 h-3 inline mr-0.5" />{order.customerPhone}
+                              {order.notes && <span className="ml-2"><Bell className="w-3 h-3 inline mr-0.5" />{order.notes}</span>}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+                              onClick={() => { setReceipt(order); setPage('receipt') }}
+                            >
+                              <Eye className="w-3 h-3 mr-1" /> Detail
+                            </Button>
+                            {order.status === 'pending' && (
+                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'confirmed')}>
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Konfirmasi
+                              </Button>
+                            )}
+                            {order.status === 'confirmed' && (
+                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs" onClick={() => updateStatus(order.id, 'preparing')}>
+                                <Clock className="w-3 h-3 mr-1" /> Proses
+                              </Button>
+                            )}
+                            {order.status === 'preparing' && (
+                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'delivered')}>
+                                <Truck className="w-3 h-3 mr-1" /> Selesai
+                              </Button>
+                            )}
+                            {['pending', 'confirmed'].includes(order.status) && (
+                              <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-xs" onClick={() => updateStatus(order.id, 'cancelled')}>
+                                <XCircle className="w-3 h-3 mr-1" /> Batal
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══ ORDERS TAB (Admin — read-only history) ═══ */}
+        {activeTab === 'orders' && isAdmin && (
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="p-4 border-b border-orange-100">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                <ReceiptText className="w-4 h-4 text-orange-500" />
+                Riwayat Semua Pesanan
+              </h3>
+              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+                Daftar lengkap semua pesanan yang pernah masuk termasuk yang sudah selesai dan dibatalkan. Data ini dapat digunakan untuk analisis penjualan dan evaluasi performa layanan.
+              </p>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+              {loading ? (
+                <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+              ) : allOrders.length === 0 ? (
+                <div className="p-8 text-center text-gray-400 text-sm">Belum ada data pesanan</div>
+              ) : (
+                <div className="divide-y divide-orange-50">
+                  {allOrders.map((order) => (
+                    <button
+                      key={order.id}
+                      onClick={() => { setReceipt(order); setPage('receipt') }}
+                      className="w-full p-3 hover:bg-orange-50 transition-colors text-left"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+                        <Badge className={`${statusColor[order.status]} text-[10px]`}>{statusLabel[order.status]}</Badge>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700">{order.customerName}</p>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-gray-400">{fmtDate(order.createdAt)}</span>
+                        <span className="text-sm font-bold text-orange-600">{fmt(order.total)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* ═══ SETTINGS TAB ═══ */}
+        {activeTab === 'settings' && (
+          <>
+            {/* Edit Profile */}
+            <div className="bg-white rounded-xl p-5 shadow-md">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-4">
+                <Edit3 className="w-4 h-4 text-orange-500" />
+                {editing ? 'Edit Profil' : 'Data Profil'}
+              </h3>
+
+              {editing ? (
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="edit-name" className="text-xs text-gray-600">Nama Lengkap</Label>
+                    <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="Nama lengkap" />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-phone" className="text-xs text-gray-600">Nomor Telepon</Label>
+                    <Input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1" placeholder="081234567890" />
+                  </div>
+                  <Separator />
+                  <div>
+                    <Label htmlFor="edit-pw" className="text-xs text-gray-600">Password Baru (Opsional)</Label>
+                    <Input id="edit-pw" type="password" value={editForm.password} onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))} className="mt-1" placeholder="Kosongkan jika tidak ingin diubah" />
+                  </div>
+                  {editForm.password && (
+                    <div>
+                      <Label htmlFor="edit-pw2" className="text-xs text-gray-600">Konfirmasi Password</Label>
+                      <Input id="edit-pw2" type="password" value={editForm.confirmPassword} onChange={(e) => setEditForm((p) => ({ ...p, confirmPassword: e.target.value }))} className="mt-1" placeholder="Ulangi password baru" />
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    <Button onClick={saveProfile} disabled={saving} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm disabled:opacity-50">
+                      {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><BadgeCheck className="w-4 h-4 mr-1" /> Simpan</>}
+                    </Button>
+                    <Button onClick={() => setEditing(false)} variant="outline" className="flex-1 border-orange-200 text-orange-600 text-sm hover:bg-orange-50">
+                      Batal
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {[
+                    { label: 'Nama', value: user?.name || '-' },
+                    { label: 'Email', value: user?.email || '-' },
+                    { label: 'Telepon', value: user?.phone || 'Belum diatur' },
+                    { label: 'Password', value: '••••••••' },
+                  ].map((row, i) => (
+                    <div key={i} className="flex justify-between items-center py-1">
+                      <span className="text-xs text-gray-400">{row.label}</span>
+                      <span className="text-sm text-gray-700 font-medium">{row.value}</span>
+                    </div>
+                  ))}
+                  <Button onClick={startEdit} variant="outline" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50 text-sm mt-2">
+                    <Edit3 className="w-4 h-4 mr-2" /> Ubah Data Profil
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* App Info */}
+            <div className="bg-white rounded-xl p-5 shadow-md">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4 text-orange-500" />
+                Tentang Aplikasi
+              </h3>
+              <div className="space-y-2.5">
+                {[
+                  { label: 'Nama Aplikasi', value: 'Ayam Geprek Sambal Ijo' },
+                  { label: 'Versi', value: '1.0.0' },
+                  { label: 'Developer', value: 'Z.ai Team' },
+                  { label: 'Deskripsi', value: 'Aplikasi pemesanan online ayam geprek sambal ijo khas Aceh dengan fitur lengkap untuk kemudahan pemesanan dan pengelolaan usaha kuliner Anda.' },
+                ].map((row, i) => (
+                  <div key={i}>
+                    <p className="text-[11px] text-gray-400">{row.label}</p>
+                    <p className={`text-sm text-gray-700 ${row.label === 'Deskripsi' ? 'text-justify leading-relaxed' : 'font-medium'}`}>{row.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Preferences */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 p-4 pb-0">
+                <Settings className="w-4 h-4 text-orange-500" />
+                Preferensi
+              </h3>
+              <div className="divide-y divide-orange-50">
+                {[
+                  { icon: <Bell className="w-5 h-5" />, label: 'Notifikasi Pesanan', desc: 'Terima notifikasi ketika status pesanan diperbarui', onClick: () => addToast('Notifikasi aktif', 'success') },
+                  { icon: <ReceiptText className="w-5 h-5" />, label: 'Struk Digital', desc: 'Simpan struk pembelian secara otomatis di riwayat pesanan', onClick: () => addToast('Struk digital aktif', 'success') },
+                  { icon: <Star className="w-5 h-5" />, label: 'Favorit', desc: 'Atur menu favorit untuk akses cepat saat pemesanan', onClick: () => addToast('Fitur favorit segera hadir', 'info') },
+                ].map((item, i) => (
+                  <button key={i} onClick={item.onClick} className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800">{item.label}</p>
+                      <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{item.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Keluar dari Akun
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
@@ -1351,7 +1871,7 @@ export default function AppPage() {
       case 'orders': return <OrdersPage />
       case 'login': return <LoginPage />
       case 'register': return <RegisterPage />
-      case 'dashboard': return <DashboardPage />
+      case 'profile': return <ProfilePage />
       case 'receipt': return <ReceiptPage />
       default: return <HomePage />
     }

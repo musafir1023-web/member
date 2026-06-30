@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type Page = 'home' | 'menu' | 'cart' | 'orders' | 'login' | 'register' | 'dashboard' | 'receipt'
+export type Page = 'home' | 'menu' | 'cart' | 'orders' | 'login' | 'register' | 'profile' | 'receipt'
 
 export interface CartItem {
   productId: string
