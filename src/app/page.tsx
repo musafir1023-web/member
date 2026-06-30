@@ -92,193 +92,127 @@ function ToastContainer() {
   )
 }
 
-/* ─────────────────────── HEADER ─────────────────────── */
-function Header() {
-  const { currentPage, setPage, user, getCartCount, logout } = useAppStore()
-  const cartCount = useAppStore(getCartCount)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const navItems: { page: Page; label: string; icon: React.ReactNode }[] = [
-    { page: 'home', label: 'Beranda', icon: <Home className="w-4 h-4" /> },
-    { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-4 h-4" /> },
-    { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-4 h-4" /> },
-    { page: 'orders', label: 'Pesanan', icon: <Package className="w-4 h-4" /> },
-  ]
+/* ─────────────────────── TOP BAR (minimal brand) ─────────────────────── */
+function TopBar() {
+  const { currentPage, setPage } = useAppStore()
+  const showBack = !['home'].includes(currentPage)
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="max-w-5xl mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          {/* Brand */}
+      <div className="max-w-5xl mx-auto px-4 h-12 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {showBack && (
+            <button
+              onClick={() => setPage('home')}
+              className="p-1.5 -ml-1 text-gray-600 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
+              aria-label="Kembali ke Beranda"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
           <button onClick={() => setPage('home')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ChefHat className="w-6 h-6 text-orange-500" />
-            <span className="font-bold text-sm sm:text-base text-gray-800 uppercase tracking-wide">
+            <ChefHat className="w-5 h-5 text-orange-500" />
+            <span className="font-bold text-xs sm:text-sm text-gray-800 uppercase tracking-wide">
               Ayam Geprek Sambal Ijo
             </span>
           </button>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <button
-                key={item.page}
-                onClick={() => setPage(item.page)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentPage === item.page
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-                {item.page === 'cart' && cartCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center -ml-1">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            ))}
-            {user ? (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage('dashboard')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    currentPage === 'dashboard'
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setPage('login')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentPage === 'login'
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                }`}
-              >
-                <LogIn className="w-4 h-4" />
-                Login
-              </button>
-            )}
-          </nav>
-
-          {/* Mobile menu toggle */}
-          <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={() => setPage('cart')}
-              className="relative p-2 text-gray-600 hover:text-orange-500 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full w-4.5 h-4.5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-orange-500 transition-colors"
-            >
-              <div className="space-y-1.5">
-                <span className={`block w-5 h-0.5 bg-current transition-transform ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-                <span className={`block w-5 h-0.5 bg-current transition-opacity ${mobileMenuOpen ? 'opacity-0' : ''}`} />
-                <span className={`block w-5 h-0.5 bg-current transition-transform ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-              </div>
-            </button>
-          </div>
         </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden md:hidden border-t border-orange-100"
-            >
-              <nav className="py-3 space-y-1">
-                {navItems.map((item) => (
-                  <button
-                    key={item.page}
-                    onClick={() => { setPage(item.page); setMobileMenuOpen(false) }}
-                    className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === item.page ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-orange-50'
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                    {item.page === 'cart' && cartCount > 0 && (
-                      <Badge className="ml-auto bg-red-500 text-white text-xs">{cartCount}</Badge>
-                    )}
-                  </button>
-                ))}
-                {user ? (
-                  <>
-                    <button
-                      onClick={() => { setPage('dashboard'); setMobileMenuOpen(false) }}
-                      className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        currentPage === 'dashboard' ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-orange-50'
-                      }`}
-                    >
-                      <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={() => { logout(); setMobileMenuOpen(false) }}
-                      className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      Keluar
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => { setPage('login'); setMobileMenuOpen(false) }}
-                    className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === 'login' ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-orange-50'
-                    }`}
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </button>
-                )}
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {showBack && (
+          <span className="text-xs text-gray-400 font-medium">
+            {currentPage === 'menu' && 'Menu'}
+            {currentPage === 'cart' && 'Keranjang'}
+            {currentPage === 'orders' && 'Pesanan'}
+            {currentPage === 'dashboard' && 'Dashboard'}
+            {currentPage === 'login' && 'Login'}
+            {currentPage === 'register' && 'Daftar'}
+            {currentPage === 'receipt' && 'Struk'}
+          </span>
+        )}
       </div>
     </header>
+  )
+}
+
+/* ─────────────────────── BOTTOM NAVIGATION ─────────────────────── */
+function BottomNav() {
+  const { currentPage, setPage, user, logout, getCartCount } = useAppStore()
+  const cartCount = useAppStore(getCartCount)
+
+  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean }[] = [
+    { page: 'home', label: 'Beranda', icon: <Home className="w-5 h-5" />, show: true },
+    { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
+    { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
+    { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
+    { page: user ? 'dashboard' : 'login', label: user ? 'Dashboard' : 'Login', icon: user ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
+  ]
+
+  const handleNav = (page: Page) => {
+    if (user && page === 'login') {
+      logout()
+      return
+    }
+    setPage(page)
+  }
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-orange-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+      {/* Safe area for iOS */}
+      <div className="pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-lg mx-auto flex items-center justify-around px-1 py-1.5">
+          {navItems.map((item) => {
+            const isActive = currentPage === item.page
+            return (
+              <button
+                key={item.label}
+                onClick={() => handleNav(item.page)}
+                className={`relative flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl min-w-[56px] transition-all duration-200 ${
+                  isActive
+                    ? 'text-orange-500'
+                    : 'text-gray-400 hover:text-gray-600 active:scale-95'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="bottomNavIndicator"
+                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-1 bg-orange-500 rounded-full"
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <div className="relative">
+                  {item.icon}
+                  {item.page === 'cart' && cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[10px] leading-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </nav>
   )
 }
 
 /* ─────────────────────── FOOTER ─────────────────────── */
 function Footer() {
   return (
-    <footer className="bg-orange-600 text-white mt-auto">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <footer className="bg-orange-600 text-white">
+      <div className="max-w-5xl mx-auto px-4 py-4 pb-24">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <ChefHat className="w-5 h-5" />
-            <span className="font-bold text-sm uppercase tracking-wider">Ayam Geprek Sambal Ijo</span>
+          <div className="flex items-center justify-center gap-2 mb-1.5">
+            <ChefHat className="w-4 h-4" />
+            <span className="font-bold text-xs uppercase tracking-wider">Ayam Geprek Sambal Ijo</span>
           </div>
-          <p className="text-orange-100 text-xs text-justify max-w-md mx-auto leading-relaxed">
+          <p className="text-orange-100 text-[11px] text-justify max-w-md mx-auto leading-relaxed">
             Menyajikan ayam geprek sambal ijo khas Aceh dengan cita rasa autentik. Pesan online mudah, cepat, dan terpercaya untuk pengalaman kuliner terbaik Anda.
           </p>
-          <Separator className="my-3 bg-orange-400/30" />
-          <p className="text-orange-200 text-xs">&copy; {new Date().getFullYear()} Ayam Geprek Sambal Ijo. Hak Cipta Dilindungi.</p>
+          <Separator className="my-2 bg-orange-400/30" />
+          <p className="text-orange-200 text-[10px]">&copy; {new Date().getFullYear()} Ayam Geprek Sambal Ijo. Hak Cipta Dilindungi.</p>
         </div>
       </div>
     </footer>
@@ -1428,7 +1362,7 @@ export default function AppPage() {
       {/* Aceh ornament on entire page */}
       <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Header />
+        <TopBar />
         <main className="flex-1">
           <AnimatePresence mode="wait">
             <motion.div
@@ -1443,6 +1377,7 @@ export default function AppPage() {
           </AnimatePresence>
         </main>
         <Footer />
+        <BottomNav />
       </div>
       <ToastContainer />
     </div>
