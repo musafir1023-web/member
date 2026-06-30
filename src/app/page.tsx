@@ -52,7 +52,6 @@ import {
   Bell,
   HelpCircle,
   Info,
-  Navigation,
   Share2,
 } from 'lucide-react'
 
@@ -126,16 +125,6 @@ function getStoreStatus(): { open: boolean; label: string } {
   // Open every day 10:00 - 22:00 WIB
   const isOpen = hour >= STORE_INFO.openHour && hour < STORE_INFO.closeHour
   return { open: isOpen, label: isOpen ? 'Buka Sekarang' : 'Tutup' }
-}
-
-const pageLabels: Record<string, string> = {
-  menu: 'Menu Kami',
-  cart: 'Keranjang Belanja',
-  orders: 'Riwayat Pesanan',
-  profile: 'Profil Saya',
-  login: 'Masuk ke Akun',
-  register: 'Daftar Akun Baru',
-  receipt: 'Struk Pembelian',
 }
 
 /* ─────────────────────── TOP BAR (SUPER COMPLETE) ─────────────────────── */
@@ -272,22 +261,6 @@ function TopBar() {
         </div>
       </div>
 
-      {/* ═══ ROW 3: Page Title Bar (non-home pages only) ═══ */}
-      {showBack && (
-        <div className="bg-white/95 backdrop-blur-sm border-b border-orange-50">
-          <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
-            <h2 className="text-sm sm:text-base font-bold text-gray-800">
-              {pageLabels[currentPage] || 'Halaman'}
-            </h2>
-            <div className="flex items-center gap-1 text-[10px] text-gray-400">
-              <Navigation className="w-3 h-3" />
-              <span className="hidden sm:inline">Beranda</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-orange-500 font-medium">{pageLabels[currentPage] || ''}</span>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   )
 }
@@ -1484,7 +1457,7 @@ function ProfilePage() {
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="sticky top-[104px] z-40 bg-orange-500 shadow-sm">
+      <div className="sticky top-[68px] z-40 bg-orange-500 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
           <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
