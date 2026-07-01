@@ -190,3 +190,33 @@ Stage Summary:
 - 2 diamond dividers (1 per face) between header and content
 - Barcode lines now orange to match the color scheme
 
+---
+Task ID: 5
+Agent: Main Agent
+Task: Merge info strip into header, add clickable detail panel
+
+Work Log:
+- Removed Row 2 (Quick Action Strip) entirely from TopBar
+- Replaced address sub-text in header with operating hours + status: "10:00 - 22:00 WIB · Buka"
+- Added clickable "Info" chip button (Info icon + "Info" text on desktop) in header
+- Created animated detail dropdown panel with AnimatePresence:
+  - Aceh ornament diamond divider with "INFORMASI TOKO" label
+  - Status card (green/red) with Clock icon, hours, "Setiap Hari"
+  - Address row with MapPin icon, full address
+  - Phone row (clickable tel: link) with blue Phone icon
+  - WhatsApp row (clickable wa.me link) with green Phone icon
+  - Share row with amber Share2 icon
+  - "Tutup" close button
+- Added fixed backdrop (bg-black/30) that closes panel on click
+- Panel animates with height: 0 → auto, opacity fade
+- Fixed profile tabs sticky offset from top-[68px] to top-[52px]
+- Verified: single orange header row, info panel shows all details, close works
+
+Stage Summary:
+- Header is now a single clean orange bar (no more separate white strip)
+- Store hours shown inline under the store name
+- "Info" chip button in header opens a detail panel
+- Detail panel has 5 info items with colored icons + Aceh ornament divider
+- Backdrop and "Tutup" button both close the panel
+- Profile tabs sticky offset adjusted for shorter header
+

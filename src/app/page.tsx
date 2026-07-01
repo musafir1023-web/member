@@ -139,16 +139,17 @@ function TopBar() {
   const cartCount = useAppStore(getCartCount)
   const showBack = currentPage !== 'home'
   const storeStatus = getStoreStatus()
+  const [showInfo, setShowInfo] = useState(false)
 
   return (
     <header className="sticky top-0 z-50">
-      {/* ═══ ROW 1: Brand Bar with Address ═══ */}
+      {/* ═══ Header Bar ═══ */}
       <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 relative overflow-hidden">
         <div className="absolute inset-0 aceh-pattern opacity-20" />
-        
+
         <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-2">
-            {/* Left: Back + Logo + Name + Address */}
+            {/* Left: Back + Logo + Name + Info Chip */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {showBack && (
                 <button
@@ -170,13 +171,20 @@ function TopBar() {
                   <h1 className="font-extrabold text-[11px] sm:text-xs text-white uppercase tracking-wider leading-tight truncate">
                     {STORE_INFO.name}
                   </h1>
-                  <div className="flex items-center gap-1 min-w-0">
-                    <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-100/70 flex-shrink-0" />
-                    <p className="text-[8px] sm:text-[10px] text-orange-100/80 leading-tight truncate">
-                      {STORE_INFO.address}
-                    </p>
-                  </div>
+                  <p className="text-[8px] sm:text-[10px] text-orange-100/80 leading-tight truncate">
+                    {storeStatus.open ? `${STORE_INFO.hours} ${STORE_INFO.timezone} · Buka` : 'Tutup'}
+                  </p>
                 </div>
+              </button>
+
+              {/* Info Chip (clickable) */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo) }}
+                className="ml-1 flex items-center gap-1 px-2 py-1 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
+                aria-label="Info Toko"
+              >
+                <Info className="w-3 h-3 text-white/90" />
+                <span className="text-[9px] sm:text-[10px] text-white/90 font-medium hidden sm:inline">Info</span>
               </button>
             </div>
 
@@ -228,45 +236,134 @@ function TopBar() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ═══ ROW 2: Quick Action Strip ═══ */}
-      <div className="bg-white border-b border-orange-100 shadow-sm">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-x-3 sm:gap-x-4 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1 text-gray-500 flex-shrink-0">
-            <Clock className="w-3 h-3 text-orange-500" />
-            <span className="text-[10px] sm:text-xs font-medium">{STORE_INFO.hours} {STORE_INFO.timezone}</span>
-          </div>
-          <div className="w-px h-3.5 bg-orange-200/60 flex-shrink-0" />
-          <a
-            href={`https://wa.me/${STORE_INFO.whatsapp}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-gray-500 hover:text-green-600 transition-colors flex-shrink-0"
-          >
-            <Phone className="w-3 h-3" />
-            <span className="text-[10px] sm:text-xs font-medium">WhatsApp</span>
-          </a>
-          <div className="w-px h-3.5 bg-orange-200/60 flex-shrink-0" />
-          <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: STORE_INFO.name,
-                  text: `${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
-                }).catch(() => {})
-              } else {
-                navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
-              }
-            }}
-            className="flex items-center gap-1 text-gray-500 hover:text-orange-600 transition-colors flex-shrink-0"
-          >
-            <Share2 className="w-3 h-3" />
-            <span className="text-[10px] sm:text-xs font-medium">Bagikan</span>
-          </button>
-        </div>
-      </div>
+        {/* ═══ Info Detail Panel (Dropdown) ═══ */}
+        <AnimatePresence>
+          {showInfo && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/30 z-[-1]"
+                onClick={() => setShowInfo(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white shadow-xl border-b border-orange-100">
+                  <div className="max-w-5xl mx-auto px-4 py-4">
+                    {/* Aceh ornament top divider */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
+                      </svg>
+                      <span className="text-[10px] text-orange-400 font-semibold uppercase tracking-widest">Informasi Toko</span>
+                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
+                      </svg>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+                    </div>
 
+                    <div className="space-y-3">
+                      {/* Status */}
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          storeStatus.open ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          <Clock className={`w-5 h-5 ${storeStatus.open ? 'text-green-600' : 'text-red-500'}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">{storeStatus.label}</p>
+                          <p className="text-xs text-gray-500">{STORE_INFO.hours} {STORE_INFO.timezone} · Setiap Hari</p>
+                        </div>
+                      </div>
+
+                      {/* Address */}
+                      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-800">Alamat</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">{STORE_INFO.address}</p>
+                        </div>
+                      </div>
+
+                      {/* Phone */}
+                      <a
+                        href={`tel:${STORE_INFO.phone}`}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Phone className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">Telepon</p>
+                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+                        </div>
+                      </a>
+
+                      {/* WhatsApp */}
+                      <a
+                        href={`https://wa.me/${STORE_INFO.whatsapp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                          <Phone className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">WhatsApp</p>
+                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+                        </div>
+                      </a>
+
+                      {/* Share */}
+                      <button
+                        onClick={() => {
+                          if (navigator.share) {
+                            navigator.share({
+                              title: STORE_INFO.name,
+                              text: `${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
+                            }).catch(() => {})
+                          } else {
+                            navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
+                          }
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors w-full"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <Share2 className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-gray-800">Bagikan</p>
+                          <p className="text-xs text-gray-500">Salin info toko ke clipboard</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Close button */}
+                    <button
+                      onClick={() => setShowInfo(false)}
+                      className="mt-3 w-full py-2 text-center text-sm font-semibold text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-colors"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
     </header>
   )
 }
@@ -1940,7 +2037,7 @@ function ProfilePage() {
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="sticky top-[68px] z-40 bg-orange-500 shadow-sm">
+      <div className="sticky top-[52px] z-40 bg-orange-500 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
           <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
