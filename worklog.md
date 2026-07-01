@@ -314,3 +314,64 @@ Stage Summary:
 - Cards now harmonize seamlessly with orange hero section gradient
 - Premium card design with 6+ concurrent animations
 - Both customer and admin cards share the same ornament design language
+
+---
+Task ID: pusaka-aceh-redesign
+Agent: Main Agent
+Task: Redesign two member cards with premium "Pusaka Aceh" (Aceh Heritage) dark theme
+
+Work Log:
+- Read existing worklog.md and full page.tsx to understand current card structure
+- Identified Card 1 (Homepage Member Card, lines ~553-859) and Card 2 (Admin Profile Member Card, lines ~2147-2375)
+- Redesigned Card 1 FRONT FACE:
+  - Changed background from `from-white to-orange-50/30` to `from-amber-950/95 via-orange-950/90 to-amber-950/95` (dark premium)
+  - Changed border from `border-orange-200/50` to `border-amber-700/40`
+  - Changed shimmer from `via-white/30` to `via-amber-400/15` (golden shimmer)
+  - Changed top banner gradient from `from-orange-600 via-orange-500 to-amber-500` to `from-amber-600 via-orange-500 to-amber-500`
+  - Added NEW Pintu Aceh Arch Ornament SVG below banner (pointed/gothic arch with decorative dots)
+  - Replaced 4 corner octagonal diamonds with detailed Pucuk Rebung motifs (80x80 viewBox with bamboo shoot center, radiating lines, vertex dots)
+  - Replaced Diamond Chain borders with Pucuk Rebung Chain borders (bamboo shoot leaf patterns with connecting lines)
+  - Replaced simple side vines with elaborate Acehnese Floral Scroll patterns (alternating left/right curves with leaf motifs)
+  - Replaced Bintang Aceh mandala watermark with more detailed version (concentric circles with dashed ring, 8-pointed star, radiating lines, diamond tips, decorative dots)
+  - Replaced Rencong watermark with subtler version (`text-amber-400/[0.08]`, smaller size)
+  - Changed all text colors: labels `text-amber-400`, names `text-amber-100`, stat numbers `text-amber-100`
+  - Changed stat boxes to `from-amber-900/50 to-orange-900/40` with `border-amber-700/30`
+  - Changed icons (Star, Gift) to `text-amber-400`
+  - Changed diamond divider to `via-amber-500/40` and `text-amber-400/50`
+  - Changed tap hint to `text-amber-500/50`
+  - Changed outer glow to `from-amber-500/30 via-yellow-400/25 to-amber-500/30`
+- Redesigned Card 1 BACK FACE:
+  - Same dark background, shimmer, banner, arch, corner, border, and watermark changes
+  - Simplified corners (4 circles only per corner)
+  - Simplified Bintang Aceh watermark (no star tips, just radiating lines)
+  - Changed barcode container to `from-amber-900/50 to-orange-900/40` with `border-amber-700/30`
+  - Changed member code to `text-amber-400/60`
+- Redesigned Card 2 (Admin) FRONT FACE:
+  - All same ornament and color changes as Card 1
+  - Added Pintu Aceh Arch Ornament (admin card has h-8 banner, arch positioned at top-8)
+  - 4 detailed Pucuk Rebung corners with proper rotations (0°/90°/-90°/180°)
+  - Pucuk Rebung Chain borders (top positioned at top-[60px] to clear h-8 banner + h-7 arch)
+  - Acehnese Floral Scroll side ornaments (w-2.5, mirrored left/right)
+  - Detailed Bintang Aceh watermark (w-48 h-48)
+  - Subtle Rencong watermark on right side
+  - Changed Premium badge to `from-amber-400 to-yellow-500` gradient
+  - All 3 stat boxes (Poin/Voucher/Role) use dark amber backgrounds
+  - All text colors updated to amber/amber-100 scheme
+- Redesigned Card 2 (Admin) BACK FACE:
+  - Same dark theme with Pintu Aceh arch, simplified corners, Pucuk Rebung chain border
+  - Simplified Bintang Aceh watermark (w-40 h-40)
+  - All text colors and barcode container updated
+- Verified: no new lint errors introduced (2 pre-existing `setMounted` warnings unrelated to changes)
+- Verified: no JS runtime errors in browser console
+- Verified: page renders correctly on both desktop and mobile viewports
+
+Stage Summary:
+- Both member cards now use dark premium "Pusaka Aceh" theme with deep amber/brown background
+- 5 new ornament types: Pintu Aceh Arch, Pucuk Rebung corners, Pucuk Rebung Chain borders, Acehnese Floral Scrolls, detailed Bintang Aceh watermark
+- All text colors harmonize with dark background (amber-400 labels, amber-100 values)
+- Golden shimmer overlay replaces white shimmer
+- All existing Framer Motion animations preserved exactly
+- 3D flip functionality preserved
+- Barcode rendering logic preserved
+- All conditional rendering preserved
+- Pre-existing lint warnings (setMounted in useEffect) and API errors (points field) are unrelated to this task

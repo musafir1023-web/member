@@ -1,0 +1,352 @@
+  2143→          {/* ═══ Admin Member Card with Animation ═══ */}
+  2144→          {isAdmin && user && (
+  2145→            <motion.div
+  2146→              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+  2147→              animate={{ opacity: 1, y: 0, scale: 1 }}
+  2148→              transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
+  2149→              className="mt-6 max-w-sm mx-auto w-full"
+  2150→            >
+  2151→              <motion.div
+  2152→                animate={{ y: [0, -4, 0] }}
+  2153→                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+  2154→                className="relative w-full cursor-pointer"
+  2155→                style={{ perspective: 1000 }}
+  2156→                onClick={() => setShowBarcode(!showBarcode)}
+  2157→              >
+  2158→                {/* Shimmer glow effect */}
+  2159→                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/30 via-amber-300/40 to-orange-400/30 rounded-2xl blur-md opacity-60" />
+  2160→
+  2161→                <div
+  2162→                  className="relative w-full"
+  2163→                  style={{
+  2164→                    transformStyle: 'preserve-3d',
+  2165→                    transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
+  2166→                    transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+  2167→                  }}
+  2168→                >
+  2169→                  {/* ═══ FRONT FACE ═══ */}
+  2170→                  <div
+  2171→                    className="relative bg-gradient-to-b from-white to-orange-50/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-orange-200/50 overflow-hidden"
+  2172→                    style={{ backfaceVisibility: 'hidden' }}
+  2173→                  >
+  2174→                    {/* Shimmer overlay */}
+  2175→                    <motion.div
+  2176→                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full z-20 pointer-events-none"
+  2177→                      animate={{ translateX: ['-100%', '200%'] }}
+  2178→                      transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 3, ease: 'linear' }}
+  2179→                    />
+  2180→
+  2181→                    {/* ── Top Gradient Banner ── */}
+  2182→                    <div className="relative h-8 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 overflow-hidden">
+  2183→                      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  2184→                      <div className="relative flex items-center justify-center h-full">
+  2185→                        <p className="text-[8px] sm:text-[9px] text-white/90 font-bold uppercase tracking-[0.25em]">Ayam Geprek Sambal Ijo</p>
+  2186→                      </div>
+  2187→                    </div>
+  2188→
+  2189→                    {/* ── Pucuk Rebung Corners ── */}
+  2190→                    {['top-9 left-1 rotate-0', 'top-9 right-1 rotate-90', 'bottom-1 left-1 -rotate-90', 'bottom-1 right-1 rotate-180'].map((pos, i) => (
+  2191→                      <svg key={i} className={`absolute ${pos} w-12 h-12 text-orange-400/[0.18]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+  2192→                        <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
+  2193→                        <line x1="30" y1="15" x2="30" y2="5" /><line x1="40.6" y1="19.4" x2="47.7" y2="12.3" /><line x1="45" y1="30" x2="55" y2="30" /><line x1="40.6" y1="40.6" x2="47.7" y2="47.7" /><line x1="30" y1="45" x2="30" y2="55" /><line x1="19.4" y1="40.6" x2="12.3" y2="47.7" /><line x1="15" y1="30" x2="5" y2="30" /><line x1="19.4" y1="19.4" x2="12.3" y2="12.3" />
+  2194→                        {i < 2 && <path d="M30,12 L33.4,21.7 L42.7,17.3 L38.3,26.6 L48,30 L38.3,33.4 L42.7,42.7 L33.4,38.3 L30,48 L26.6,38.3 L17.3,42.7 L21.7,33.4 L12,30 L21.7,26.6 L17.3,17.3 L26.6,21.7 Z" fill="currentColor" fillOpacity="0.04" />}
+  2195→                        <circle cx="30" cy="5" r="1.2" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.2" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.2" fill="currentColor" stroke="none" />
+  2196→                      </svg>
+  2197→                    ))}
+  2198→
+  2199→                    {/* ── Diamond Chain Borders ── */}
+  2200→                    <svg className="absolute top-8 left-0 right-0 w-full h-4 text-orange-400/[0.15]" viewBox="0 0 300 20" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" preserveAspectRatio="none">
+  2201→                      <line x1="0" y1="1" x2="300" y2="1" /><line x1="0" y1="19" x2="300" y2="19" />
+  2202→                      <path d="M25,5 L37,10 L25,15 L13,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M75,5 L87,10 L75,15 L63,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M125,5 L137,10 L125,15 L113,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M150,3 L164,10 L150,17 L136,10 Z" fill="currentColor" fillOpacity="0.05" /><path d="M175,5 L187,10 L175,15 L163,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M225,5 L237,10 L225,15 L213,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M275,5 L287,10 L275,15 L263,10 Z" fill="currentColor" fillOpacity="0.03" />
+  2203→                    </svg>
+  2204→                    <svg className="absolute bottom-0 left-0 right-0 w-full h-4 text-orange-400/[0.15]" viewBox="0 0 300 20" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" preserveAspectRatio="none">
+  2205→                      <line x1="0" y1="1" x2="300" y2="1" /><line x1="0" y1="19" x2="300" y2="19" />
+  2206→                      <path d="M25,5 L37,10 L25,15 L13,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M75,5 L87,10 L75,15 L63,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M125,5 L137,10 L125,15 L113,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M150,3 L164,10 L150,17 L136,10 Z" fill="currentColor" fillOpacity="0.05" /><path d="M175,5 L187,10 L175,15 L163,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M225,5 L237,10 L225,15 L213,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M275,5 L287,10 L275,15 L263,10 Z" fill="currentColor" fillOpacity="0.03" />
+  2207→                    </svg>
+  2208→
+  2209→                    {/* ── Side Vines ── */}
+  2210→                    <svg className="absolute left-0 top-12 bottom-4 w-2 text-orange-400/[0.10]" viewBox="0 0 10 180" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+  2211→                      <circle cx="5" cy="4" r="2" /><line x1="5" y1="7" x2="5" y2="14" /><path d="M5,14 L8,18 L5,22 L2,18 Z" /><circle cx="5" cy="24" r="2" /><line x1="5" y1="27" x2="5" y2="34" /><path d="M5,34 L8,38 L5,42 L2,38 Z" /><circle cx="5" cy="44" r="2" /><line x1="5" y1="47" x2="5" y2="54" /><path d="M5,54 L8,58 L5,62 L2,58 Z" /><circle cx="5" cy="64" r="2" /><line x1="5" y1="67" x2="5" y2="74" /><path d="M5,74 L8,78 L5,82 L2,78 Z" /><circle cx="5" cy="84" r="2" /><line x1="5" y1="87" x2="5" y2="94" /><path d="M5,94 L8,98 L5,102 L2,98 Z" />
+  2212→                    </svg>
+  2213→                    <svg className="absolute right-0 top-12 bottom-4 w-2 text-orange-400/[0.10]" viewBox="0 0 10 180" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+  2214→                      <circle cx="5" cy="4" r="2" /><line x1="5" y1="7" x2="5" y2="14" /><path d="M5,14 L8,18 L5,22 L2,18 Z" /><circle cx="5" cy="24" r="2" /><line x1="5" y1="27" x2="5" y2="34" /><path d="M5,34 L8,38 L5,42 L2,38 Z" /><circle cx="5" cy="44" r="2" /><line x1="5" y1="47" x2="5" y2="54" /><path d="M5,54 L8,58 L5,62 L2,58 Z" /><circle cx="5" cy="64" r="2" /><line x1="5" y1="67" x2="5" y2="74" /><path d="M5,74 L8,78 L5,82 L2,78 Z" /><circle cx="5" cy="84" r="2" /><line x1="5" y1="87" x2="5" y2="94" /><path d="M5,94 L8,98 L5,102 L2,98 Z" />
+  2215→                    </svg>
+  2216→
+  2217→                    {/* ── Bintang Aceh Mandala Watermark ── */}
+  2218→                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-orange-300/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round">
+  2219→                      <circle cx="100" cy="100" r="90" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="50" /><circle cx="100" cy="100" r="30" />
+  2220→                      <path d="M100,30 Q113.4,67.7 149.5,50.5 Q132.3,86.6 170,100 Q132.3,113.4 149.5,149.5 Q113.4,132.3 100,170 Q86.6,132.3 50.5,149.5 Q67.7,113.4 30,100 Q67.7,86.6 50.5,50.5 Q86.6,67.7 100,30 Z" fill="currentColor" fillOpacity="0.02" />
+  2221→                      <line x1="100" y1="70" x2="100" y2="10" /><line x1="121.2" y1="78.8" x2="163.6" y2="36.4" /><line x1="130" y1="100" x2="190" y2="100" /><line x1="121.2" y1="121.2" x2="163.6" y2="163.6" /><line x1="100" y1="130" x2="100" y2="190" /><line x1="78.8" y1="121.2" x2="36.4" y2="163.6" /><line x1="70" y1="100" x2="10" y2="100" /><line x1="78.8" y1="78.8" x2="36.4" y2="36.4" />
+  2222→                      <circle cx="100" cy="100" r="6" fill="currentColor" fillOpacity="0.06" stroke="none" />
+  2223→                    </svg>
+  2224→
+  2225→                    {/* ── Rencong Watermark ── */}
+  2226→                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-20 text-orange-400/[0.07]" viewBox="0 0 120 200" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+  2227→                      <path d="M60,12 C58,24 55,46 51,70 C48,86 45,100 43,112 C41,120 39,126 37,133 C34,142 32,152 32,161 C32,170 35,178 42,184 C48,189 55,192 60,193 C65,192 72,189 78,184 C85,178 88,170 88,161 C88,152 86,142 83,133 C81,126 79,120 77,112 C75,100 72,86 69,70 C65,46 62,24 60,12 Z" fill="currentColor" fillOpacity="0.05" />
+  2228→                      <line x1="60" y1="20" x2="60" y2="108" strokeWidth="0.5" />
+  2229→                    </svg>
+  2230→
+  2231→                    <div className="relative z-10 px-4 pt-3 pb-5 sm:px-5 sm:pt-4 sm:pb-6">
+  2232→                      {/* Card Header */}
+  2233→                      <div className="flex items-center justify-between mb-3">
+  2234→                        <div className="flex items-center gap-2.5">
+  2235→                          <motion.div
+  2236→                            animate={{ rotate: [0, 4, -4, 0] }}
+  2237→                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+  2238→                            className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/20"
+  2239→                          >
+  2240→                            <Crown className="w-5 h-5 text-white" />
+  2241→                          </motion.div>
+  2242→                          <div className="text-left">
+  2243→                            <p className="text-[8px] text-orange-500 font-bold uppercase tracking-[0.2em]">Admin Card</p>
+  2244→                            <p className="text-gray-800 font-bold text-xs sm:text-sm truncate max-w-[130px]">{user.name}</p>
+  2245→                          </div>
+  2246→                        </div>
+  2247→                        <motion.div
+  2248→                          animate={{ scale: [1, 1.06, 1] }}
+  2249→                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+  2250→                          className="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg px-2.5 py-1 shadow-sm shadow-amber-500/20"
+  2251→                        >
+  2252→                          <span className="text-[8px] text-white font-extrabold uppercase tracking-wider">Premium</span>
+  2253→                        </motion.div>
+  2254→                      </div>
+  2255→
+  2256→                      {/* Diamond Divider */}
+  2257→                      <div className="flex items-center gap-2 mb-3">
+  2258→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+  2259→                        <svg className="w-2.5 h-2.5 text-orange-400/60" viewBox="0 0 12 12" fill="none">
+  2260→                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+  2261→                        </svg>
+  2262→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+  2263→                      </div>
+  2264→
+  2265→                      {/* Stats Row */}
+  2266→                      <div className="flex gap-2">
+  2267→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl p-2.5 text-center border border-orange-200/50">
+  2268→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+  2269→                            <Star className="w-3.5 h-3.5 text-orange-500" />
+  2270→                            <span className="text-[8px] text-orange-500 font-semibold uppercase tracking-wider">Poin</span>
+  2271→                          </div>
+  2272→                          <p className="text-gray-800 font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+  2273→                        </motion.div>
+  2274→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl p-2.5 text-center border border-orange-200/50">
+  2275→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+  2276→                            <Gift className="w-3.5 h-3.5 text-orange-500" />
+  2277→                            <span className="text-[8px] text-orange-500 font-semibold uppercase tracking-wider">Voucher</span>
+  2278→                          </div>
+  2279→                          <p className="text-gray-800 font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+  2280→                        </motion.div>
+  2281→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl p-2.5 text-center border border-orange-200/50">
+  2282→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+  2283→                            <Shield className="w-3.5 h-3.5 text-orange-500" />
+  2284→                            <span className="text-[8px] text-orange-500 font-semibold uppercase tracking-wider">Role</span>
+  2285→                          </div>
+  2286→                          <p className="text-gray-800 font-extrabold text-[11px] leading-tight mt-0.5">Admin</p>
+  2287→                        </motion.div>
+  2288→                      </div>
+  2289→
+  2290→                      {/* Tap hint */}
+  2291→                      <motion.p
+  2292→                        animate={{ opacity: [0.3, 0.7, 0.3] }}
+  2293→                        transition={{ duration: 2, repeat: Infinity }}
+  2294→                        className="text-center text-[8px] text-orange-400/50 font-medium mt-3"
+  2295→                      >
+  2296→                        Ketuk untuk melihat barcode
+  2297→                      </motion.p>
+  2298→                    </div>
+  2299→                  </div>
+  2300→
+  2301→                  {/* ═══ BACK FACE (Barcode) ═══ */}
+  2302→                  <div
+  2303→                    className="absolute inset-0 bg-gradient-to-b from-white to-orange-50/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-orange-200/50 overflow-hidden flex flex-col items-center justify-center"
+  2304→                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+  2305→                  >
+  2306→                    {/* Shimmer overlay */}
+  2307→                    <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full pointer-events-none" animate={{ translateX: ['-100%', '200%'] }} transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 3, ease: 'linear' }} />
+  2308→
+  2309→                    {/* Top Gradient Banner */}
+  2310→                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 overflow-hidden">
+  2311→                      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  2312→                      <div className="relative flex items-center justify-center h-full">
+  2313→                        <p className="text-[8px] sm:text-[9px] text-white/90 font-bold uppercase tracking-[0.25em]">Ayam Geprek Sambal Ijo</p>
+  2314→                      </div>
+  2315→                    </div>
+  2316→
+  2317→                    {/* Pucuk Rebung Corners (back) */}
+  2318→                    {['top-9 left-1', 'top-9 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map((pos, i) => (
+  2319→                      <svg key={i} className={`absolute ${pos} w-12 h-12 text-orange-400/[0.18]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+  2320→                        <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
+  2321→                        <line x1="30" y1="15" x2="30" y2="5" /><line x1="40.6" y1="19.4" x2="47.7" y2="12.3" /><line x1="45" y1="30" x2="55" y2="30" /><line x1="40.6" y1="40.6" x2="47.7" y2="47.7" /><line x1="30" y1="45" x2="30" y2="55" /><line x1="19.4" y1="40.6" x2="12.3" y2="47.7" /><line x1="15" y1="30" x2="5" y2="30" /><line x1="19.4" y1="19.4" x2="12.3" y2="12.3" />
+  2322→                        <circle cx="30" cy="5" r="1.2" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.2" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.2" fill="currentColor" stroke="none" />
+  2323→                      </svg>
+  2324→                    ))}
+  2325→
+  2326→                    {/* Diamond Chain Bottom */}
+  2327→                    <svg className="absolute bottom-0 left-0 right-0 w-full h-4 text-orange-400/[0.15]" viewBox="0 0 300 20" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+  2328→                      <line x1="0" y1="1" x2="300" y2="1" /><line x1="0" y1="19" x2="300" y2="19" />
+  2329→                      <path d="M25,5 L37,10 L25,15 L13,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M75,5 L87,10 L75,15 L63,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M125,5 L137,10 L125,15 L113,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M150,3 L164,10 L150,17 L136,10 Z" fill="currentColor" fillOpacity="0.05" /><path d="M175,5 L187,10 L175,15 L163,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M225,5 L237,10 L225,15 L213,10 Z" fill="currentColor" fillOpacity="0.03" /><path d="M275,5 L287,10 L275,15 L263,10 Z" fill="currentColor" fillOpacity="0.03" />
+  2330→                    </svg>
+  2331→
+  2332→                    {/* Bintang Aceh Watermark */}
+  2333→                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 text-orange-300/[0.06]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.5">
+  2334→                      <circle cx="100" cy="100" r="80" /><circle cx="100" cy="100" r="55" /><circle cx="100" cy="100" r="30" />
+  2335→                      <path d="M100,30 Q113.4,67.7 149.5,50.5 Q132.3,86.6 170,100 Q132.3,113.4 149.5,149.5 Q113.4,132.3 100,170 Q86.6,132.3 50.5,149.5 Q67.7,113.4 30,100 Q67.7,86.6 50.5,50.5 Q86.6,67.7 100,30 Z" fill="currentColor" fillOpacity="0.02" />
+  2336→                      <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.05" stroke="none" />
+  2337→                    </svg>
+  2338→
+  2339→                    <div className="relative z-10 w-full flex flex-col items-center px-4 pt-11 pb-6 sm:px-5">
+  2340→                      {/* Card label */}
+  2341→                      <div className="flex items-center gap-2 mb-2.5">
+  2342→                        <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
+  2343→                          <Crown className="w-4 h-4 text-white" />
+  2344→                        </motion.div>
+  2345→                        <div className="text-left">
+  2346→                          <p className="text-[8px] text-orange-500 font-bold uppercase tracking-[0.2em]">Admin Card</p>
+  2347→                          <p className="text-gray-800 font-bold text-[11px] truncate max-w-[110px]">{user.name}</p>
+  2348→                        </div>
+  2349→                      </div>
+  2350→
+  2351→                      {/* Diamond Divider */}
+  2352→                      <div className="flex items-center gap-2 mb-2.5 w-full">
+  2353→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+  2354→                        <svg className="w-2.5 h-2.5 text-orange-400/60" viewBox="0 0 12 12" fill="none">
+  2355→                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+  2356→                        </svg>
+  2357→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+  2358→                      </div>
+  2359→
+  2360→                      {/* Barcode */}
+  2361→                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-gradient-to-br from-orange-50/60 to-amber-50/40 rounded-xl p-3.5 border border-orange-200/50 w-full flex items-center justify-center">
+  2362→                        <svg ref={barcodeRef} className="w-full" />
+  2363→                      </motion.div>
+  2364→
+  2365→                      {/* Member code */}
+  2366→                      <p className="text-[9px] text-orange-500/60 font-mono mt-2 tracking-[0.2em] font-semibold">{memberCode}</p>
+  2367→
+  2368→                      {/* Tap hint */}
+  2369→                      <motion.p animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="text-[8px] text-orange-400/50 font-medium mt-2">
+  2370→                        Ketuk untuk kembali
+  2371→                      </motion.p>
+  2372→                    </div>
+  2373→                  </div>
+  2374→                </div>
+  2375→              </motion.div>
+  2376→            </motion.div>
+  2377→          )}
+  2378→        </div>
+  2379→      </div>
+  2380→
+  2381→      {/* ─── Tabs ─── */}
+  2382→      <div className="sticky top-[52px] z-40 bg-orange-500 shadow-sm">
+  2383→        <div className="max-w-2xl mx-auto px-2">
+  2384→          <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
+  2385→            {tabs.map((tab) => (
+  2386→              <button
+  2387→                key={tab.id}
+  2388→                onClick={() => setActiveTab(tab.id)}
+  2389→                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+  2390→                  activeTab === tab.id
+  2391→                    ? 'bg-white text-orange-600 shadow-md'
+  2392→                    : 'text-white/80 hover:text-white hover:bg-white/10'
+  2393→                }`}
+  2394→              >
+  2395→                {tab.icon}
+  2396→                <span className="hidden sm:inline">{tab.label}</span>
+  2397→              </button>
+  2398→            ))}
+  2399→          </div>
+  2400→        </div>
+  2401→      </div>
+  2402→
+  2403→      {/* ─── Tab Content ─── */}
+  2404→      <div className="max-w-2xl mx-auto px-4 mt-5 space-y-4">
+  2405→        {/* ═══ OVERVIEW TAB ═══ */}
+  2406→        {activeTab === 'overview' && (
+  2407→          <>
+  2408→            {/* Quick Stats */}
+  2409→            {loading ? (
+  2410→              <div className="grid grid-cols-2 gap-3">
+  2411→                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+  2412→              </div>
+  2413→            ) : isAdmin ? (
+  2414→              <div className="grid grid-cols-2 gap-3">
+  2415→                {[
+  2416→                  { label: 'Total Pesanan', value: adminStats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+  2417→                  { label: 'Menunggu', value: adminStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+  2418→                  { label: 'Selesai', value: adminStats.delivered, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+  2419→                  { label: 'Pendapatan', value: fmt(adminStats.revenue), icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+  2420→                ].map((s, i) => (
+  2421→                  <motion.div
+  2422→                    key={i}
+  2423→                    initial={{ opacity: 0, y: 10 }}
+  2424→                    animate={{ opacity: 1, y: 0 }}
+  2425→                    transition={{ delay: i * 0.05 }}
+  2426→                    className="bg-white rounded-xl p-4 shadow-md"
+  2427→                  >
+  2428→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+  2429→                      {s.icon}
+  2430→                    </div>
+  2431→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+  2432→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+  2433→                  </motion.div>
+  2434→                ))}
+  2435→              </div>
+  2436→            ) : (
+  2437→              <div className="grid grid-cols-2 gap-3">
+  2438→                {[
+  2439→                  { label: 'Total Pesanan', value: customerStats.totalOrders, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+  2440→                  { label: 'Sedang Proses', value: customerStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+  2441→                  { label: 'Selesai', value: customerStats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+  2442→                  { label: 'Total Belanja', value: fmt(customerStats.totalSpent), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+  2443→                ].map((s, i) => (
+  2444→                  <motion.div
+  2445→                    key={i}
+  2446→                    initial={{ opacity: 0, y: 10 }}
+  2447→                    animate={{ opacity: 1, y: 0 }}
+  2448→                    transition={{ delay: i * 0.05 }}
+  2449→                    className="bg-white rounded-xl p-4 shadow-md"
+  2450→                  >
+  2451→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+  2452→                      {s.icon}
+  2453→                    </div>
+  2454→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+  2455→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+  2456→                  </motion.div>
+  2457→                ))}
+  2458→              </div>
+  2459→            )}
+  2460→
+  2461→            {/* Info Cards */}
+  2462→            <div className="bg-white rounded-xl p-5 shadow-md">
+  2463→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+  2464→                <Info className="w-4 h-4 text-orange-500" />
+  2465→                Informasi Akun
+  2466→              </h3>
+  2467→              <div className="space-y-3">
+  2468→                {[
+  2469→                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Nama', value: user?.name || '-' },
+  2470→                  { icon: <Mail className="w-4 h-4 text-gray-400" />, label: 'Email', value: user?.email || '-' },
+  2471→                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Telepon', value: user?.phone || 'Belum diatur' },
+  2472→                  { icon: <Shield className="w-4 h-4 text-gray-400" />, label: 'Role', value: isAdmin ? 'Administrator' : 'Customer' },
+  2473→                  { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Bergabung', value: memberSince },
+  2474→                ].map((row, i) => (
+  2475→                  <div key={i} className="flex items-center gap-3">
+  2476→                    {row.icon}
+  2477→                    <div className="flex-1">
+  2478→                      <p className="text-[11px] text-gray-400">{row.label}</p>
+  2479→                      <p className="text-sm text-gray-700 font-medium">{row.value}</p>
+  2480→                    </div>
+  2481→                  </div>
+  2482→                ))}
+  2483→              </div>
+  2484→              <Button onClick={startEdit} variant="outline" className="w-full mt-4 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm">
+  2485→                <Edit3 className="w-4 h-4 mr-2" />
+  2486→                Edit Profil
+  2487→              </Button>
+  2488→            </div>
+  2489→
+  2490→            {/* Quick Actions */}
+  2491→            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+  2492→              {[
+
+[showing lines 2143-2492 of 2925; use offset=2493 with limit to continue reading]
