@@ -172,7 +172,7 @@ function TopBar() {
                     {STORE_INFO.name}
                   </h1>
                   <p className="text-[9px] sm:text-[11px] text-orange-100/80 leading-tight truncate">
-                    {STORE_INFO.hours} {STORE_INFO.timezone}
+                    Jl. Medan - Banda Aceh, Kec. Pidie
                   </p>
                 </div>
               </button>
@@ -190,15 +190,6 @@ function TopBar() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              {/* Phone Shortcut */}
-              <a
-                href={`tel:${STORE_INFO.phone}`}
-                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
-                aria-label="Telepon"
-              >
-                <Phone className="w-5 h-5" />
-              </a>
-
               {/* Notification Bell */}
               <button
                 onClick={() => setPage('orders')}
@@ -1866,6 +1857,25 @@ function ProfilePage() {
   const [orders, setOrders] = useState<OrderData[]>([])
   const [allOrders, setAllOrders] = useState<OrderData[]>([])
   const [loading, setLoading] = useState(true)
+  const [showBarcode, setShowBarcode] = useState(false)
+  const barcodeRef = useRef<SVGSVGElement>(null)
+  const memberCode = user ? `AGSI-${user.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}` : ''
+
+  // Barcode rendering
+  useEffect(() => {
+    if (showBarcode && barcodeRef.current && memberCode) {
+      try {
+        JsBarcode(barcodeRef.current, memberCode, {
+          format: 'CODE128',
+          width: 2,
+          height: 50,
+          displayValue: false,
+          background: 'transparent',
+          lineColor: '#f97316',
+        })
+      } catch { /* ignore */ }
+    }
+  }, [showBarcode, memberCode])
 
   const isAdmin = user?.role === 'admin'
 
@@ -2022,6 +2032,234 @@ function ProfilePage() {
               <p className="text-orange-200/50 text-[10px] mt-1">Bergabung sejak {memberSince}</p>
             </div>
           </div>
+
+          {/* ═══ Admin Member Card with Animation ═══ */}
+          {isAdmin && user && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
+              className="mt-6 max-w-sm mx-auto w-full"
+            >
+              <motion.div
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative w-full cursor-pointer"
+                style={{ perspective: 1000 }}
+                onClick={() => setShowBarcode(!showBarcode)}
+              >
+                {/* Shimmer glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/30 via-amber-300/40 to-orange-400/30 rounded-2xl blur-md opacity-60" />
+
+                <div
+                  className="relative w-full"
+                  style={{
+                    transformStyle: 'preserve-3d',
+                    transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  {/* ═══ FRONT FACE ═══ */}
+                  <div
+                    className="relative bg-white/95 backdrop-blur-lg rounded-2xl p-5 sm:p-6 shadow-2xl border-2 border-orange-300/60 overflow-hidden"
+                    style={{ backfaceVisibility: 'hidden' }}
+                  >
+                    {/* Animated shimmer overlay */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
+                      animate={{ translateX: ['-100%', '200%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'linear' }}
+                    />
+
+                    {/* Aceh Ornament - Corners */}
+                    {['top-2 left-2', 'top-2 right-2', 'bottom-2 left-2', 'bottom-2 right-2'].map((pos, i) => (
+                      <svg key={i} className={`absolute ${pos} w-10 h-10 text-orange-400/20`} viewBox="0 0 50 50" fill="none">
+                        <path d="M5 5 L25 2 L45 5 L48 25 L45 45 L25 48 L5 45 L2 25 Z" stroke="currentColor" strokeWidth="1.2" />
+                        <path d="M10 10 L25 8 L40 10 L42 25 L40 40 L25 42 L10 40 L8 25 Z" stroke="currentColor" strokeWidth="0.8" />
+                        <circle cx="25" cy="25" r="8" stroke="currentColor" strokeWidth="0.8" />
+                        {i < 2 && <path d="M25 17 L28 23 L34 23 L29 27 L31 33 L25 29 L19 33 L21 27 L16 23 L22 23 Z" stroke="currentColor" strokeWidth="0.6" fill="currentColor" fillOpacity="0.15" />}
+                      </svg>
+                    ))}
+                    {/* Aceh Meander Borders */}
+                    <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 text-orange-400/15" viewBox="0 0 120 18" fill="none">
+                      <path d="M0 9 L12 9 L15 3 L18 9 L30 9 L33 3 L36 9 L48 9 L51 3 L54 9 L66 9 L69 3 L72 9 L84 9 L87 3 L90 9 L102 9 L105 3 L108 9 L120 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-4 text-orange-400/15" viewBox="0 0 120 18" fill="none">
+                      <path d="M0 9 L12 9 L15 15 L18 9 L30 9 L33 15 L36 9 L48 9 L51 15 L54 9 L66 9 L69 15 L72 9 L84 9 L87 15 L90 9 L102 9 L105 15 L108 9 L120 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    {/* Center Diamond Watermark */}
+                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-orange-300/[0.06]" viewBox="0 0 200 200" fill="none">
+                      <path d="M100 20 L180 100 L100 180 L20 100 Z" stroke="currentColor" strokeWidth="2" />
+                      <path d="M100 40 L160 100 L100 160 L40 100 Z" stroke="currentColor" strokeWidth="1.5" />
+                      <circle cx="100" cy="100" r="30" stroke="currentColor" strokeWidth="1" />
+                      <circle cx="100" cy="100" r="50" stroke="currentColor" strokeWidth="0.8" />
+                    </svg>
+
+                    <div className="relative z-10">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <motion.div
+                            animate={{ rotate: [0, 5, -5, 0] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                            className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-md"
+                          >
+                            <Crown className="w-5 h-5 text-white" />
+                          </motion.div>
+                          <div className="text-left">
+                            <p className="text-[9px] text-orange-400 font-semibold uppercase tracking-widest">Admin Card</p>
+                            <p className="text-gray-800 font-bold text-xs sm:text-sm truncate max-w-[140px]">{user.name}</p>
+                          </div>
+                        </div>
+                        <motion.div
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                          className="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg px-2.5 py-1 shadow-sm"
+                        >
+                          <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Premium</span>
+                        </motion.div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+                        <svg className="w-2.5 h-2.5 text-orange-400/50" viewBox="0 0 12 12" fill="none">
+                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.2" />
+                        </svg>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+                      </div>
+
+                      {/* Stats Row */}
+                      <div className="flex gap-2.5">
+                        <motion.div
+                          whileHover={{ scale: 1.03 }}
+                          className="flex-1 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-2.5 text-center border border-orange-200/60"
+                        >
+                          <div className="flex items-center justify-center gap-1 mb-0.5">
+                            <Star className="w-3.5 h-3.5 text-orange-500" />
+                            <span className="text-[9px] text-orange-400 font-semibold uppercase tracking-wider">Poin</span>
+                          </div>
+                          <p className="text-gray-800 font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{ scale: 1.03 }}
+                          className="flex-1 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-2.5 text-center border border-orange-200/60"
+                        >
+                          <div className="flex items-center justify-center gap-1 mb-0.5">
+                            <Gift className="w-3.5 h-3.5 text-orange-500" />
+                            <span className="text-[9px] text-orange-400 font-semibold uppercase tracking-wider">Voucher</span>
+                          </div>
+                          <p className="text-gray-800 font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{ scale: 1.03 }}
+                          className="flex-1 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-2.5 text-center border border-orange-200/60"
+                        >
+                          <div className="flex items-center justify-center gap-1 mb-0.5">
+                            <Shield className="w-3.5 h-3.5 text-orange-500" />
+                            <span className="text-[9px] text-orange-400 font-semibold uppercase tracking-wider">Role</span>
+                          </div>
+                          <p className="text-gray-800 font-extrabold text-[11px] leading-tight mt-0.5">Admin</p>
+                        </motion.div>
+                      </div>
+
+                      {/* Tap hint */}
+                      <motion.p
+                        animate={{ opacity: [0.4, 0.8, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-center text-[9px] text-orange-400/60 font-medium mt-3"
+                      >
+                        Ketuk untuk melihat barcode
+                      </motion.p>
+                    </div>
+                  </div>
+
+                  {/* ═══ BACK FACE (Barcode) ═══ */}
+                  <div
+                    className="absolute inset-0 bg-white/95 backdrop-blur-lg rounded-2xl p-5 sm:p-6 shadow-2xl border-2 border-orange-300/60 overflow-hidden flex flex-col items-center justify-center"
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                  >
+                    {/* Animated shimmer overlay */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
+                      animate={{ translateX: ['-100%', '200%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'linear' }}
+                    />
+
+                    {/* Aceh Ornaments - Corners */}
+                    {['top-2 left-2', 'top-2 right-2', 'bottom-2 left-2', 'bottom-2 right-2'].map((pos, i) => (
+                      <svg key={i} className={`absolute ${pos} w-10 h-10 text-orange-400/20`} viewBox="0 0 50 50" fill="none">
+                        <path d="M5 5 L25 2 L45 5 L48 25 L45 45 L25 48 L5 45 L2 25 Z" stroke="currentColor" strokeWidth="1.2" />
+                        <path d="M10 10 L25 8 L40 10 L42 25 L40 40 L25 42 L10 40 L8 25 Z" stroke="currentColor" strokeWidth="0.8" />
+                        <circle cx="25" cy="25" r="8" stroke="currentColor" strokeWidth="0.8" />
+                      </svg>
+                    ))}
+                    {/* Meander Borders */}
+                    <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 text-orange-400/15" viewBox="0 0 120 18" fill="none">
+                      <path d="M0 9 L12 9 L15 3 L18 9 L30 9 L33 3 L36 9 L48 9 L51 3 L54 9 L66 9 L69 3 L72 9 L84 9 L87 3 L90 9 L102 9 L105 3 L108 9 L120 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-4 text-orange-400/15" viewBox="0 0 120 18" fill="none">
+                      <path d="M0 9 L12 9 L15 15 L18 9 L30 9 L33 15 L36 9 L48 9 L51 15 L54 9 L66 9 L69 15 L72 9 L84 9 L87 15 L90 9 L102 9 L105 15 L108 9 L120 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    {/* Diamond Watermark */}
+                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-orange-300/[0.06]" viewBox="0 0 200 200" fill="none">
+                      <path d="M100 20 L180 100 L100 180 L20 100 Z" stroke="currentColor" strokeWidth="2" />
+                      <path d="M100 40 L160 100 L100 160 L40 100 Z" stroke="currentColor" strokeWidth="1.5" />
+                      <circle cx="100" cy="100" r="30" stroke="currentColor" strokeWidth="1" />
+                    </svg>
+
+                    <div className="relative z-10 w-full flex flex-col items-center">
+                      {/* Card label */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <motion.div
+                          animate={{ rotate: [0, -5, 5, 0] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                          className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm"
+                        >
+                          <Crown className="w-4 h-4 text-white" />
+                        </motion.div>
+                        <div className="text-left">
+                          <p className="text-[9px] text-orange-400 font-semibold uppercase tracking-widest">Admin Card</p>
+                          <p className="text-gray-800 font-bold text-[11px] truncate max-w-[120px]">{user.name}</p>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="flex items-center gap-2 mb-2.5 w-full">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+                        <svg className="w-2.5 h-2.5 text-orange-400/50" viewBox="0 0 12 12" fill="none">
+                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.2" />
+                        </svg>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+                      </div>
+
+                      {/* Barcode */}
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-gradient-to-br from-orange-50/80 to-amber-50/80 rounded-xl p-3.5 border border-orange-200/60 w-full flex items-center justify-center"
+                      >
+                        <svg ref={barcodeRef} className="w-full" />
+                      </motion.div>
+
+                      {/* Member code */}
+                      <p className="text-[10px] text-orange-500/70 font-mono mt-2 tracking-[0.2em] font-semibold">{memberCode}</p>
+
+                      {/* Tap hint */}
+                      <motion.p
+                        animate={{ opacity: [0.4, 0.8, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-[9px] text-orange-400/60 font-medium mt-2"
+                      >
+                        Ketuk untuk kembali
+                      </motion.p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </div>
       </div>
 

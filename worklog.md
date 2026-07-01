@@ -246,3 +246,33 @@ Stage Summary:
 - Store status info still accessible via Info button → detail panel
 - All header elements properly proportioned
 - Lint passes clean
+---
+Task ID: 1a,1b,1c
+Agent: Main Agent
+Task: (1a) Hapus ikon telepon dari header, (1b) Tampilkan alamat toko di bawah nama toko, (1c) Di hero section akun admin tampilkan kartu member dengan animasi
+
+Work Log:
+- Removed phone icon `<a>` element from header (Phone shortcut)
+- Replaced subtitle from "10:00 - 22:00 WIB" to "Jl. Medan - Banda Aceh, Kec. Pidie"
+- Added showBarcode state, barcodeRef, memberCode to ProfilePage component
+- Added JsBarcode rendering useEffect in ProfilePage
+- Created animated Admin Card in profile hero section with:
+  - Spring entrance animation (opacity + y + scale, delay 0.2s)
+  - Floating animation (y: [0, -4, 0] infinite)
+  - Shimmer glow effect (gradient overlay sliding across card)
+  - Crown icon rotation animation
+  - Premium badge pulse animation
+  - Tap hint opacity pulse
+  - 3D flip (700ms cubic-bezier) with front/back faces
+  - Front: Admin Card label, name, Premium badge, Poin/Voucher/Role stats
+  - Back: Barcode (CODE128, orange lines), member code, tap-to-return hint
+  - Aceh ornaments: corner octagonal diamonds, meander borders, center diamond watermark
+- Verified with VLM: header has no phone icon, shows address, admin card renders correctly
+- Verified 3D flip shows barcode back face with correct member code
+
+Stage Summary:
+- Header cleaned: no phone icon, address shown below store name
+- Admin profile hero section now features animated member card
+- Card has 6+ concurrent Framer Motion animations
+- 3D flip barcode works identically to homepage member card
+- All changes pass lint, no runtime errors
