@@ -528,33 +528,14 @@ function HomePage() {
             <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
               Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
-              <Button
-                onClick={() => setPage('menu')}
-                size="lg"
-                className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg hover:shadow-xl transition-all px-8"
-              >
-                <UtensilsCrossed className="w-4 h-4 mr-2" />
-                Pesan Sekarang
-              </Button>
-              <Button
-                onClick={() => setPage('menu')}
-                size="lg"
-                variant="outline"
-                className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8"
-              >
-                Lihat Menu
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-
-            {/* Member Card - 3D Flip */}
+            {/* Member Card - Credit Card Size 3D Flip */}
             {user && user.role !== 'admin' && (
               <motion.div
-                initial={{ opacity: 0, y: 25, scale: 0.92 }}
+                initial={{ opacity: 0, y: 20, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 180, damping: 18 }}
-                className="mt-8 max-w-sm mx-auto w-full"
+                className="mt-8 mx-auto w-full"
+                style={{ maxWidth: 340 }}
               >
                 <motion.div
                   animate={{ y: [0, -3, 0] }}
@@ -564,7 +545,7 @@ function HomePage() {
                   onClick={() => setShowBarcode(!showBarcode)}
                 >
                   {/* Rotating glow ring */}
-                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+                  <div className="absolute -inset-[2px] rounded-xl overflow-hidden">
                     <motion.div
                       className="absolute inset-[-50%]"
                       animate={{ rotate: 360 }}
@@ -576,6 +557,7 @@ function HomePage() {
                   <div
                     className="relative w-full"
                     style={{
+                      aspectRatio: '8.56 / 5.4',
                       transformStyle: 'preserve-3d',
                       transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
                       transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -583,7 +565,7 @@ function HomePage() {
                   >
                     {/* ═══ FRONT FACE ═══ */}
                     <div
-                      className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden"
+                      className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-xl shadow-2xl border border-white/20 overflow-hidden"
                       style={{ backfaceVisibility: 'hidden' }}
                     >
                       {/* Shimmer overlay */}
@@ -593,138 +575,91 @@ function HomePage() {
                         transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
                       />
 
-                      {/* ── Animated Top Border ── */}
+                      {/* Animated Top Border */}
                       <motion.div
-                        className="h-1 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
+                        className="h-0.5 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
                         animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
                         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                         style={{ backgroundSize: '200% 100%' }}
                       />
 
-                      {/* ── Pucuk Rebung Corners ── */}
-                      <svg className="absolute top-2 left-1.5 w-14 h-14 text-white/[0.18]" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
-                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
-                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                      </svg>
-                      <svg className="absolute top-2 right-1.5 w-14 h-14 text-white/[0.18] rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
-                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
-                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                      </svg>
-                      <svg className="absolute bottom-1 left-1.5 w-14 h-14 text-white/[0.18] -rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
-                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
-                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                      </svg>
-                      <svg className="absolute bottom-1 right-1.5 w-14 h-14 text-white/[0.18] rotate-180" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
-                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
-                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                      </svg>
-
-                      {/* ── Bintang Aceh Mandala Watermark ── */}
-                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 text-white/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="100" cy="100" r="90" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="50" /><circle cx="100" cy="100" r="30" />
-                        <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.03" />
+                      {/* Bintang Aceh Watermark */}
+                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 text-white/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7">
+                        <circle cx="100" cy="100" r="90" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="50" />
                         <line x1="100" y1="60" x2="100" y2="5" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="195" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="195" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="5" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
-                        <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.06" stroke="none" />
                       </svg>
 
-                      {/* ── Rencong Watermark ── */}
-                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-16 text-white/[0.05]" viewBox="0 0 120 200" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M60,12 C58,24 55,46 51,70 C48,86 45,100 43,112 C41,120 39,126 37,133 C34,142 32,152 32,161 C32,170 35,178 42,184 C48,189 55,192 60,193 C65,192 72,189 78,184 C85,178 88,170 88,161 C88,152 86,142 83,133 C81,126 79,120 77,112 C75,100 72,86 69,70 C65,46 62,24 60,12 Z" fill="currentColor" fillOpacity="0.04" />
-                        <line x1="60" y1="20" x2="60" y2="108" strokeWidth="0.5" />
-                      </svg>
-
-                      {/* ── Sparkle Particles ── */}
-                      {[0, 1, 2, 3].map((i) => (
+                      {/* Sparkle Particles */}
+                      {[0, 1, 2].map((i) => (
                         <motion.div
                           key={i}
-                          className="absolute w-1 h-1 bg-white/40 rounded-full"
-                          style={{ top: `${18 + i * 22}%`, left: i % 2 === 0 ? '8%' : '88%' }}
-                          animate={{ y: [0, -8, 0], opacity: [0.2, 0.7, 0.2], scale: [0.8, 1.3, 0.8] }}
-                          transition={{ duration: 2.5 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.6 }}
+                          className="absolute w-0.5 h-0.5 bg-white/50 rounded-full"
+                          style={{ top: `${20 + i * 25}%`, left: i % 2 === 0 ? '10%' : '87%' }}
+                          animate={{ y: [0, -5, 0], opacity: [0.2, 0.8, 0.2] }}
+                          transition={{ duration: 2.5 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
                         />
                       ))}
 
-                      {/* ═══ CARD CONTENT ═══ */}
-                      <div className="relative z-10 px-5 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-7">
-                        {/* Card Header */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
+                      {/* ═══ FRONT CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-4 pt-3 pb-2.5">
+                        {/* Top row: Crown + label | Gold badge */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
                             <motion.div
                               animate={{ rotate: [0, 5, -5, 3, -3, 0] }}
                               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                              className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+                              className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center"
                             >
-                              <Crown className="w-6 h-6 text-yellow-200" />
+                              <Crown className="w-4 h-4 text-yellow-200" />
                             </motion.div>
                             <div className="text-left">
-                              <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="text-[9px] text-white/80 font-bold uppercase tracking-[0.2em]">Member Card</motion.p>
-                              <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="text-white font-extrabold text-sm sm:text-base truncate max-w-[160px]">{user.name}</motion.p>
+                              <motion.p initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="text-[7px] text-white/80 font-bold uppercase tracking-[0.15em] leading-none">Member Card</motion.p>
+                              <motion.p initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="text-white font-extrabold text-xs sm:text-sm truncate max-w-[130px] leading-tight mt-0.5">{user.name}</motion.p>
                             </div>
                           </div>
                           <motion.div
-                            animate={{ scale: [1, 1.06, 1] }}
+                            animate={{ scale: [1, 1.05, 1] }}
                             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                            className="bg-white/25 backdrop-blur-sm rounded-lg px-3 py-1.5"
+                            className="bg-white/20 backdrop-blur-sm rounded-md px-2.5 py-1"
                           >
-                            <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Gold</span>
+                            <span className="text-[8px] text-white font-extrabold uppercase tracking-wider">Gold</span>
                           </motion.div>
                         </div>
 
-                        {/* Diamond Divider */}
-                        <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.5, delay: 0.5 }} className="flex items-center gap-2 mb-4">
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                          <svg className="w-3 h-3 text-white/40" viewBox="0 0 12 12" fill="none">
-                            <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
-                          </svg>
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                        </motion.div>
-
-                        {/* Stats Row */}
-                        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="flex gap-3">
+                        {/* Stats row */}
+                        <div className="flex-1 flex items-end gap-2">
                           <motion.div
-                            whileHover={{ scale: 1.03 }}
-                            animate={{ boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 15px 2px rgba(255,255,255,0.1)', '0 0 0 0 rgba(255,255,255,0)'] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3.5 text-center border border-white/20"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.5 }}
+                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/15"
                           >
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                              <Star className="w-4 h-4 text-yellow-200" />
-                              <span className="text-[10px] text-white/80 font-semibold uppercase tracking-wider">Poin</span>
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <Star className="w-3 h-3 text-yellow-200" />
+                              <span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Poin</span>
                             </div>
-                            <p className="text-white font-extrabold text-xl leading-tight">{user.points ?? 0}</p>
+                            <p className="text-white font-extrabold text-base leading-none">{user.points ?? 0}</p>
                           </motion.div>
                           <motion.div
-                            whileHover={{ scale: 1.03 }}
-                            animate={{ boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 15px 2px rgba(255,255,255,0.1)', '0 0 0 0 rgba(255,255,255,0)'] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3.5 text-center border border-white/20"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.6 }}
+                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/15"
                           >
-                            <div className="flex items-center justify-center gap-1.5 mb-1">
-                              <Gift className="w-4 h-4 text-yellow-200" />
-                              <span className="text-[10px] text-white/80 font-semibold uppercase tracking-wider">Voucher</span>
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <Gift className="w-3 h-3 text-yellow-200" />
+                              <span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Voucher</span>
                             </div>
-                            <p className="text-white font-extrabold text-xl leading-tight">{user.voucher ?? 0}</p>
+                            <p className="text-white font-extrabold text-base leading-none">{user.voucher ?? 0}</p>
                           </motion.div>
-                        </motion.div>
+                        </div>
 
-                        {/* Tap hint */}
+                        {/* Bottom hint */}
                         <motion.p
                           initial={{ opacity: 0 }}
-                          animate={{ opacity: [0.3, 0.7, 0.3] }}
+                          animate={{ opacity: [0.25, 0.6, 0.25] }}
                           transition={{ duration: 2.5, repeat: Infinity, delay: 0.8 }}
-                          className="text-center text-[9px] text-white/40 font-medium mt-4"
+                          className="text-center text-[7px] text-white/40 font-medium mt-1.5"
                         >
                           Ketuk untuk melihat barcode
                         </motion.p>
@@ -733,7 +668,7 @@ function HomePage() {
 
                     {/* ═══ BACK FACE (Barcode) ═══ */}
                     <div
-                      className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col items-center justify-center"
+                      className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-xl shadow-2xl border border-white/20 overflow-hidden"
                       style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                     >
                       {/* Shimmer overlay */}
@@ -745,71 +680,47 @@ function HomePage() {
 
                       {/* Animated Top Border */}
                       <motion.div
-                        className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
+                        className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
                         animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
                         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                         style={{ backgroundSize: '200% 100%' }}
                       />
 
-                      {/* Pucuk Rebung Corners (back) */}
-                      {['top-2 left-1.5', 'top-2 right-1.5', 'bottom-1 left-1.5', 'bottom-1 right-1.5'].map((pos, i) => (
-                        <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.15]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
-                          <circle cx="30" cy="5" r="1.4" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.4" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.4" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.4" fill="currentColor" stroke="none" />
-                        </svg>
-                      ))}
-
                       {/* Bintang Aceh Watermark (back) */}
-                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-white/[0.06]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="100" cy="100" r="80" /><circle cx="100" cy="100" r="55" /><circle cx="100" cy="100" r="30" />
-                        <path d="M100,30 C108,50 125,55 145,52 C130,68 125,82 130,105 C112,92 88,92 70,105 C75,82 70,68 55,52 C75,55 92,50 100,30 Z" fill="currentColor" fillOpacity="0.02" />
-                        <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.05" stroke="none" />
+                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-white/[0.05]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6">
+                        <circle cx="100" cy="100" r="80" /><circle cx="100" cy="100" r="55" />
                       </svg>
 
-                      {/* Sparkle Particles (back) */}
-                      {[0, 1].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute w-1 h-1 bg-white/30 rounded-full"
-                          style={{ top: `${30 + i * 40}%`, left: i === 0 ? '12%' : '85%' }}
-                          animate={{ y: [0, -6, 0], opacity: [0.15, 0.5, 0.15] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 1 }}
-                        />
-                      ))}
-
-                      <div className="relative z-10 w-full flex flex-col items-center px-5 pt-5 pb-6 sm:px-6">
-                        {/* Card label */}
-                        <div className="flex items-center gap-2.5 mb-3">
-                          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                            <Crown className="w-4.5 h-4.5 text-yellow-200" />
+                      {/* ═══ BACK CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-4 pt-2.5 pb-2.5">
+                        {/* Top: Crown + label */}
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-7 h-7 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <Crown className="w-3.5 h-3.5 text-yellow-200" />
                           </motion.div>
                           <div className="text-left">
-                            <p className="text-[9px] text-white/80 font-bold uppercase tracking-[0.2em]">Member Card</p>
-                            <p className="text-white font-bold text-xs sm:text-sm truncate max-w-[140px]">{user.name}</p>
+                            <p className="text-[7px] text-white/80 font-bold uppercase tracking-[0.15em] leading-none">Member Card</p>
+                            <p className="text-white font-bold text-[10px] truncate max-w-[120px] leading-tight mt-0.5">{user.name}</p>
                           </div>
                         </div>
 
-                        {/* Diamond Divider */}
-                        <div className="flex items-center gap-2 mb-3 w-full">
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                          <svg className="w-2.5 h-2.5 text-white/40" viewBox="0 0 12 12" fill="none">
-                            <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
-                          </svg>
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                        </div>
-
-                        {/* Barcode */}
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 w-full flex items-center justify-center">
-                          <svg ref={barcodeRef} className="w-full" />
+                        {/* White barcode area */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex-1 bg-white rounded-lg p-2 flex flex-col items-center justify-center min-h-0"
+                        >
+                          <svg ref={barcodeRef} className="w-full h-full" style={{ minHeight: 40 }} />
                         </motion.div>
 
-                        {/* Member code text */}
-                        <p className="text-[10px] sm:text-[11px] text-white/60 font-mono mt-2.5 tracking-[0.2em] font-semibold">{memberCode}</p>
-
-                        {/* Tap hint */}
-                        <motion.p animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[9px] text-white/40 font-medium mt-2.5">
-                          Ketuk untuk kembali
-                        </motion.p>
+                        {/* Member code + hint */}
+                        <div className="flex items-center justify-between mt-1.5">
+                          <p className="text-[8px] text-white/60 font-mono tracking-[0.15em] font-semibold">{memberCode}</p>
+                          <motion.p animate={{ opacity: [0.25, 0.6, 0.25] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[7px] text-white/40 font-medium">
+                            Ketuk untuk kembali
+                          </motion.p>
+                        </div>
                       </div>
                     </div>
                   </div>
