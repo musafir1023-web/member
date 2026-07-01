@@ -147,7 +147,7 @@ function TopBar() {
       <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 relative overflow-hidden">
         <div className="absolute inset-0 aceh-pattern opacity-20" />
 
-        <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-2">
+        <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             {/* Left: Back + Logo + Name + Info Chip */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -164,15 +164,15 @@ function TopBar() {
                 onClick={() => setPage('home')}
                 className="flex items-center gap-2 hover:opacity-90 transition-opacity min-w-0"
               >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
-                  <ChefHat className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                  <ChefHat className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-extrabold text-[11px] sm:text-xs text-white uppercase tracking-wider leading-tight truncate">
+                  <h1 className="font-extrabold text-xs sm:text-sm text-white uppercase tracking-wider leading-tight truncate">
                     {STORE_INFO.name}
                   </h1>
-                  <p className="text-[8px] sm:text-[10px] text-orange-100/80 leading-tight truncate">
-                    {storeStatus.open ? `${STORE_INFO.hours} ${STORE_INFO.timezone} · Buka` : 'Tutup'}
+                  <p className="text-[9px] sm:text-[11px] text-orange-100/80 leading-tight truncate">
+                    {STORE_INFO.hours} {STORE_INFO.timezone}
                   </p>
                 </div>
               </button>
@@ -180,53 +180,42 @@ function TopBar() {
               {/* Info Chip (clickable) */}
               <button
                 onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo) }}
-                className="ml-1 flex items-center gap-1 px-2 py-1 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
+                className="ml-2 flex items-center gap-1.5 px-2.5 py-1.5 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
                 aria-label="Info Toko"
               >
-                <Info className="w-3 h-3 text-white/90" />
-                <span className="text-[9px] sm:text-[10px] text-white/90 font-medium hidden sm:inline">Info</span>
+                <Info className="w-3.5 h-3.5 text-white/90" />
+                <span className="text-[9px] sm:text-[11px] text-white/90 font-medium hidden sm:inline">Info</span>
               </button>
             </div>
 
-            {/* Right: Status + Actions */}
+            {/* Right: Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              {/* Open/Closed Status */}
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border ${
-                storeStatus.open
-                  ? 'bg-green-500/20 text-green-100 border-green-400/30'
-                  : 'bg-red-500/20 text-red-100 border-red-400/30'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${storeStatus.open ? 'bg-green-300 animate-pulse' : 'bg-red-300'}`} />
-                <span className="hidden sm:inline">{storeStatus.label}</span>
-                <span className="sm:hidden">{storeStatus.open ? 'Buka' : 'Tutup'}</span>
-              </div>
-
               {/* Phone Shortcut */}
               <a
                 href={`tel:${STORE_INFO.phone}`}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
                 aria-label="Telepon"
               >
-                <Phone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <Phone className="w-5 h-5" />
               </a>
 
               {/* Notification Bell */}
               <button
                 onClick={() => setPage('orders')}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
                 aria-label="Notifikasi"
               >
-                <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full" />
               </button>
 
               {/* Cart Shortcut */}
               <button
                 onClick={() => setPage('cart')}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
                 aria-label="Keranjang"
               >
-                <ShoppingCart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
                     {cartCount > 99 ? '99+' : cartCount}

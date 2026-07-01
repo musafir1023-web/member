@@ -220,3 +220,29 @@ Stage Summary:
 - Backdrop and "Tutup" button both close the panel
 - Profile tabs sticky offset adjusted for shorter header
 
+---
+Task ID: task-d2
+Agent: Main Agent
+Task: Besarkan sedikit ukuran header, hapus ikon buka di header
+
+Work Log:
+- Increased header padding from py-2 to py-3
+- Enlarged logo container from w-9 h-9 sm:w-10 sm:h-10 to w-10 h-10 sm:w-12 sm:h-12
+- Enlarged ChefHat icon from w-5 h-5 sm:w-5.5 sm:h-5.5 to w-6 h-6 sm:w-7 sm:h-7
+- Increased title text from text-[11px] sm:text-xs to text-xs sm:text-sm
+- Increased subtitle text from text-[8px] sm:text-[10px] to text-[9px] sm:text-[11px]
+- Removed "· Buka" from subtitle, now shows only "10:00 - 22:00 WIB"
+- Removed the green/red Open/Closed status badge chip (pulsing dot + "Buka"/"Tutup" text)
+- Updated comment from "Right: Status + Actions" to "Right: Actions"
+- Enlarged Info Chip button (ml-2, px-2.5 py-1.5, w-3.5 icon, text-[11px])
+- Enlarged all action button icons from w-4 h-4 to w-5 h-5
+- Increased action button padding from p-2 to p-2.5
+- Verified with VLM: header is larger, no "Buka" badge, icons properly sized, Info button works
+- Verified Info detail panel still opens correctly with all store info
+
+Stage Summary:
+- Header is visually larger and more prominent
+- "Buka"/"Tutup" status badge completely removed from header
+- Store status info still accessible via Info button → detail panel
+- All header elements properly proportioned
+- Lint passes clean
