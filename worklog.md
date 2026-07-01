@@ -133,3 +133,28 @@ Stage Summary:
 - All APIs updated to return points and voucher data
 - Lint passes clean
 
+---
+Task ID: 3
+Agent: Main Agent
+Task: Add 3D flip barcode to member card on homepage hero section
+
+Work Log:
+- Installed jsbarcode@3.12.3 package for client-side barcode generation
+- Added `useRef` to React imports, imported JsBarcode
+- Added `showBarcode` state and `barcodeRef` SVG ref in HomePage component
+- Generated member code: `AGSI-{user_id_alphanumeric_10chars}` (e.g. AGSI-CMR09LV540)
+- Added useEffect to render JsBarcode (CODE128 format, amber/yellow lines, transparent bg) when back face is visible
+- Replaced flat member card with 3D flip card using CSS `perspective`, `preserve-3d`, `backface-visibility: hidden`
+- Front face: name, points, voucher, Gold badge, "Ketuk untuk melihat barcode" hint
+- Back face: name, barcode SVG, member code in monospace, "Ketuk untuk kembali" hint
+- Flip animation: CSS transition 600ms with cubic-bezier(0.4, 0, 0.2, 1) easing
+- Verified with Agent Browser + VLM: front shows points/voucher, back shows rendered barcode, click toggles both ways
+- Lint passes clean
+
+Stage Summary:
+- Member card now has 3D flip interaction on click
+- Front: customer name, points, voucher count, Gold badge
+- Back: barcode (CODE128) with member code, customer name
+- Member code format: AGSI-XXXXXXXXXX (e.g. AGSI-CMR09LV540)
+- Smooth 600ms flip animation with preserve-3d
+

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore, type CartItem, type OrderData, type Page } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -59,6 +59,7 @@ import {
   Percent,
   Gift,
 } from 'lucide-react'
+import JsBarcode from 'jsbarcode'
 
 /* ─────────────────────── FORMATTERS ─────────────────────── */
 const fmt = (n: number) =>
@@ -354,6 +355,30 @@ function HomePage() {
   const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
   const [activeTab, setActiveTab] = useState<'terbaru' | 'terlaris' | 'promo'>('terbaru')
   const [loading, setLoading] = useState(true)
+  const [showBarcode, setShowBarcode] = useState(false)
+  const barcodeRef = useRef<SVGSVGElement>(null)
+
+  const memberCode = user ? `AGSI-${user.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}` : ''
+
+  // Generate barcode when back side is visible
+  useEffect(() => {
+    if (showBarcode && barcodeRef.current && memberCode) {
+      try {
+        JsBarcode(barcodeRef.current, memberCode, {
+          format: 'CODE128',
+          width: 1.5,
+          height: 44,
+          displayValue: true,
+          font: 'monospace',
+          fontSize: 11,
+          textMargin: 4,
+          margin: 0,
+          background: 'transparent',
+          lineColor: '#fcd34d',
+        })
+      } catch {}
+    }
+  }, [showBarcode, memberCode])
 
   // Fetch latest user points/voucher on mount
   useEffect(() => {
@@ -444,7 +469,7 @@ function HomePage() {
               </Button>
             </div>
 
-            {/* Member Card */}
+            {/* Member Card - 3D Flip */}
             {user && user.role !== 'admin' && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -452,45 +477,107 @@ function HomePage() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="mt-8 max-w-xs mx-auto w-full"
               >
-                <div className="relative bg-gradient-to-br from-amber-900/90 via-amber-800/90 to-orange-900/90 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-amber-600/30 overflow-hidden">
-                  {/* Decorative pattern overlay */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400 rounded-full blur-2xl" />
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-orange-400 rounded-full blur-2xl" />
-                  </div>
-
-                  <div className="relative z-10">
-                    {/* Card Header */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/30 border border-amber-400/30 flex items-center justify-center">
-                          <Crown className="w-5 h-5 text-amber-300" />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-[10px] text-amber-300/80 font-medium uppercase tracking-wider">Member Card</p>
-                          <p className="text-white font-bold text-sm truncate max-w-[140px]">{user.name}</p>
-                        </div>
+                <div
+                  className="relative w-full cursor-pointer"
+                  style={{ perspective: 800 }}
+                  onClick={() => setShowBarcode(!showBarcode)}
+                >
+                  <div
+                    className="relative w-full transition-transform duration-600 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                      transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    {/* ═══ FRONT FACE ═══ */}
+                    <div
+                      className="relative bg-gradient-to-br from-amber-900/90 via-amber-800/90 to-orange-900/90 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-amber-600/30 overflow-hidden"
+                      style={{ backfaceVisibility: 'hidden' }}
+                    >
+                      {/* Decorative pattern overlay */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400 rounded-full blur-2xl" />
+                        <div className="absolute bottom-0 left-0 w-20 h-20 bg-orange-400 rounded-full blur-2xl" />
                       </div>
-                      <div className="bg-amber-500/20 border border-amber-400/20 rounded-lg px-2 py-0.5">
-                        <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider">Gold</span>
+
+                      <div className="relative z-10">
+                        {/* Card Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/30 border border-amber-400/30 flex items-center justify-center">
+                              <Crown className="w-5 h-5 text-amber-300" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-[10px] text-amber-300/80 font-medium uppercase tracking-wider">Member Card</p>
+                              <p className="text-white font-bold text-sm truncate max-w-[140px]">{user.name}</p>
+                            </div>
+                          </div>
+                          <div className="bg-amber-500/20 border border-amber-400/20 rounded-lg px-2 py-0.5">
+                            <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider">Gold</span>
+                          </div>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="flex gap-2">
+                          <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <Star className="w-3.5 h-3.5 text-yellow-400" />
+                              <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Poin</span>
+                            </div>
+                            <p className="text-white font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+                          </div>
+                          <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <Gift className="w-3.5 h-3.5 text-pink-400" />
+                              <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Voucher</span>
+                            </div>
+                            <p className="text-white font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+                          </div>
+                        </div>
+
+                        {/* Tap hint */}
+                        <div className="flex items-center justify-center gap-1.5 mt-3">
+                          <span className="text-[9px] text-amber-300/50 font-medium">Ketuk untuk melihat barcode</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Stats Row */}
-                    <div className="flex gap-2">
-                      <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
-                        <div className="flex items-center justify-center gap-1 mb-0.5">
-                          <Star className="w-3.5 h-3.5 text-yellow-400" />
-                          <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Poin</span>
-                        </div>
-                        <p className="text-white font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+                    {/* ═══ BACK FACE (Barcode) ═══ */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-br from-amber-900/95 via-amber-800/95 to-orange-900/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-amber-600/30 overflow-hidden flex flex-col items-center justify-center"
+                      style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                    >
+                      {/* Decorative */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 left-0 w-32 h-32 bg-amber-400 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 right-0 w-28 h-28 bg-orange-400 rounded-full blur-3xl" />
                       </div>
-                      <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
-                        <div className="flex items-center justify-center gap-1 mb-0.5">
-                          <Gift className="w-3.5 h-3.5 text-pink-400" />
-                          <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Voucher</span>
+
+                      <div className="relative z-10 w-full flex flex-col items-center">
+                        {/* Card label */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/30 border border-amber-400/30 flex items-center justify-center">
+                            <Crown className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <div className="text-left">
+                            <p className="text-[9px] text-amber-300/60 font-medium uppercase tracking-wider">Member Card</p>
+                            <p className="text-white font-bold text-xs truncate max-w-[120px]">{user.name}</p>
+                          </div>
                         </div>
-                        <p className="text-white font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+
+                        {/* Barcode */}
+                        <div className="bg-white/5 rounded-xl p-3 border border-white/10 w-full flex items-center justify-center">
+                          <svg ref={barcodeRef} className="w-full" />
+                        </div>
+
+                        {/* Member code text */}
+                        <p className="text-[10px] text-amber-200/60 font-mono mt-2 tracking-widest">{memberCode}</p>
+
+                        {/* Tap hint */}
+                        <div className="flex items-center justify-center gap-1.5 mt-2">
+                          <span className="text-[9px] text-amber-300/50 font-medium">Ketuk untuk kembali</span>
+                        </div>
                       </div>
                     </div>
                   </div>
