@@ -158,3 +158,35 @@ Stage Summary:
 - Member code format: AGSI-XXXXXXXXXX (e.g. AGSI-CMR09LV540)
 - Smooth 600ms flip animation with preserve-3d
 
+---
+Task ID: 4
+Agent: Main Agent
+Task: Enlarge member card, match hero colors, add Aceh ornaments
+
+Work Log:
+- Changed card max-width from max-w-xs (320px) to max-w-sm (384px)
+- Increased padding from p-4 to p-5 sm:p-6 for larger feel
+- Changed card background from dark amber (amber-900/90) to white/95 with backdrop-blur-lg
+- Changed border from amber-600/30 thin to orange-300/60 2px solid
+- Updated all card text colors: orange-400 for labels, gray-800 for values, orange-500 for icons
+- Changed Crown icon container from amber-500/30 border to orange-to-amber gradient bg
+- Changed Gold badge from amber-500/20 border to orange-500-to-amber-500 gradient
+- Changed stat boxes from white/10 dark to orange-50-to-amber-50 gradient with orange-200 border
+- Increased stat numbers from text-lg to text-xl
+- Added Aceh ornament SVGs to all 4 corners: diamond + inner-diamond + circle + star motifs
+- Added Aceh meander border patterns (geometric zigzag) at top and bottom edges
+- Added Aceh diamond watermark in center (very subtle opacity)
+- Added divider with Aceh diamond separator between header and stats
+- Updated barcode lineColor from yellow (#fcd34d) to orange (#ea580c) to match theme
+- Applied same ornament/decoration pattern to both front and back faces
+- Verified with Agent Browser + VLM: white card with orange accents, ornaments visible, harmonizes with hero
+
+Stage Summary:
+- Card is now larger (max-w-sm) with more padding
+- White card with orange accents matches the orange hero section palette
+- 8 corner Aceh ornament SVGs (4 per face) with diamond, circle, star motifs
+- 4 meander border SVGs (2 per face) at top and bottom edges
+- 2 center diamond watermarks (1 per face)
+- 2 diamond dividers (1 per face) between header and content
+- Barcode lines now orange to match the color scheme
+
