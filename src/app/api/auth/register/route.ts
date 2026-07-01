@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
       email: user.email,
       role: user.role,
       phone: user.phone,
+      points: user.points,
+      voucher: user.voucher,
     })
   } catch (error) {
     return NextResponse.json(

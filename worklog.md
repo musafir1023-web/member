@@ -104,4 +104,32 @@ Stage Summary:
 - Cart and notification shortcuts in header
 - Breadcrumb navigation on sub-pages
 - Footer updated with full store info grid
-- No lint errors, no runtime errors
+- No lint errors, no runtime errors---
+Task ID: 2
+Agent: Main Agent
+Task: Add member card to hero section on homepage showing name, points, voucher
+
+Work Log:
+- Added `points Int @default(0)` and `voucher Int @default(0)` fields to User model in prisma/schema.prisma
+- Ran `bun run db:push` to apply schema changes to SQLite database
+- Updated `User` interface in src/lib/store.ts to include optional `points` and `voucher` fields
+- Updated login API (POST /api/auth/login) to return points and voucher
+- Updated register API (POST /api/auth/register) to return points and voucher
+- Updated profile API (PUT /api/auth/profile) to return points and voucher
+- Added GET handler to /api/auth/profile to fetch latest user data (for points/voucher sync)
+- Added `Gift` icon import from lucide-react
+- Updated HomePage component to fetch user profile on mount for latest points/voucher
+- Added member card to hero section (visible only for logged-in customers, not admin)
+- Added login prompt button for non-logged-in users ("Masuk untuk mendapatkan poin & voucher")
+- Added add-to-cart guard for non-logged-in users on homepage
+- Verified both states (logged-in and logged-out) with Agent Browser + VLM
+
+Stage Summary:
+- Member card displays customer name, points, and voucher count in the hero section
+- Dark amber/gold themed card with Crown icon, Star icon for points, Gift icon for voucher
+- Shows "Gold" badge and "Member Card" label
+- Non-logged-in users see a prompt to login for points & voucher
+- Admin users do not see the member card
+- All APIs updated to return points and voucher data
+- Lint passes clean
+

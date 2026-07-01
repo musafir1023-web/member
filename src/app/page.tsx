@@ -57,6 +57,7 @@ import {
   Sparkles,
   Crown,
   Percent,
+  Gift,
 } from 'lucide-react'
 
 /* ─────────────────────── FORMATTERS ─────────────────────── */
@@ -348,13 +349,25 @@ interface HomeProduct {
 }
 
 function HomePage() {
-  const setPage = useAppStore((s) => s.setPage)
-  const addToCart = useAppStore((s) => s.addToCart)
-  const addToast = useAppStore((s) => s.addToast)
+  const { setPage, addToCart, addToast, user, setUser } = useAppStore()
   const [products, setProducts] = useState<HomeProduct[]>([])
   const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
   const [activeTab, setActiveTab] = useState<'terbaru' | 'terlaris' | 'promo'>('terbaru')
   const [loading, setLoading] = useState(true)
+
+  // Fetch latest user points/voucher on mount
+  useEffect(() => {
+    if (user && user.id) {
+      fetch(`/api/auth/profile?userId=${user.id}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.id) {
+            setUser({ ...user, points: data.points, voucher: data.voucher })
+          }
+        })
+        .catch(() => {})
+    }
+  }, [user?.id])
 
   useEffect(() => {
     Promise.all([
@@ -373,6 +386,11 @@ function HomePage() {
   }, [addToast])
 
   const handleAdd = (p: HomeProduct) => {
+    if (!user) {
+      addToast('Silakan login terlebih dahulu untuk menambahkan produk', 'error')
+      setPage('login')
+      return
+    }
     addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
     addToast(`${p.name} ditambahkan ke keranjang`)
   }
@@ -425,6 +443,79 @@ function HomePage() {
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
+
+            {/* Member Card */}
+            {user && user.role !== 'admin' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mt-8 max-w-xs mx-auto w-full"
+              >
+                <div className="relative bg-gradient-to-br from-amber-900/90 via-amber-800/90 to-orange-900/90 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-amber-600/30 overflow-hidden">
+                  {/* Decorative pattern overlay */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400 rounded-full blur-2xl" />
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-orange-400 rounded-full blur-2xl" />
+                  </div>
+
+                  <div className="relative z-10">
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/30 border border-amber-400/30 flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-amber-300" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] text-amber-300/80 font-medium uppercase tracking-wider">Member Card</p>
+                          <p className="text-white font-bold text-sm truncate max-w-[140px]">{user.name}</p>
+                        </div>
+                      </div>
+                      <div className="bg-amber-500/20 border border-amber-400/20 rounded-lg px-2 py-0.5">
+                        <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider">Gold</span>
+                      </div>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
+                        <div className="flex items-center justify-center gap-1 mb-0.5">
+                          <Star className="w-3.5 h-3.5 text-yellow-400" />
+                          <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Poin</span>
+                        </div>
+                        <p className="text-white font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+                      </div>
+                      <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/10">
+                        <div className="flex items-center justify-center gap-1 mb-0.5">
+                          <Gift className="w-3.5 h-3.5 text-pink-400" />
+                          <span className="text-[9px] text-amber-200/70 font-medium uppercase tracking-wide">Voucher</span>
+                        </div>
+                        <p className="text-white font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Login prompt for non-logged-in users */}
+            {!user && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mt-8"
+              >
+                <button
+                  onClick={() => setPage('login')}
+                  className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 border border-white/20 rounded-xl px-4 py-2.5 transition-all group"
+                >
+                  <User className="w-4 h-4 text-white/80 group-hover:text-white" />
+                  <span className="text-white/80 group-hover:text-white text-sm font-medium">Masuk untuk mendapatkan poin & voucher</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
         <div className="absolute bottom-0 left-0 right-0">
