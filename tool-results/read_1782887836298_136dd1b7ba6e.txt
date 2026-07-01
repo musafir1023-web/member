@@ -1,0 +1,342 @@
+   551→            {/* Member Card - 3D Flip */}
+   552→            {user && user.role !== 'admin' && (
+   553→              <motion.div
+   554→                initial={{ opacity: 0, y: 25, scale: 0.92 }}
+   555→                animate={{ opacity: 1, y: 0, scale: 1 }}
+   556→                transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 180, damping: 18 }}
+   557→                className="mt-8 max-w-sm mx-auto w-full"
+   558→              >
+   559→                <motion.div
+   560→                  animate={{ y: [0, -3, 0] }}
+   561→                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+   562→                  className="relative w-full cursor-pointer"
+   563→                  style={{ perspective: 1000 }}
+   564→                  onClick={() => setShowBarcode(!showBarcode)}
+   565→                >
+   566→                  {/* Outer glow */}
+   567→                  <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-500/30 via-yellow-400/25 to-amber-500/30 rounded-2xl blur-lg opacity-70" />
+   568→
+   569→                  <div
+   570→                    className="relative w-full"
+   571→                    style={{
+   572→                      transformStyle: 'preserve-3d',
+   573→                      transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
+   574→                      transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+   575→                    }}
+   576→                  >
+   577→                    {/* ═══ FRONT FACE ═══ */}
+   578→                    <div
+   579→                      className="relative bg-gradient-to-b from-amber-950/95 via-orange-950/90 to-amber-950/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-amber-700/40 overflow-hidden"
+   580→                      style={{ backfaceVisibility: 'hidden' }}
+   581→                    >
+   582→                      {/* Shimmer overlay */}
+   583→                      <motion.div
+   584→                        className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/15 to-transparent -translate-x-full z-20 pointer-events-none"
+   585→                        animate={{ translateX: ['-100%', '200%'] }}
+   586→                        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
+   587→                      />
+   588→
+   589→                      {/* ── Top Gradient Banner ── */}
+   590→                      <div className="relative h-9 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 overflow-hidden">
+   591→                        <div className="absolute inset-0 aceh-pattern opacity-20" />
+   592→                        <div className="relative flex items-center justify-center h-full">
+   593→                          <p className="text-[9px] sm:text-[10px] text-white/90 font-bold uppercase tracking-[0.25em]">Ayam Geprek Sambal Ijo</p>
+   594→                        </div>
+   595→                      </div>
+   596→
+   597→                      {/* ── Pintu Aceh Arch Ornament ── */}
+   598→                      <svg className="absolute top-9 left-0 right-0 w-full h-8 text-amber-500/[0.18]" viewBox="0 0 300 30" fill="none" stroke="currentColor" strokeWidth="0.8">
+   599→                        <path d="M10,28 L10,18 Q10,4 150,4 Q290,4 290,18 L290,28" />
+   600→                        <path d="M10,28 L10,20 Q10,8 150,8 Q290,8 290,20 L290,28" />
+   601→                        <circle cx="150" cy="4" r="2" fill="currentColor" stroke="none" />
+   602→                        <circle cx="100" cy="6" r="1.2" fill="currentColor" stroke="none" />
+   603→                        <circle cx="200" cy="6" r="1.2" fill="currentColor" stroke="none" />
+   604→                        <circle cx="60" cy="11" r="1" fill="currentColor" stroke="none" />
+   605→                        <circle cx="240" cy="11" r="1" fill="currentColor" stroke="none" />
+   606→                        <circle cx="10" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   607→                        <circle cx="290" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   608→                      </svg>
+   609→
+   610→                      {/* ── Pucuk Rebung Corners ── */}
+   611→                      <svg className="absolute top-11 left-1.5 w-16 h-16 text-amber-400/[0.22]" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   612→                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
+   613→                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+   614→                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+   615→                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
+   616→                        <line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+   617→                        <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+   618→                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+   619→                      </svg>
+   620→                      <svg className="absolute top-11 right-1.5 w-16 h-16 text-amber-400/[0.22] rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   621→                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
+   622→                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+   623→                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+   624→                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
+   625→                        <line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+   626→                        <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+   627→                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+   628→                      </svg>
+   629→                      <svg className="absolute bottom-1.5 left-1.5 w-16 h-16 text-amber-400/[0.22] -rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   630→                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
+   631→                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+   632→                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+   633→                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
+   634→                        <line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+   635→                        <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+   636→                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+   637→                      </svg>
+   638→                      <svg className="absolute bottom-1.5 right-1.5 w-16 h-16 text-amber-400/[0.22] rotate-180" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   639→                        <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" />
+   640→                        <path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+   641→                        <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+   642→                        <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" />
+   643→                        <line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+   644→                        <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+   645→                        <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+   646→                      </svg>
+   647→
+   648→                      {/* ── Pucuk Rebung Chain Border Top ── */}
+   649→                      <svg className="absolute top-[72px] left-0 right-0 w-full h-6 text-amber-500/[0.18]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   650→                        <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+   651→                        <path d="M30,6 C32,10 36,12 35,16 C34,19 32,20 30,22 C28,20 26,19 25,16 C24,12 28,10 30,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="6" x2="30" y2="22" strokeWidth="0.4" /><circle cx="30" cy="4" r="1.5" fill="currentColor" stroke="none" />
+   652→                        <path d="M90,6 C92,10 96,12 95,16 C94,19 92,20 90,22 C88,20 86,19 85,16 C84,12 88,10 90,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="6" x2="90" y2="22" strokeWidth="0.4" /><circle cx="90" cy="4" r="1.5" fill="currentColor" stroke="none" />
+   653→                        <path d="M150,6 C152,10 156,12 155,16 C154,19 152,20 150,22 C148,20 146,19 145,16 C144,12 148,10 150,6 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="6" x2="150" y2="22" strokeWidth="0.4" /><circle cx="150" cy="4" r="1.8" fill="currentColor" stroke="none" />
+   654→                        <path d="M210,6 C212,10 216,12 215,16 C214,19 212,20 210,22 C208,20 206,19 205,16 C204,12 208,10 210,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="6" x2="210" y2="22" strokeWidth="0.4" /><circle cx="210" cy="4" r="1.5" fill="currentColor" stroke="none" />
+   655→                        <path d="M270,6 C272,10 276,12 275,16 C274,19 272,20 270,22 C268,20 266,19 265,16 C264,12 268,10 270,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="6" x2="270" y2="22" strokeWidth="0.4" /><circle cx="270" cy="4" r="1.5" fill="currentColor" stroke="none" />
+   656→                      </svg>
+   657→
+   658→                      {/* ── Pucuk Rebung Chain Border Bottom ── */}
+   659→                      <svg className="absolute bottom-0 left-0 right-0 w-full h-6 text-amber-500/[0.18]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   660→                        <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+   661→                        <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   662→                        <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   663→                        <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
+   664→                        <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   665→                        <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   666→                      </svg>
+   667→
+   668→                      {/* ── Acehnese Floral Scroll Left ── */}
+   669→                      <svg className="absolute left-0 top-16 bottom-7 w-3 text-amber-400/[0.15]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   670→                        <path d="M6,0 C6,8 6,12 6,20" />
+   671→                        <path d="M6,20 C10,16 12,12 10,8 C8,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="8" r="1.5" />
+   672→                        <path d="M6,20 C6,28 6,36 6,45" />
+   673→                        <path d="M6,45 C2,41 0,37 2,33 C4,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="33" r="1.5" />
+   674→                        <path d="M6,45 C6,53 6,61 6,70" />
+   675→                        <path d="M6,70 C10,66 12,62 10,58 C8,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="58" r="1.5" />
+   676→                        <path d="M6,70 C6,78 6,86 6,95" />
+   677→                        <path d="M6,95 C2,91 0,87 2,83 C4,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="83" r="1.5" />
+   678→                        <path d="M6,95 C6,103 6,111 6,120" />
+   679→                        <path d="M6,120 C10,116 12,112 10,108 C8,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="108" r="1.5" />
+   680→                        <path d="M6,120 C6,128 6,136 6,145" />
+   681→                        <path d="M6,145 C2,141 0,137 2,133 C4,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="133" r="1.5" />
+   682→                        <path d="M6,145 C6,153 6,161 6,170" />
+   683→                        <path d="M6,170 C10,166 12,162 10,158 C8,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="158" r="1.5" />
+   684→                        <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
+   685→                      </svg>
+   686→                      {/* ── Acehnese Floral Scroll Right ── */}
+   687→                      <svg className="absolute right-0 top-16 bottom-7 w-3 text-amber-400/[0.15]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   688→                        <path d="M6,0 C6,8 6,12 6,20" />
+   689→                        <path d="M6,20 C2,16 0,12 2,8 C4,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="8" r="1.5" />
+   690→                        <path d="M6,20 C6,28 6,36 6,45" />
+   691→                        <path d="M6,45 C10,41 12,37 10,33 C8,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="33" r="1.5" />
+   692→                        <path d="M6,45 C6,53 6,61 6,70" />
+   693→                        <path d="M6,70 C2,66 0,62 2,58 C4,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="58" r="1.5" />
+   694→                        <path d="M6,70 C6,78 6,86 6,95" />
+   695→                        <path d="M6,95 C10,91 12,87 10,83 C8,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="83" r="1.5" />
+   696→                        <path d="M6,95 C6,103 6,111 6,120" />
+   697→                        <path d="M6,120 C2,116 0,112 2,108 C4,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="108" r="1.5" />
+   698→                        <path d="M6,120 C6,128 6,136 6,145" />
+   699→                        <path d="M6,145 C10,141 12,137 10,133 C8,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="133" r="1.5" />
+   700→                        <path d="M6,145 C6,153 6,161 6,170" />
+   701→                        <path d="M6,170 C2,166 0,162 2,158 C4,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="158" r="1.5" />
+   702→                        <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
+   703→                      </svg>
+   704→
+   705→                      {/* ── Bintang Aceh Mandala Watermark ── */}
+   706→                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 text-amber-400/[0.10]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round">
+   707→                        <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="88" strokeWidth="0.4" strokeDasharray="4 4" />
+   708→                        <circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" /><circle cx="100" cy="100" r="18" strokeWidth="0.4" />
+   709→                        <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.03" />
+   710→                        <line x1="100" y1="60" x2="100" y2="5" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="195" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="195" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="5" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
+   711→                        <path d="M100,16 L102,22 L100,28 L98,22 Z" fill="currentColor" stroke="none" /><path d="M170.5,33.5 L166,37 L162,33 L166,29 Z" fill="currentColor" stroke="none" /><path d="M198,100 L192,102 L186,100 L192,98 Z" fill="currentColor" stroke="none" /><path d="M170.5,166.5 L166,163 L162,167 L166,171 Z" fill="currentColor" stroke="none" /><path d="M100,184 L102,178 L100,172 L98,178 Z" fill="currentColor" stroke="none" /><path d="M29.5,166.5 L34,163 L38,167 L34,171 Z" fill="currentColor" stroke="none" /><path d="M2,100 L8,98 L14,100 L8,102 Z" fill="currentColor" stroke="none" /><path d="M29.5,33.5 L34,37 L38,33 L34,29 Z" fill="currentColor" stroke="none" />
+   712→                        <circle cx="100" cy="42" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="60" r="2.5" fill="currentColor" stroke="none" /><circle cx="158" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="100" cy="158" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="42" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="60" r="2.5" fill="currentColor" stroke="none" />
+   713→                        <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.08" stroke="none" />
+   714→                      </svg>
+   715→
+   716→                      {/* ── Rencong Watermark (right side, subtle) ── */}
+   717→                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-18 text-amber-400/[0.08]" viewBox="0 0 120 200" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   718→                        <path d="M60,12 C58,24 55,46 51,70 C48,86 45,100 43,112 C41,120 39,126 37,133 C34,142 32,152 32,161 C32,170 35,178 42,184 C48,189 55,192 60,193 C65,192 72,189 78,184 C85,178 88,170 88,161 C88,152 86,142 83,133 C81,126 79,120 77,112 C75,100 72,86 69,70 C65,46 62,24 60,12 Z" fill="currentColor" fillOpacity="0.05" />
+   719→                        <line x1="60" y1="20" x2="60" y2="108" strokeWidth="0.5" />
+   720→                      </svg>
+   721→
+   722→                      {/* ═══ CARD CONTENT ═══ */}
+   723→                      <div className="relative z-10 px-5 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-7">
+   724→                        {/* Card Header */}
+   725→                        <div className="flex items-center justify-between mb-4">
+   726→                          <div className="flex items-center gap-3">
+   727→                            <motion.div
+   728→                              animate={{ rotate: [0, 3, -3, 0] }}
+   729→                              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+   730→                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/20"
+   731→                            >
+   732→                              <Crown className="w-6 h-6 text-white" />
+   733→                            </motion.div>
+   734→                            <div className="text-left">
+   735→                              <p className="text-[9px] text-amber-400 font-bold uppercase tracking-[0.2em]">Member Card</p>
+   736→                              <p className="text-amber-100 font-extrabold text-sm sm:text-base truncate max-w-[160px]">{user.name}</p>
+   737→                            </div>
+   738→                          </div>
+   739→                          <motion.div
+   740→                            animate={{ scale: [1, 1.06, 1] }}
+   741→                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+   742→                            className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg px-3 py-1.5 shadow-sm shadow-orange-500/20"
+   743→                          >
+   744→                            <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Gold</span>
+   745→                          </motion.div>
+   746→                        </div>
+   747→
+   748→                        {/* Diamond Divider */}
+   749→                        <div className="flex items-center gap-2 mb-4">
+   750→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   751→                          <svg className="w-3 h-3 text-amber-400/50" viewBox="0 0 12 12" fill="none">
+   752→                            <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+   753→                          </svg>
+   754→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   755→                        </div>
+   756→
+   757→                        {/* Stats Row */}
+   758→                        <div className="flex gap-3">
+   759→                          <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-gradient-to-br from-amber-900/50 to-orange-900/40 rounded-xl p-3.5 text-center border border-amber-700/30">
+   760→                            <div className="flex items-center justify-center gap-1.5 mb-1">
+   761→                              <Star className="w-4 h-4 text-amber-400" />
+   762→                              <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Poin</span>
+   763→                            </div>
+   764→                            <p className="text-amber-100 font-extrabold text-xl leading-tight">{user.points ?? 0}</p>
+   765→                          </motion.div>
+   766→                          <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-gradient-to-br from-amber-900/50 to-orange-900/40 rounded-xl p-3.5 text-center border border-amber-700/30">
+   767→                            <div className="flex items-center justify-center gap-1.5 mb-1">
+   768→                              <Gift className="w-4 h-4 text-amber-400" />
+   769→                              <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Voucher</span>
+   770→                            </div>
+   771→                            <p className="text-amber-100 font-extrabold text-xl leading-tight">{user.voucher ?? 0}</p>
+   772→                          </motion.div>
+   773→                        </div>
+   774→
+   775→                        {/* Tap hint */}
+   776→                        <motion.p
+   777→                          animate={{ opacity: [0.3, 0.7, 0.3] }}
+   778→                          transition={{ duration: 2.5, repeat: Infinity }}
+   779→                          className="text-center text-[9px] text-amber-500/50 font-medium mt-4"
+   780→                        >
+   781→                          Ketuk untuk melihat barcode
+   782→                        </motion.p>
+   783→                      </div>
+   784→                    </div>
+   785→
+   786→                    {/* ═══ BACK FACE (Barcode) ═══ */}
+   787→                    <div
+   788→                      className="absolute inset-0 bg-gradient-to-b from-amber-950/95 via-orange-950/90 to-amber-950/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-amber-700/40 overflow-hidden flex flex-col items-center justify-center"
+   789→                      style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+   790→                    >
+   791→                      {/* Shimmer overlay */}
+   792→                      <motion.div
+   793→                        className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/15 to-transparent -translate-x-full pointer-events-none"
+   794→                        animate={{ translateX: ['-100%', '200%'] }}
+   795→                        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
+   796→                      />
+   797→
+   798→                      {/* Top Gradient Banner */}
+   799→                      <div className="absolute top-0 left-0 right-0 h-9 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 overflow-hidden">
+   800→                        <div className="absolute inset-0 aceh-pattern opacity-20" />
+   801→                        <div className="relative flex items-center justify-center h-full">
+   802→                          <p className="text-[9px] sm:text-[10px] text-white/90 font-bold uppercase tracking-[0.25em]">Ayam Geprek Sambal Ijo</p>
+   803→                        </div>
+   804→                      </div>
+   805→
+   806→                      {/* Pintu Aceh Arch Ornament */}
+   807→                      <svg className="absolute top-9 left-0 right-0 w-full h-8 text-amber-500/[0.18]" viewBox="0 0 300 30" fill="none" stroke="currentColor" strokeWidth="0.8">
+   808→                        <path d="M10,28 L10,18 Q10,4 150,4 Q290,4 290,18 L290,28" /><path d="M10,28 L10,20 Q10,8 150,8 Q290,8 290,20 L290,28" />
+   809→                        <circle cx="150" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="100" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="200" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="60" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="240" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="10" cy="20" r="1.5" fill="currentColor" stroke="none" /><circle cx="290" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   810→                      </svg>
+   811→
+   812→                      {/* Pucuk Rebung Corners (back) */}
+   813→                      {['top-11 left-1.5', 'top-11 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
+   814→                        <svg key={i} className={`absolute ${pos} w-14 h-14 text-amber-400/[0.22]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+   815→                          <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
+   816→                          <line x1="30" y1="15" x2="30" y2="5" /><line x1="40.6" y1="19.4" x2="47.7" y2="12.3" /><line x1="45" y1="30" x2="55" y2="30" /><line x1="40.6" y1="40.6" x2="47.7" y2="47.7" /><line x1="30" y1="45" x2="30" y2="55" /><line x1="19.4" y1="40.6" x2="12.3" y2="47.7" /><line x1="15" y1="30" x2="5" y2="30" /><line x1="19.4" y1="19.4" x2="12.3" y2="12.3" />
+   817→                          <circle cx="30" cy="5" r="1.4" fill="currentColor" stroke="none" /><circle cx="47.7" cy="12.3" r="1.4" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.4" fill="currentColor" stroke="none" /><circle cx="47.7" cy="47.7" r="1.4" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.4" fill="currentColor" stroke="none" /><circle cx="12.3" cy="47.7" r="1.4" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.4" fill="currentColor" stroke="none" /><circle cx="12.3" cy="12.3" r="1.4" fill="currentColor" stroke="none" />
+   818→                        </svg>
+   819→                      ))}
+   820→
+   821→                      {/* Pucuk Rebung Chain Border Bottom */}
+   822→                      <svg className="absolute bottom-0 left-0 right-0 w-full h-6 text-amber-500/[0.18]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   823→                        <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+   824→                        <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   825→                        <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   826→                        <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
+   827→                        <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   828→                        <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   829→                      </svg>
+   830→
+   831→                      {/* Bintang Aceh Watermark (back) */}
+   832→                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 text-amber-400/[0.08]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round">
+   833→                        <circle cx="100" cy="100" r="90" strokeWidth="0.4" strokeDasharray="4 4" /><circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" />
+   834→                        <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.02" />
+   835→                        <line x1="100" y1="60" x2="100" y2="10" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="190" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="190" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="10" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
+   836→                        <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.06" stroke="none" />
+   837→                      </svg>
+   838→
+   839→                      <div className="relative z-10 w-full flex flex-col items-center px-5 pt-12 pb-7 sm:px-6">
+   840→                        {/* Card label */}
+   841→                        <div className="flex items-center gap-2.5 mb-3">
+   842→                          <motion.div animate={{ rotate: [0, -3, 3, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-sm">
+   843→                            <Crown className="w-4.5 h-4.5 text-white" />
+   844→                          </motion.div>
+   845→                          <div className="text-left">
+   846→                            <p className="text-[9px] text-amber-400 font-bold uppercase tracking-[0.2em]">Member Card</p>
+   847→                            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[140px]">{user.name}</p>
+   848→                          </div>
+   849→                        </div>
+   850→
+   851→                        {/* Diamond Divider */}
+   852→                        <div className="flex items-center gap-2 mb-3 w-full">
+   853→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   854→                          <svg className="w-2.5 h-2.5 text-amber-400/50" viewBox="0 0 12 12" fill="none">
+   855→                            <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+   856→                          </svg>
+   857→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   858→                        </div>
+   859→
+   860→                        {/* Barcode */}
+   861→                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-gradient-to-br from-amber-900/50 to-orange-900/40 rounded-xl p-4 border border-amber-700/30 w-full flex items-center justify-center">
+   862→                          <svg ref={barcodeRef} className="w-full" />
+   863→                        </motion.div>
+   864→
+   865→                        {/* Member code text */}
+   866→                        <p className="text-[10px] sm:text-[11px] text-amber-400/60 font-mono mt-2.5 tracking-[0.2em] font-semibold">{memberCode}</p>
+   867→
+   868→                        {/* Tap hint */}
+   869→                        <motion.p animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[9px] text-amber-500/50 font-medium mt-2.5">
+   870→                          Ketuk untuk kembali
+   871→                        </motion.p>
+   872→                      </div>
+   873→                    </div>
+   874→                  </div>
+   875→                </motion.div>
+   876→              </motion.div>
+   877→            )}
+   878→
+   879→            {/* Login prompt for non-logged-in users */}
+   880→            {!user && (
+   881→              <motion.div
+   882→                initial={{ opacity: 0, y: 15 }}
+   883→                animate={{ opacity: 1, y: 0 }}
+   884→                transition={{ duration: 0.5, delay: 0.3 }}
+   885→                className="mt-8"
+   886→              >
+   887→                <button
+   888→                  onClick={() => setPage('login')}
+   889→                  className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 border border-white/20 rounded-xl px-4 py-2.5 transition-all group"
+   890→                >
+
+[showing lines 551-890 of 3011; use offset=891 with limit to continue reading]
