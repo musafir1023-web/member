@@ -131,6 +131,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'app-storage',
+      skipHydration: true,
       partialize: (state) => ({
         user: state.user,
         cart: state.cart,
