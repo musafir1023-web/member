@@ -58,6 +58,9 @@ import {
   Crown,
   Percent,
   Gift,
+  X,
+  Camera,
+  PackageSearch,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -1831,7 +1834,7 @@ function RegisterPage() {
 /* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
 function ProfilePage() {
   const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products'>('overview')
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
@@ -1969,10 +1972,114 @@ function ProfilePage() {
   const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
 
   // ─── Tab definitions ───
+  // ─── Product Management State ───
+  const [allProducts, setAllProducts] = useState<any[]>([])
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<any>(null)
+  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', originalPrice: '', category: 'Makanan', tag: '', available: true })
+  const [productImage, setProductImage] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [savingProduct, setSavingProduct] = useState(false)
+  const [deletingProduct, setDeletingProduct] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const loadProducts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/products?all=true')
+      const data = await res.json()
+      if (Array.isArray(data)) setAllProducts(data)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { if (isAdmin) loadProducts() }, [isAdmin, loadProducts])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setProductImage(data.url)
+    } catch (err: any) {
+      addToast(err.message || 'Gagal mengunggah gambar', 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const resetProductForm = () => {
+    setProductForm({ name: '', description: '', price: '', originalPrice: '', category: 'Makanan', tag: '', available: true })
+    setProductImage('')
+    setEditingProduct(null)
+    setShowProductForm(false)
+  }
+
+  const openEditProduct = (p: any) => {
+    setEditingProduct(p)
+    setProductForm({ name: p.name, description: p.description, price: String(p.price), originalPrice: p.originalPrice ? String(p.originalPrice) : '', category: p.category, tag: p.tag || '', available: p.available })
+    setProductImage(p.image)
+    setShowProductForm(true)
+  }
+
+  const saveProduct = async () => {
+    if (!productForm.name.trim() || !productForm.price) {
+      addToast('Nama dan harga wajib diisi', 'error'); return
+    }
+    setSavingProduct(true)
+    try {
+      const body: any = {
+        name: productForm.name.trim(),
+        description: productForm.description.trim(),
+        price: Number(productForm.price),
+        originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : null,
+        category: productForm.category,
+        tag: productForm.tag || null,
+        available: productForm.available,
+        image: productImage || '/images/products/default.png',
+      }
+      if (editingProduct) {
+        body.id = editingProduct.id
+        const res = await fetch('/api/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error('Gagal update produk')
+        addToast('Produk berhasil diupdate', 'success')
+      } else {
+        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        if (!res.ok) throw new Error('Gagal menambah produk')
+        addToast('Produk berhasil ditambahkan', 'success')
+      }
+      resetProductForm()
+      loadProducts()
+    } catch (err: any) {
+      addToast(err.message, 'error')
+    } finally {
+      setSavingProduct(false)
+    }
+  }
+
+  const deleteProduct = async (id: string) => {
+    if (!confirm('Hapus produk ini?')) return
+    setDeletingProduct(id)
+    try {
+      const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Gagal menghapus')
+      addToast('Produk dihapus', 'success')
+      loadProducts()
+    } catch {
+      addToast('Gagal menghapus produk', 'error')
+    } finally {
+      setDeletingProduct(null)
+    }
+  }
+
   const tabs = isAdmin
     ? [
         { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
-        { id: 'admin' as const, label: 'Kelola Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
+        { id: 'admin' as const, label: 'Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
+        { id: 'products' as const, label: 'Produk', icon: <UtensilsCrossed className="w-4 h-4" /> },
         { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
         { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
       ]
@@ -2697,6 +2804,140 @@ function ProfilePage() {
           </div>
         )}
 
+        {/* ═══ PRODUCTS TAB (Admin — manage products) ═══ */}
+        {activeTab === 'products' && isAdmin && (
+          <>
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-4 border-b border-orange-100 flex items-center justify-between">
+                <div>
+                  <h2 className="font-bold text-gray-800 flex items-center gap-2">
+                    <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+                    Kelola Produk
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Tambah, edit, atau hapus menu produk</p>
+                </div>
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white text-xs" onClick={() => { resetProductForm(); setShowProductForm(true) }}>
+                  <Plus className="w-4 h-4 mr-1" /> Tambah
+                </Button>
+              </div>
+
+              {showProductForm && (
+                <div className="p-4 border-b border-orange-100 bg-orange-50/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm text-gray-700">{editingProduct ? 'Edit Produk' : 'Produk Baru'}</h3>
+                    <Button size="sm" variant="ghost" onClick={resetProductForm}><X className="w-4 h-4" /></Button>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-gray-600">Gambar Produk</Label>
+                    <div className="mt-1 flex items-center gap-3">
+                      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-20 h-20 rounded-xl border-2 border-dashed border-orange-300 flex flex-col items-center justify-center text-orange-400 hover:border-orange-500 hover:text-orange-600 transition-colors disabled:opacity-50 flex-shrink-0 overflow-hidden">
+                        {uploading ? (
+                          <span className="w-5 h-5 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
+                        ) : productImage ? (
+                          <img src={productImage} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <><Camera className="w-5 h-5" /><span className="text-[9px] mt-0.5">Upload</span></>
+                        )}
+                      </button>
+                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-gray-400 text-justify leading-relaxed">Klik untuk upload gambar. Maksimal 2MB. Format: JPG, PNG, GIF, WebP.</p>
+                        {productImage && <p className="text-[10px] text-green-600 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Gambar berhasil diupload</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <Label className="text-xs text-gray-600">Nama Produk *</Label>
+                      <Input className="mt-1 h-9 text-sm" value={productForm.name} onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ayam Geprek Sambal Ijo" />
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs text-gray-600">Deskripsi</Label>
+                      <Textarea className="mt-1 text-sm" rows={2} value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat produk" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Harga *</Label>
+                      <Input type="number" className="mt-1 h-9 text-sm" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} placeholder="15000" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Harga Asli</Label>
+                      <Input type="number" className="mt-1 h-9 text-sm" value={productForm.originalPrice} onChange={(e) => setProductForm((p) => ({ ...p, originalPrice: e.target.value }))} placeholder="18000 (opsional)" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Kategori</Label>
+                      <select className="mt-1 h-9 w-full rounded-md border border-orange-200 bg-white px-3 text-sm" value={productForm.category} onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}>
+                        <option value="Makanan">Makanan</option>
+                        <option value="Minuman">Minuman</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Tambahan">Tambahan</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Tag</Label>
+                      <select className="mt-1 h-9 w-full rounded-md border border-orange-200 bg-white px-3 text-sm" value={productForm.tag} onChange={(e) => setProductForm((p) => ({ ...p, tag: e.target.value }))}>
+                        <option value="">Tanpa Tag</option>
+                        <option value="terbaru">Terbaru</option>
+                        <option value="terlaris">Terlaris</option>
+                        <option value="promo">Promo</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <input type="checkbox" id="prod-available" checked={productForm.available} onChange={(e) => setProductForm((p) => ({ ...p, available: e.target.checked }))} className="rounded border-orange-300" />
+                      <Label htmlFor="prod-available" className="text-xs text-gray-600">Tersedia untuk dipesan</Label>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <Button onClick={saveProduct} disabled={savingProduct} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm disabled:opacity-50">
+                      {savingProduct ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><BadgeCheck className="w-4 h-4 mr-1" /> {editingProduct ? 'Update' : 'Simpan'}</>}
+                    </Button>
+                    <Button onClick={resetProductForm} variant="outline" className="border-orange-200 text-orange-600 text-sm hover:bg-orange-50">Batal</Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+                {allProducts.length === 0 ? (
+                  <div className="p-8 text-center"><PackageSearch className="w-10 h-10 text-gray-300 mx-auto mb-2" /><p className="text-gray-400 text-sm">Belum ada produk</p></div>
+                ) : (
+                  <div className="divide-y divide-orange-50">
+                    {allProducts.map((p: any) => (
+                      <div key={p.id} className="p-3 hover:bg-orange-50/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-lg overflow-hidden bg-orange-100 flex-shrink-0">
+                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+                              {!p.available && <Badge className="bg-gray-100 text-gray-500 text-[9px]">Nonaktif</Badge>}
+                            </div>
+                            <p className="text-xs text-gray-400">{p.category}{p.tag ? ` · ${p.tag}` : ''}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-sm font-bold text-orange-600">{fmt(p.price)}</span>
+                              {p.originalPrice && p.originalPrice > p.price && <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice)}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button size="sm" variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 text-[11px] h-8 px-2" onClick={() => openEditProduct(p)}>
+                              <Edit3 className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-[11px] h-8 px-2" onClick={() => deleteProduct(p.id)} disabled={deletingProduct === p.id}>
+                              {deletingProduct === p.id ? <span className="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* ═══ SETTINGS TAB ═══ */}
         {activeTab === 'settings' && (
           <>
@@ -2822,6 +3063,29 @@ function ProfilePage() {
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+
+  useEffect(() => {
+    useAppStore.persist.rehydrate()
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex flex-col bg-orange-500">
+        <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <header className="sticky top-0 z-50"><div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 h-14" /></header>
+          <main className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Skeleton className="w-12 h-12 rounded-full bg-white/20" />
+              <Skeleton className="w-40 h-4 bg-white/20" />
+            </div>
+          </main>
+          <nav className="fixed bottom-0 left-0 right-0 z-50"><div className="bg-white border-t h-16" /></nav>
+        </div>
+      </div>
+    )
+  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -2839,19 +3103,12 @@ export default function AppPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-orange-500">
-      {/* Aceh ornament on entire page */}
       <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
         <TopBar />
         <main className="flex-1 pb-24">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-            >
+            <motion.div key={currentPage} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {renderPage()}
             </motion.div>
           </AnimatePresence>
