@@ -482,8 +482,8 @@ function HomePage() {
       fetch('/api/products?tag=promo').then((r) => r.json()),
     ])
       .then(([all, promo]) => {
-        setProducts(all)
-        setPromoProducts(promo)
+        setProducts(Array.isArray(all) ? all : [])
+        setPromoProducts(Array.isArray(promo) ? promo : [])
         setLoading(false)
       })
       .catch(() => {
@@ -998,7 +998,7 @@ function MenuPage() {
     fetch('/api/products')
       .then((r) => r.json())
       .then((data) => {
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(() => {
