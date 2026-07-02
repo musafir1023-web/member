@@ -63,3 +63,28 @@ model OrderItem {
   order      Order   @relation(fields: [orderId], references: [id])
   product    Product @relation(fields: [productId], references: [id])
 }
+
+model ChatRoom {
+  id              String        @id @default(cuid())
+  customerId      String
+  customerName    String
+  lastMessage     String        @default("")
+  lastMessageAt   DateTime      @default(now())
+  unreadCustomer  Int           @default(0)
+  unreadAdmin     Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  messages        ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  senderId  String
+  senderName String
+  senderRole String
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}

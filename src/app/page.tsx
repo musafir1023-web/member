@@ -61,6 +61,9 @@ import {
   X,
   Camera,
   PackageSearch,
+  MessageCircle,
+  Send,
+  Smile,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -358,11 +361,12 @@ function BottomNav() {
   const cartCount = useAppStore(getCartCount)
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
-  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean }[] = [
+  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean; badge?: number }[] = [
     { page: 'home', label: 'Beranda', icon: <Home className="w-5 h-5" />, show: true },
     { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
     { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
     { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
+    { page: 'chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" />, show: !!user, badge: useAppStore((s) => s.unreadChats) },
     { page: user ? 'profile' : 'login', label: user ? 'Profile' : 'Login', icon: user ? <UserCircle className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
   ]
 
@@ -403,6 +407,11 @@ function BottomNav() {
                   {item.page === 'cart' && mounted && cartCount > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
                       {cartCount}
+                    </span>
+                  )}
+                  {item.page === 'chat' && mounted && (item.badge ?? 0) > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                      {item.badge}
                     </span>
                   )}
                 </div>
@@ -1834,7 +1843,7 @@ function RegisterPage() {
 /* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
 function ProfilePage() {
   const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products' | 'chat'>('overview')
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
@@ -2001,8 +2010,12 @@ function ProfilePage() {
       const fd = new FormData()
       fd.append('file', file)
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server error: respons bukan JSON')
+      }
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) throw new Error(data.error || 'Gagal mengunggah gambar')
       setProductImage(data.url)
     } catch (err: any) {
       addToast(err.message || 'Gagal mengunggah gambar', 'error')
@@ -2080,6 +2093,7 @@ function ProfilePage() {
         { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
         { id: 'admin' as const, label: 'Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
         { id: 'products' as const, label: 'Produk', icon: <UtensilsCrossed className="w-4 h-4" /> },
+        { id: 'chat' as const, label: 'Chat', icon: <MessageCircle className="w-4 h-4" /> },
         { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
         { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
       ]
@@ -2939,6 +2953,9 @@ function ProfilePage() {
         )}
 
         {/* ═══ SETTINGS TAB ═══ */}
+        {activeTab === 'chat' && isAdmin && (
+          <AdminChatPanel />
+        )}
         {activeTab === 'settings' && (
           <>
             {/* Edit Profile */}
@@ -3060,6 +3077,642 @@ function ProfilePage() {
   )
 }
 
+/* ─────────────────────── CHAT HOOK ─────────────────────── */
+function useChatSocket(roomId: string | null, userId: string, role: string) {
+  const socketRef = useRef<any>(null)
+  const [connected, setConnected] = useState(false)
+  const { addToast } = useAppStore()
+
+  useEffect(() => {
+    if (!roomId || !userId) return
+
+    let socket: any
+    let cancelled = false
+
+    // Dynamic import to avoid SSR issues
+    import('socket.io-client').then(({ io }) => {
+      if (cancelled) return
+      socket = io('/?XTransformPort=3003', {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
+      })
+      socketRef.current = socket
+
+      socket.on('connect', () => {
+        setConnected(true)
+        socket.emit('join-room', { roomId, userId, role })
+      })
+      socket.on('disconnect', () => setConnected(false))
+      socket.on('connect_error', () => setConnected(false))
+    }).catch(() => {
+      // Socket.IO not available, fallback to REST only
+    })
+
+    return () => {
+      cancelled = true
+      if (socket) {
+        socket.emit('leave-room')
+        socket.disconnect()
+      }
+      socketRef.current = null
+    }
+  }, [roomId, userId, role])
+
+  const sendMessage = useCallback((data: { roomId: string; senderId: string; senderName: string; senderRole: string; content: string }) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('send-message', data)
+    } else {
+      // Fallback to REST
+      fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).catch(() => addToast('Gagal mengirim pesan', 'error'))
+    }
+  }, [addToast])
+
+  const emitTyping = useCallback((data: { roomId: string; userId: string; name: string }) => {
+    socketRef.current?.emit('typing', data)
+  }, [])
+
+  const emitStopTyping = useCallback((data: { roomId: string; userId: string }) => {
+    socketRef.current?.emit('stop-typing', data)
+  }, [])
+
+  return { socket: socketRef, connected, sendMessage, emitTyping, emitStopTyping }
+}
+
+/* ─────────────────────── CHAT PAGE (Customer) ─────────────────────── */
+function ChatPage() {
+  const { user, setPage, addToast, setUnreadChats } = useAppStore()
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMsg, setNewMsg] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [roomId, setRoomId] = useState<string | null>(null)
+  const [typingUser, setTypingUser] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isAdmin = user?.role === 'admin'
+  const { socket, connected, sendMessage, emitTyping, emitStopTyping } = useChatSocket(roomId, user?.id || '', user?.role || '')
+
+  // Initialize room
+  useEffect(() => {
+    if (!user) { setPage('login'); return }
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/rooms?userId=${user.id}&role=${user.role}`)
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          setRoomId(data[0].id)
+          setUnreadChats(data[0][user.role === 'admin' ? 'unreadAdmin' : 'unreadCustomer'] || 0)
+        }
+      } catch {
+        addToast('Gagal memuat chat', 'error')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [user, setPage, addToast, setUnreadChats])
+
+  // Load messages when room changes
+  useEffect(() => {
+    if (!roomId) return
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?roomId=${roomId}`)
+        const data = await res.json()
+        setMessages(Array.isArray(data) ? data : [])
+      } catch { /* ignore */ }
+    })()
+  }, [roomId])
+
+  // Mark as read
+  useEffect(() => {
+    if (!roomId || !user) return
+    fetch('/api/chat/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId, role: user.role }),
+    }).then(() => setUnreadChats(0)).catch(() => {})
+  }, [roomId, user, setUnreadChats])
+
+  // Listen for new messages
+  useEffect(() => {
+    if (!socket.current) return
+    const s = socket.current
+
+    const handleNewMessage = (msg: any) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev
+        return [...prev, msg]
+      })
+      // Auto-scroll
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+
+    const handleRead = () => {
+      setUnreadChats(0)
+      setMessages((prev) => prev.map((m) => ({ ...m, read: true })))
+    }
+
+    const handleTyping = (data: { name: string }) => {
+      setTypingUser(data.name)
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      typingTimerRef.current = setTimeout(() => setTypingUser(null), 2000)
+    }
+
+    const handleStopTyping = () => setTypingUser(null)
+
+    s.on('new-message', handleNewMessage)
+    s.on('messages-read', handleRead)
+    s.on('user-typing', handleTyping)
+    s.on('user-stop-typing', handleStopTyping)
+
+    return () => {
+      s.off('new-message', handleNewMessage)
+      s.off('messages-read', handleRead)
+      s.off('user-typing', handleTyping)
+      s.off('user-stop-typing', handleStopTyping)
+    }
+  }, [socket, setUnreadChats])
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!newMsg.trim() || !roomId || !user || sending) return
+    const content = newMsg.trim()
+    setNewMsg('')
+    emitStopTyping({ roomId, userId: user.id })
+    setSending(true)
+    try {
+      if (connected) {
+        sendMessage({ roomId, senderId: user.id, senderName: user.name, senderRole: user.role, content })
+      } else {
+        const res = await fetch('/api/chat/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId, senderId: user.id, senderName: user.name, senderRole: user.role, content }),
+        })
+        const data = await res.json()
+        if (data.id) {
+          setMessages((prev) => [...prev, data])
+        }
+      }
+    } catch {
+      addToast('Gagal mengirim pesan', 'error')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleInputChange = (val: string) => {
+    setNewMsg(val)
+    if (roomId && user) {
+      if (val.trim()) {
+        emitTyping({ roomId, userId: user.id, name: user.name })
+      } else {
+        emitStopTyping({ roomId, userId: user.id })
+      }
+    }
+  }
+
+  const fmtTime = (d: string) => {
+    const date = new Date(d)
+    return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-8">
+        <Skeleton className="w-32 h-6 bg-white/20 mb-4" />
+        <Skeleton className="w-full h-64 bg-white/20 rounded-xl" />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
+  return (
+    <div className="max-w-lg mx-auto flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
+      {/* Header */}
+      <div className="bg-white rounded-t-2xl px-4 py-3 border-b border-orange-100 flex items-center gap-3 shadow-sm flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+          {isAdmin ? 'CS' : user.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-bold text-gray-800 text-sm">{isAdmin ? 'Admin Customer Service' : 'Customer Service'}</h2>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-gray-300'}`} />
+            <span className="text-[11px] text-gray-400">
+              {typingUser ? `${typingUser} sedang mengetik...` : connected ? 'Online' : 'Menghubungkan...'}
+            </span>
+          </div>
+        </div>
+        <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto bg-gray-50/80 px-4 py-4 space-y-3" style={{ scrollbarWidth: 'thin' }}>
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+            <MessageCircle className="w-12 h-12 opacity-30" />
+            <p className="text-sm">Belum ada pesan. Mulai percakapan!</p>
+            <p className="text-xs text-gray-300">Kami siap membantu Anda</p>
+          </div>
+        )}
+        {messages.map((msg) => {
+          const isMe = msg.senderId === user.id
+          return (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`max-w-[80%] ${isMe ? 'order-1' : 'order-1'}`}>
+                {/* Show sender name for admin chat */}
+                {isAdmin && !isMe && (
+                  <p className="text-[10px] text-gray-400 mb-0.5 ml-1">{msg.senderName}</p>
+                )}
+                <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                  isMe
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-md'
+                    : 'bg-white text-gray-800 rounded-bl-md border border-gray-100'
+                }`}>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                </div>
+                <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
+                  {fmtTime(msg.createdAt)}
+                  {isMe && msg.read && ' ✓✓'}
+                </p>
+              </div>
+            </motion.div>
+          )
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="bg-white rounded-b-2xl border-t border-orange-100 p-3 flex-shrink-0 shadow-sm">
+        <div className="flex items-end gap-2">
+          <div className="flex-1 relative">
+            <Input
+              value={newMsg}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+              placeholder="Ketik pesan..."
+              className="pr-10 rounded-xl border-orange-200 focus:border-orange-400 text-sm"
+              disabled={sending}
+            />
+            <Smile className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+          </div>
+          <Button
+            onClick={handleSend}
+            disabled={!newMsg.trim() || sending}
+            className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white p-3 h-10 w-10 flex items-center justify-center flex-shrink-0 shadow-md"
+          >
+            {sending ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────── ADMIN CHAT PANEL (inside Profile) ─────────────────────── */
+function AdminChatPanel() {
+  const { user, setPage, addToast, setUnreadChats } = useAppStore()
+  const [rooms, setRooms] = useState<any[]>([])
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMsg, setNewMsg] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [typingUser, setTypingUser] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { socket, connected, sendMessage, emitTyping, emitStopTyping } = useChatSocket(selectedRoom, user?.id || '', 'admin')
+
+  // Load rooms
+  useEffect(() => {
+    if (!user?.id) return
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/rooms?userId=${user.id}&role=admin`)
+        const data = await res.json()
+        const list = Array.isArray(data) ? data : []
+        setRooms(list)
+        const totalUnread = list.reduce((s: number, r: any) => s + (r.unreadAdmin || 0), 0)
+        setUnreadChats(totalUnread)
+        // Auto-select first room
+        if (list.length > 0 && !selectedRoom) {
+          setSelectedRoom(list[0].id)
+        }
+      } catch {
+        addToast('Gagal memuat chat', 'error')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [user, addToast, setUnreadChats])
+
+  // Load messages when room changes
+  useEffect(() => {
+    if (!selectedRoom) return
+    setMessages([])
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?roomId=${selectedRoom}`)
+        const data = await res.json()
+        setMessages(Array.isArray(data) ? data : [])
+      } catch { /* ignore */ }
+    })()
+  }, [selectedRoom])
+
+  // Mark as read
+  useEffect(() => {
+    if (!selectedRoom) return
+    fetch('/api/chat/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId: selectedRoom, role: 'admin' }),
+    }).then(() => {
+      setRooms((prev) => prev.map((r) => r.id === selectedRoom ? { ...r, unreadAdmin: 0 } : r))
+      const totalUnread = rooms.reduce((s, r) => s + (r.id === selectedRoom ? 0 : r.unreadAdmin || 0), 0)
+      setUnreadChats(totalUnread)
+    }).catch(() => {})
+  }, [selectedRoom, setUnreadChats])
+
+  // Listen for new messages
+  useEffect(() => {
+    if (!socket.current) return
+    const s = socket.current
+
+    const handleNewMessage = (msg: any) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev
+        return [...prev, msg]
+      })
+      // Update room list (last message, unread)
+      setRooms((prev) => {
+        const updated = prev.map((r) =>
+          r.id === msg.roomId
+            ? { ...r, lastMessage: msg.content.slice(0, 100), lastMessageAt: msg.createdAt, unreadAdmin: msg.senderRole === 'customer' ? (r.unreadAdmin || 0) + 1 : r.unreadAdmin }
+            : r
+        )
+        const total = updated.reduce((s: number, r: any) => s + (r.unreadAdmin || 0), 0)
+        setUnreadChats(total)
+        return updated
+      })
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+
+    const handleRead = () => {
+      setMessages((prev) => prev.map((m) => ({ ...m, read: true })))
+    }
+
+    const handleTyping = (data: { name: string }) => {
+      setTypingUser(data.name)
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      typingTimerRef.current = setTimeout(() => setTypingUser(null), 2000)
+    }
+
+    const handleStopTyping = () => setTypingUser(null)
+
+    s.on('new-message', handleNewMessage)
+    s.on('messages-read', handleRead)
+    s.on('user-typing', handleTyping)
+    s.on('user-stop-typing', handleStopTyping)
+
+    return () => {
+      s.off('new-message', handleNewMessage)
+      s.off('messages-read', handleRead)
+      s.off('user-typing', handleTyping)
+      s.off('user-stop-typing', handleStopTyping)
+    }
+  }, [socket, selectedRoom, setUnreadChats])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!newMsg.trim() || !selectedRoom || !user || sending) return
+    const content = newMsg.trim()
+    setNewMsg('')
+    emitStopTyping({ roomId: selectedRoom, userId: user.id })
+    setSending(true)
+    try {
+      if (connected) {
+        sendMessage({ roomId: selectedRoom, senderId: user.id, senderName: user.name, senderRole: 'admin', content })
+      } else {
+        const res = await fetch('/api/chat/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId: selectedRoom, senderId: user.id, senderName: user.name, senderRole: 'admin', content }),
+        })
+        const data = await res.json()
+        if (data.id) {
+          setMessages((prev) => [...prev, data])
+        }
+      }
+      // Update room last message
+      setRooms((prev) => prev.map((r) =>
+        r.id === selectedRoom ? { ...r, lastMessage: content.slice(0, 100) } : r
+      ))
+    } catch {
+      addToast('Gagal mengirim pesan', 'error')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleInputChange = (val: string) => {
+    setNewMsg(val)
+    if (selectedRoom && user) {
+      if (val.trim()) {
+        emitTyping({ roomId: selectedRoom, userId: user.id, name: user.name })
+      } else {
+        emitStopTyping({ roomId: selectedRoom, userId: user.id })
+      }
+    }
+  }
+
+  const fmtTime = (d: string) => new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl p-5 shadow-md">
+        <Skeleton className="w-32 h-5 mb-4" />
+        <Skeleton className="w-full h-48" />
+      </div>
+    )
+  }
+
+  const currentRoom = rooms.find((r) => r.id === selectedRoom)
+
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden" style={{ height: '70vh' }}>
+      <div className="flex h-full">
+        {/* Room list (sidebar) */}
+        <div className={`border-r border-orange-100 flex flex-col ${selectedRoom ? 'hidden sm:flex w-64' : 'w-full'} flex-shrink-0`}>
+          <div className="px-4 py-3 border-b border-orange-100 bg-orange-50/50">
+            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-orange-500" />
+              Chat Pelanggan
+              {rooms.length > 0 && (
+                <Badge className="bg-orange-500 text-white text-[10px] border-0 ml-auto">{rooms.length}</Badge>
+              )}
+            </h3>
+          </div>
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+            {rooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                <MessageCircle className="w-8 h-8 opacity-30 mb-2" />
+                <p className="text-xs">Belum ada chat</p>
+              </div>
+            ) : (
+              rooms.map((room) => (
+                <button
+                  key={room.id}
+                  onClick={() => setSelectedRoom(room.id)}
+                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-orange-50/50 transition-colors ${
+                    selectedRoom === room.id ? 'bg-orange-50 border-l-2 border-l-orange-500' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      {room.customerName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{room.customerName}</p>
+                        {room.unreadAdmin > 0 && (
+                          <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">
+                            {room.unreadAdmin}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                        {room.lastMessage || 'Belum ada pesan'}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Chat area */}
+        {selectedRoom && currentRoom ? (
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Chat header */}
+            <div className="px-4 py-3 border-b border-orange-100 flex items-center gap-3 bg-orange-50/30">
+              <button onClick={() => setSelectedRoom(null)} className="sm:hidden p-1 text-gray-400 hover:text-gray-600">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {currentRoom.customerName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-gray-800 text-sm truncate">{currentRoom.customerName}</h4>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-gray-300'}`} />
+                  <span className="text-[10px] text-gray-400">
+                    {typingUser ? `${typingUser} sedang mengetik...` : connected ? 'Online' : 'Menghubungkan...'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto bg-gray-50/50 px-4 py-3 space-y-2" style={{ scrollbarWidth: 'thin' }}>
+              {messages.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                  <MessageCircle className="w-10 h-10 opacity-30" />
+                  <p className="text-xs">Belum ada pesan</p>
+                </div>
+              )}
+              {messages.map((msg) => {
+                const isMe = msg.senderRole === 'admin'
+                return (
+                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className="max-w-[80%]">
+                      {!isMe && (
+                        <p className="text-[10px] text-gray-400 mb-0.5 ml-1">{msg.senderName}</p>
+                      )}
+                      <div className={`rounded-2xl px-3 py-2 shadow-sm ${
+                        isMe
+                          ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-md'
+                          : 'bg-white text-gray-800 rounded-bl-md border border-gray-100'
+                      }`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                      </div>
+                      <p className={`text-[10px] text-gray-400 mt-0.5 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
+                        {fmtTime(msg.createdAt)}
+                        {isMe && msg.read && ' ✓✓'}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="px-3 py-2.5 border-t border-orange-100 flex-shrink-0">
+              <div className="flex items-end gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    value={newMsg}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                    placeholder="Ketik balasan..."
+                    className="pr-10 rounded-xl border-orange-200 focus:border-orange-400 text-sm"
+                    disabled={sending}
+                  />
+                  <Smile className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                </div>
+                <Button
+                  onClick={handleSend}
+                  disabled={!newMsg.trim() || sending}
+                  className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white p-3 h-9 w-9 flex items-center justify-center flex-shrink-0"
+                >
+                  {sending ? (
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : !selectedRoom && (
+          <div className="hidden sm:flex flex-1 items-center justify-center text-gray-400">
+            <div className="text-center">
+              <MessageCircle className="w-12 h-12 opacity-20 mx-auto mb-3" />
+              <p className="text-sm font-medium">Pilih pelanggan untuk memulai chat</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
@@ -3097,6 +3750,7 @@ export default function AppPage() {
       case 'register': return <RegisterPage />
       case 'profile': return <ProfilePage />
       case 'receipt': return <ReceiptPage />
+      case 'chat': return <ChatPage />
       default: return <HomePage />
     }
   }

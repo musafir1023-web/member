@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type Page = 'home' | 'menu' | 'cart' | 'orders' | 'login' | 'register' | 'profile' | 'receipt'
+export type Page = 'home' | 'menu' | 'cart' | 'orders' | 'login' | 'register' | 'profile' | 'receipt' | 'chat'
 
 export interface CartItem {
   productId: string
@@ -63,6 +63,9 @@ interface AppState {
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[]
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void
   removeToast: (id: string) => void
+
+  unreadChats: number
+  setUnreadChats: (n: number) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -128,6 +131,9 @@ export const useAppStore = create<AppState>()(
       removeToast: (id) => {
         set({ toasts: get().toasts.filter((t) => t.id !== id) })
       },
+
+      unreadChats: 0,
+      setUnreadChats: (n) => set({ unreadChats: n }),
     }),
     {
       name: 'app-storage',
