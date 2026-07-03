@@ -401,3 +401,133 @@ Stage Summary:
 - **Modified**: `src/lib/db.ts` (restored PrismaLibSql adapter)
 - Upload works: POST /api/upload with FormData → returns {url: "data:image/...;base64,...", name, size}
 - Product management accessible via Profile → "Produk" tab (admin only)
+
+---
+Task ID: chat-feature
+Agent: Main Agent
+Task: Add chat feature between customer and admin in profile page
+
+Work Log:
+- Added ChatRoom and ChatMessage models to Prisma schema (ChatRoom has @unique customerId for 1:1 customer-admin chat)
+- Pushed schema to local SQLite database with prisma db push
+- Created Socket.IO mini-service (port 3003) for real-time messaging
+  - Handles join-room, send-message, typing/stop-typing, messages-read events
+  - Calls Next.js REST API for database operations (no duplicate Prisma client)
+- Created 4 chat API routes:
+  - GET/POST /api/chat/rooms (list rooms for admin, get/create room for customer)
+  - GET /api/chat/messages (load messages for a room, supports pagination)
+  - POST /api/chat/send (send message, update room last message and unread count)
+  - POST /api/chat/read (mark messages as read, reset unread count)
+- Updated Zustand store: added 'chat' to Page type, added unreadChats state
+- Created useChatSocket hook with dynamic import('socket.io-client') to avoid SSR crash
+  - Falls back to REST API when socket unavailable
+  - Handles connect/disconnect/reconnect, typing indicators
+- Created CustomerChatPanel component for customer profile chat tab:
+  - Auto-creates chat room on first visit
+  - Message bubbles (orange gradient for sent, white for received)
+  - Typing indicator, online status, read receipts (✓✓)
+  - Message input with Enter key support and send button
+  - Auto-scroll to latest message
+  - REST fallback when Socket.IO unavailable
+- Created AdminChatPanel component for admin profile chat tab:
+  - Room list sidebar with unread badges
+  - Responsive: sidebar hidden on mobile, full layout on desktop
+  - Same chat message UI as customer panel
+  - New message notifications with unread count update
+- Added "Chat" tab to both customer and admin profile tabs
+- Fixed PrismaLibSQL export name (uppercase SQL) for @prisma/adapter-libsql@6
+- Fixed @prisma/adapter-libsql version mismatch (7.x → 6.x to match @prisma/client)
+- Added @unique to ChatRoom.customerId for findUnique support
+- Fixed hydration issue: CustomerChatPanel no longer redirects to login on null user
+- Removed standalone ChatPage (was separate route, now inline in profile)
+- Removed chat item from bottom nav (accessible via Profile → Chat tab)
+- Socket.IO client uses dynamic import() to avoid SSR browser API crash
+
+Stage Summary:
+- Full real-time chat between customer and admin in profile page
+- Customer: Profile → Chat tab → direct chat with Customer Service
+- Admin: Profile → Chat tab → room list + chat with selected customer
+- REST API fallback ensures chat works even without Socket.IO
+- All API endpoints verified: rooms, messages, send, read
+- No lint errors
+
+---
+Task ID: chat-verify
+Agent: Main Agent
+Task: Verify and fix message/chat feature on profile page
+
+Work Log:
+- Read and analyzed all existing chat code (API routes, components, hooks, chat service)
+- Fixed messages API to explicitly serialize createdAt to ISO strings
+- Fixed rooms API to serialize lastMessageAt for admin view
+- Fixed AdminChatPanel stale closure bug in mark-as-read useEffect (was using `rooms` from closure instead of functional setState)
+- Added REST polling mechanism (3s interval) to CustomerChatPanel when Socket.IO not connected
+- Added REST polling for messages AND room list to AdminChatPanel when Socket.IO not connected
+- Ran ESLint - zero errors
+- Started both Next.js dev server (port 3000) and Socket.IO chat service (port 3003)
+- Verified all 4 chat API endpoints work correctly via curl (rooms, messages, send, read)
+- Verified customer chat panel via agent-browser:
+  - Chat tab renders in Profile page (Ringkasan, Pesanan Saya, Chat, Pengaturan)
+  - "Customer Service" header with "Terhubung via REST" status
+  - Existing messages load from database with timestamps and read receipts (✓✓)
+  - REST polling (3s) successfully receives new messages sent via API
+  - Empty state shows "Belum ada pesan. Mulai percakapan!"
+  - Input field with send button, properly enables/disables
+- Verified admin chat panel via agent-browser + VLM screenshot analysis:
+  - Room list sidebar with customer names, avatar initials, last message previews
+  - Unread message badges (red circle with count)
+  - Selected room shows full message history
+  - Customer messages (white bubble, left) and admin messages (orange bubble, right)
+  - Timestamps on all messages
+  - Input area with "Ketik balasan..." placeholder
+- Zero browser console errors during testing
+
+Stage Summary:
+- Chat feature fully working on profile page for both customer and admin
+- Customer: Profile → Chat → direct conversation with Customer Service
+- Admin: Profile → Chat → split view (room list + chat window)
+- REST polling provides near-real-time updates without Socket.IO dependency
+- Socket.IO service available for instant real-time when deployed
+- All 4 API endpoints tested and verified (rooms, messages, send, read)
+---
+Task ID: 1
+Agent: Main
+Task: Fix chat message creation failure ("Perbaiki gagal membuat pesan")
+
+Work Log:
+- Investigated root causes: chat service not running, stale user session, rooms API requiring DB user lookup
+- Fixed /api/chat/rooms GET endpoint to not require DB user lookup - accepts `name` query param as fallback
+- Fixed CustomerChatPanel to pass user name in rooms request and handle errors with toast notifications
+- Added retry button when room creation fails (with retryKey state to re-trigger useEffect)
+- Changed both CustomerChatPanel and AdminChatPanel handleSend to always use REST as primary method (more reliable than socket-dependent sending)
+- Added user session validation in AppPage that checks if user exists in DB after hydration, clears session if not found
+- Started chat mini-service on port 3003
+- Verified end-to-end: customer sends 2 messages, admin sees them in admin panel, admin replies, customer receives reply via REST polling
+
+Stage Summary:
+- Chat messaging now works reliably via REST API (no dependency on Socket.IO being connected)
+- Room creation works even if user doesn't exist in DB (uses name from request)
+- Stale sessions are automatically cleared with user-friendly toast notification
+- Error states are properly handled with retry capability
+- All fixes verified via agent-browser end-to-end testing
+---
+Task ID: 2
+Agent: Main
+Task: Redesign MenuPage with grid layout
+
+Work Log:
+- Read current MenuPage — had 1-col mobile, 2-col sm, 3-col lg grid with large cards (h-48 images)
+- Redesigned to compact 2-col mobile / 3-col sm+ grid with square aspect-ratio images
+- Changed category filter from wrap buttons to horizontal scrollable pills (rounded-full)
+- Added "Menu Kami" title with UtensilsCrossed icon
+- Added product count display ("2 menu tersedia")
+- Cards: square image, hover zoom effect, quick-add overlay button on desktop, compact info section
+- Separate mobile/desktop add buttons (solid orange on mobile, soft bg on desktop)
+- Added empty state for filtered categories
+- Used whileTap animation instead of whileHover for mobile-friendly interaction
+
+Stage Summary:
+- Menu page now uses compact 2-column grid on mobile, 3-column on tablet/desktop
+- Verified via VLM screenshot analysis: confirmed 2-col grid, mobile-friendly, compact layout
+- Add-to-cart button works from grid — cart badge updates correctly
+- No lint errors, no runtime errors

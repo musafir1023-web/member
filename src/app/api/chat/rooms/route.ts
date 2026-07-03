@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const userId = request.nextUrl.searchParams.get('userId')
     const role = request.nextUrl.searchParams.get('role')
+    const name = request.nextUrl.searchParams.get('name')
 
     if (!userId || !role) {
       return NextResponse.json({ error: 'Parameter tidak lengkap' }, { status: 400 })
@@ -25,22 +26,39 @@ export async function GET(request: NextRequest) {
           _count: { select: { messages: true } },
         },
       })
-      return NextResponse.json(rooms)
+      const serialized = rooms.map((r) => ({
+        ...r,
+        lastMessageAt: r.lastMessageAt.toISOString(),
+        createdAt: (r as any).createdAt?.toISOString?.() || '',
+      }))
+      return NextResponse.json(serialized)
     }
 
     // Customer: get or create their room
-    const user = await db.user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
-    if (!user) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
+    // Try to get name from DB, fallback to query param
+    let customerName = name || 'Customer'
+    try {
+      const user = await db.user.findUnique({ where: { id: userId }, select: { name: true } })
+      if (user) customerName = user.name
+    } catch {
+      // User might not exist in DB, use provided name
+    }
 
     let room = await db.chatRoom.findUnique({ where: { customerId: userId } })
 
     if (!room) {
       room = await db.chatRoom.create({
-        data: { customerId: userId, customerName: user.name },
+        data: { customerId: userId, customerName },
       })
     }
 
-    return NextResponse.json([room])
+    return NextResponse.json([{
+      ...room,
+      lastMessageAt: room.lastMessageAt.toISOString(),
+      createdAt: room.createdAt.toISOString(),
+      unreadCustomer: room.unreadCustomer,
+      unreadAdmin: room.unreadAdmin,
+    }])
   } catch (error) {
     console.error('Chat rooms error:', error)
     return NextResponse.json({ error: 'Gagal memuat chat' }, { status: 500 })

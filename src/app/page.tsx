@@ -361,12 +361,11 @@ function BottomNav() {
   const cartCount = useAppStore(getCartCount)
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
-  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean; badge?: number }[] = [
+  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean }[] = [
     { page: 'home', label: 'Beranda', icon: <Home className="w-5 h-5" />, show: true },
     { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
     { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
     { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
-    { page: 'chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" />, show: !!user, badge: useAppStore((s) => s.unreadChats) },
     { page: user ? 'profile' : 'login', label: user ? 'Profile' : 'Login', icon: user ? <UserCircle className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
   ]
 
@@ -407,11 +406,6 @@ function BottomNav() {
                   {item.page === 'cart' && mounted && cartCount > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
                       {cartCount}
-                    </span>
-                  )}
-                  {item.page === 'chat' && mounted && (item.badge ?? 0) > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
-                      {item.badge}
                     </span>
                   )}
                 </div>
@@ -1027,87 +1021,121 @@ function MenuPage() {
   return (
     <div className="min-h-screen">
       {/* Hero mini */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-5 relative">
         <div className="absolute inset-0 aceh-pattern opacity-30" />
         <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <p className="text-orange-50 text-sm max-w-lg mx-auto text-justify leading-relaxed">
-            Pilih berbagai varian ayam geprek sambal ijo dan minuman segar yang kami sediakan. Semua menu dibuat dari bahan pilihan dengan kualitas terbaik untuk kepuasan Anda.
+          <h2 className="text-xl font-extrabold text-white mb-1">
+            <UtensilsCrossed className="w-6 h-6 inline-block mr-1.5 -mt-1" />
+            Menu Kami
+          </h2>
+          <p className="text-orange-50 text-xs max-w-md mx-auto leading-relaxed">
+            Pilih berbagai varian ayam geprek sambal ijo dan minuman segar dengan kualitas terbaik.
           </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Category filter */}
-        <div className="flex flex-wrap gap-2 mb-6 justify-center">
+      <div className="max-w-5xl mx-auto px-4 py-4">
+        {/* Category filter — horizontal scroll */}
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {categories.map((cat) => (
-            <Button
+            <button
               key={cat}
-              size="sm"
-              variant={activeCategory === cat ? 'default' : 'outline'}
-              className={activeCategory === cat ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-orange-200 text-gray-600 hover:bg-orange-50'}
               onClick={() => setActiveCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                activeCategory === cat
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
+              }`}
             >
               {cat}
-            </Button>
+            </button>
           ))}
         </div>
 
-        {/* Product grid */}
+        {/* Product count */}
+        {!loading && (
+          <p className="text-xs text-gray-400 mb-3">{filtered.length} menu tersedia</p>
+        )}
+
+        {/* Product grid — 2 col mobile, 3 col tablet+ */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-md">
-                <Skeleton className="w-full h-48" />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                <Skeleton className="w-full aspect-square" />
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
                   <Skeleton className="h-4 w-1/2" />
                 </div>
               </div>
             ))}
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <UtensilsCrossed className="w-12 h-12 text-white/30 mx-auto mb-3" />
+            <p className="text-white/60 text-sm">Tidak ada menu di kategori ini</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((p) => (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4 }}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow flex flex-col"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col group"
               >
-                <div className="relative h-48 overflow-hidden">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                  <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-xs">{p.category}</Badge>
+                {/* Image */}
+                <div className="relative aspect-square overflow-hidden">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                   {p.originalPrice && p.originalPrice > p.price && (
-                    <Badge className="absolute top-3 right-3 bg-red-500 text-white text-xs">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                       -{Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}%
-                    </Badge>
+                    </span>
                   )}
                   {p.tag === 'terlaris' && !p.originalPrice && (
-                    <Badge className="absolute top-3 right-3 bg-amber-500 text-white text-xs flex items-center gap-0.5">
-                      <Flame className="w-3 h-3" /> Laris
-                    </Badge>
+                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                      <Flame className="w-2.5 h-2.5" /> Laris
+                    </span>
                   )}
+                  {/* Quick add button overlay */}
+                  <button
+                    onClick={() => handleAdd(p)}
+                    className="absolute bottom-2 right-2 w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="font-bold text-gray-800 mb-1 text-sm leading-snug">{p.name}</h3>
-                  <p className="text-xs text-gray-500 text-justify leading-relaxed flex-1 line-clamp-3">{p.description}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="font-extrabold text-orange-600 text-base">{fmt(p.price)}</span>
+
+                {/* Info */}
+                <div className="p-3 flex-1 flex flex-col">
+                  <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2">{p.name}</h3>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-relaxed flex-1 line-clamp-2">{p.description}</p>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-extrabold text-orange-600 text-sm">{fmt(p.price)}</span>
                       {p.originalPrice && p.originalPrice > p.price && (
-                        <span className="text-xs text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+                        <span className="text-[10px] text-gray-300 line-through">{fmt(p.originalPrice)}</span>
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 text-white shadow-md"
+                    <button
                       onClick={() => handleAdd(p)}
+                      className="sm:hidden bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-sm active:scale-95 transition-all"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
+                      + Tambah
+                    </button>
+                    <button
+                      onClick={() => handleAdd(p)}
+                      className="hidden sm:flex bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
                       Tambah
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -2100,6 +2128,7 @@ function ProfilePage() {
     : [
         { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
         { id: 'orders' as const, label: 'Pesanan Saya', icon: <Package className="w-4 h-4" /> },
+        { id: 'chat' as const, label: 'Chat', icon: <MessageCircle className="w-4 h-4" /> },
         { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
       ]
 
@@ -2953,8 +2982,12 @@ function ProfilePage() {
         )}
 
         {/* ═══ SETTINGS TAB ═══ */}
+        {/* ═══ CHAT TAB ═══ */}
         {activeTab === 'chat' && isAdmin && (
           <AdminChatPanel />
+        )}
+        {activeTab === 'chat' && !isAdmin && (
+          <CustomerChatPanel />
         )}
         {activeTab === 'settings' && (
           <>
@@ -3144,8 +3177,8 @@ function useChatSocket(roomId: string | null, userId: string, role: string) {
   return { socket: socketRef, connected, sendMessage, emitTyping, emitStopTyping }
 }
 
-/* ─────────────────────── CHAT PAGE (Customer) ─────────────────────── */
-function ChatPage() {
+/* ─────────────────────── CUSTOMER CHAT PANEL (inside Profile) ─────────────────────── */
+function CustomerChatPanel() {
   const { user, setPage, addToast, setUnreadChats } = useAppStore()
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
@@ -3153,22 +3186,40 @@ function ChatPage() {
   const [sending, setSending] = useState(false)
   const [roomId, setRoomId] = useState<string | null>(null)
   const [typingUser, setTypingUser] = useState<string | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const isAdmin = user?.role === 'admin'
   const { socket, connected, sendMessage, emitTyping, emitStopTyping } = useChatSocket(roomId, user?.id || '', user?.role || '')
 
   // Initialize room
   useEffect(() => {
-    if (!user) { setPage('login'); return }
+    if (!user) return  // Wait for hydration, don't navigate away
     ;(async () => {
       try {
-        const res = await fetch(`/api/chat/rooms?userId=${user.id}&role=${user.role}`)
+        const res = await fetch(`/api/chat/rooms?userId=${encodeURIComponent(user.id)}&role=${encodeURIComponent(user.role)}&name=${encodeURIComponent(user.name)}`)
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          addToast(errData.error || 'Gagal memuat chat', 'error')
+          return
+        }
         const data = await res.json()
         if (Array.isArray(data) && data.length > 0) {
           setRoomId(data[0].id)
-          setUnreadChats(data[0][user.role === 'admin' ? 'unreadAdmin' : 'unreadCustomer'] || 0)
+          setUnreadChats(data[0].unreadCustomer || 0)
+        } else {
+          // No room returned — try POST to create one
+          const postRes = await fetch('/api/chat/rooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, name: user.name }),
+          })
+          if (postRes.ok) {
+            const room = await postRes.json()
+            if (room.id) setRoomId(room.id)
+          } else {
+            addToast('Gagal membuat room chat', 'error')
+          }
         }
       } catch {
         addToast('Gagal memuat chat', 'error')
@@ -3176,7 +3227,7 @@ function ChatPage() {
         setLoading(false)
       }
     })()
-  }, [user, setPage, addToast, setUnreadChats])
+  }, [user, setPage, addToast, setUnreadChats, retryKey])
 
   // Load messages when room changes
   useEffect(() => {
@@ -3189,6 +3240,27 @@ function ChatPage() {
       } catch { /* ignore */ }
     })()
   }, [roomId])
+
+  // REST polling for new messages when socket is not connected
+  useEffect(() => {
+    if (!roomId || connected) return
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?roomId=${roomId}`)
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setMessages((prev) => {
+            if (data.length > prev.length) {
+              setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+              return data
+            }
+            return prev
+          })
+        }
+      } catch { /* ignore */ }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [roomId, connected])
 
   // Mark as read
   useEffect(() => {
@@ -3252,18 +3324,22 @@ function ChatPage() {
     emitStopTyping({ roomId, userId: user.id })
     setSending(true)
     try {
-      if (connected) {
-        sendMessage({ roomId, senderId: user.id, senderName: user.name, senderRole: user.role, content })
-      } else {
-        const res = await fetch('/api/chat/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomId, senderId: user.id, senderName: user.name, senderRole: user.role, content }),
-        })
-        const data = await res.json()
-        if (data.id) {
-          setMessages((prev) => [...prev, data])
-        }
+      // Always use REST as primary — more reliable
+      const res = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId, senderId: user.id, senderName: user.name, senderRole: user.role, content }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        addToast(err.error || 'Gagal mengirim pesan', 'error')
+        return
+      }
+      const data = await res.json()
+      if (data.id) {
+        setMessages((prev) => [...prev, data])
+      } else if (data.error) {
+        addToast(data.error, 'error')
       }
     } catch {
       addToast('Gagal mengirim pesan', 'error')
@@ -3290,32 +3366,49 @@ function ChatPage() {
 
   if (loading) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-8">
-        <Skeleton className="w-32 h-6 bg-white/20 mb-4" />
-        <Skeleton className="w-full h-64 bg-white/20 rounded-xl" />
+      <div className="bg-white rounded-xl p-5 shadow-md">
+        <Skeleton className="w-32 h-5 mb-4" />
+        <Skeleton className="w-full h-48" />
       </div>
     )
   }
 
   if (!user) return null
 
+  // Show error when room couldn't be created
+  if (!roomId) {
+    return (
+      <div className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col items-center justify-center gap-3 p-8" style={{ height: '65vh' }}>
+        <MessageCircle className="w-12 h-12 text-gray-300" />
+        <p className="text-sm text-gray-500">Gagal memuat chat</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-xl border-orange-200 text-orange-600 hover:bg-orange-50"
+          onClick={() => { setLoading(true); setRoomId(null); setRetryKey((k) => k + 1) }}
+        >
+          Coba Lagi
+        </Button>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-lg mx-auto flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col" style={{ height: '65vh' }}>
       {/* Header */}
-      <div className="bg-white rounded-t-2xl px-4 py-3 border-b border-orange-100 flex items-center gap-3 shadow-sm flex-shrink-0">
+      <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-3 border-b border-orange-100 flex items-center gap-3 flex-shrink-0">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-          {isAdmin ? 'CS' : user.name.charAt(0).toUpperCase()}
+          <MessageCircle className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-gray-800 text-sm">{isAdmin ? 'Admin Customer Service' : 'Customer Service'}</h2>
+          <h3 className="font-bold text-gray-800 text-sm">Customer Service</h3>
           <div className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-gray-300'}`} />
             <span className="text-[11px] text-gray-400">
-              {typingUser ? `${typingUser} sedang mengetik...` : connected ? 'Online' : 'Menghubungkan...'}
+              {typingUser ? `${typingUser} sedang mengetik...` : connected ? 'Online' : 'Terhubung via REST'}
             </span>
           </div>
         </div>
-        <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
       </div>
 
       {/* Messages */}
@@ -3337,10 +3430,6 @@ function ChatPage() {
               className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[80%] ${isMe ? 'order-1' : 'order-1'}`}>
-                {/* Show sender name for admin chat */}
-                {isAdmin && !isMe && (
-                  <p className="text-[10px] text-gray-400 mb-0.5 ml-1">{msg.senderName}</p>
-                )}
                 <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
                   isMe
                     ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-md'
@@ -3360,7 +3449,7 @@ function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white rounded-b-2xl border-t border-orange-100 p-3 flex-shrink-0 shadow-sm">
+      <div className="bg-white border-t border-orange-100 p-3 flex-shrink-0">
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <Input
@@ -3441,6 +3530,48 @@ function AdminChatPanel() {
     })()
   }, [selectedRoom])
 
+  // REST polling for new messages when socket is not connected
+  useEffect(() => {
+    if (!selectedRoom || connected) return
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?roomId=${selectedRoom}`)
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setMessages((prev) => {
+            if (data.length > prev.length) {
+              setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+              return data
+            }
+            return prev
+          })
+        }
+      } catch { /* ignore */ }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [selectedRoom, connected])
+
+  // REST polling for rooms list when socket is not connected (admin)
+  useEffect(() => {
+    if (connected) return
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/chat/rooms?userId=${user?.id}&role=admin`)
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setRooms(data)
+        }
+      } catch { /* ignore */ }
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [connected, user?.id])
+
+  // Sync unread count from rooms state
+  useEffect(() => {
+    const total = rooms.reduce((s: number, r: any) => s + (r.unreadAdmin || 0), 0)
+    setUnreadChats(total)
+  }, [rooms, setUnreadChats])
+
   // Mark as read
   useEffect(() => {
     if (!selectedRoom) return
@@ -3450,10 +3581,8 @@ function AdminChatPanel() {
       body: JSON.stringify({ roomId: selectedRoom, role: 'admin' }),
     }).then(() => {
       setRooms((prev) => prev.map((r) => r.id === selectedRoom ? { ...r, unreadAdmin: 0 } : r))
-      const totalUnread = rooms.reduce((s, r) => s + (r.id === selectedRoom ? 0 : r.unreadAdmin || 0), 0)
-      setUnreadChats(totalUnread)
     }).catch(() => {})
-  }, [selectedRoom, setUnreadChats])
+  }, [selectedRoom])
 
   // Listen for new messages
   useEffect(() => {
@@ -3466,16 +3595,13 @@ function AdminChatPanel() {
         return [...prev, msg]
       })
       // Update room list (last message, unread)
-      setRooms((prev) => {
-        const updated = prev.map((r) =>
+      setRooms((prev) =>
+        prev.map((r) =>
           r.id === msg.roomId
             ? { ...r, lastMessage: msg.content.slice(0, 100), lastMessageAt: msg.createdAt, unreadAdmin: msg.senderRole === 'customer' ? (r.unreadAdmin || 0) + 1 : r.unreadAdmin }
             : r
         )
-        const total = updated.reduce((s: number, r: any) => s + (r.unreadAdmin || 0), 0)
-        setUnreadChats(total)
-        return updated
-      })
+      )
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     }
 
@@ -3515,18 +3641,20 @@ function AdminChatPanel() {
     emitStopTyping({ roomId: selectedRoom, userId: user.id })
     setSending(true)
     try {
-      if (connected) {
-        sendMessage({ roomId: selectedRoom, senderId: user.id, senderName: user.name, senderRole: 'admin', content })
-      } else {
-        const res = await fetch('/api/chat/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomId: selectedRoom, senderId: user.id, senderName: user.name, senderRole: 'admin', content }),
-        })
-        const data = await res.json()
-        if (data.id) {
-          setMessages((prev) => [...prev, data])
-        }
+      // Always use REST as primary — more reliable
+      const res = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: selectedRoom, senderId: user.id, senderName: user.name, senderRole: 'admin', content }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        addToast(err.error || 'Gagal mengirim pesan', 'error')
+        return
+      }
+      const data = await res.json()
+      if (data.id) {
+        setMessages((prev) => [...prev, data])
       }
       // Update room last message
       setRooms((prev) => prev.map((r) =>
@@ -3716,11 +3844,28 @@ function AdminChatPanel() {
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
+  const user = useAppStore((s) => s.user)
+  const logout = useAppStore((s) => s.logout)
+  const addToast = useAppStore((s) => s.addToast)
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   useEffect(() => {
     useAppStore.persist.rehydrate()
   }, [])
+
+  // Validate user session after hydration
+  useEffect(() => {
+    if (!mounted || !user) return
+    fetch(`/api/auth/profile?userId=${encodeURIComponent(user.id)}`)
+      .then((res) => {
+        if (!res.ok) {
+          // User no longer exists in DB — clear session
+          logout()
+          addToast('Sesi Anda telah berakhir. Silakan login kembali.', 'info')
+        }
+      })
+      .catch(() => {})
+  }, [mounted, user, logout, addToast])
 
   if (!mounted) {
     return (
@@ -3750,7 +3895,6 @@ export default function AppPage() {
       case 'register': return <RegisterPage />
       case 'profile': return <ProfilePage />
       case 'receipt': return <ReceiptPage />
-      case 'chat': return <ChatPage />
       default: return <HomePage />
     }
   }

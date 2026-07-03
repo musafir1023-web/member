@@ -1,0 +1,3 @@
+// Notification sound generator - creates a pleasant chime
+// We'll use Web Audio API in the component instead of an audio file
+// This avoids file size issues and encoding complexity

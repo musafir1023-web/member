@@ -1,0 +1,15 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "app-storage",
+          "value": "{\"state\":{\"user\":{\"id\":\"cmr09lv54000cr5ok2tuolu8a\",\"name\":\"Safir\",\"email\":\"musafir2310@gmail.com\",\"role\":\"customer\",\"phone\":\"085260812758\"},\"cart\":[]},\"version\":0}"
+        }
+      ],
+      "sessionStorage": []
+    }
+  ]
+}

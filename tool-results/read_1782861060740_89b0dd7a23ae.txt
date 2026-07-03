@@ -1,0 +1,769 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { io, Socket } from 'socket.io-client'
+     6→import { Input } from '@/components/ui/input'
+     7→import { Badge } from '@/components/ui/badge'
+     8→import { Skeleton } from '@/components/ui/skeleton'
+     9→import {
+    10→  MessageCircle,
+    11→  Send,
+    12→  Search,
+    13→  ArrowLeft,
+    14→  Phone,
+    15→  Smile,
+    16→  Check,
+    17→  CheckCheck,
+    18→} from 'lucide-react'
+    19→
+    20→interface ChatMessage {
+    21→  id: string
+    22→  conversationId: string
+    23→  senderId: string
+    24→  senderRole: string
+    25→  content: string
+    26→  type: string
+    27→  readByAdmin: boolean
+    28→  readByUser: boolean
+    29→  createdAt: string
+    30→  senderName?: string
+    31→}
+    32→
+    33→interface Conversation {
+    34→  id: string
+    35→  userId: string
+    36→  userName: string
+    37→  userPhone: string | null
+    38→  lastMessage: string | null
+    39→  lastMessageAt: string | null
+    40→  unreadAdmin: number
+    41→  unreadUser: number
+    42→  createdAt: string
+    43→  _count: { messages: number }
+    44→}
+    45→
+    46→interface ChatWidgetProps {
+    47→  userId: string
+    48→  userName: string
+    49→  userRole: string
+    50→  userPhone?: string
+    51→}
+    52→
+    53→const formatTime = (dateStr: string) => {
+    54→  const d = new Date(dateStr)
+    55→  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    56→}
+    57→
+    58→const formatDate = (dateStr: string) => {
+    59→  const d = new Date(dateStr)
+    60→  const today = new Date()
+    61→  const yesterday = new Date(today)
+    62→  yesterday.setDate(yesterday.getDate() - 1)
+    63→
+    64→  if (d.toDateString() === today.toDateString()) return 'Hari ini'
+    65→  if (d.toDateString() === yesterday.toDateString()) return 'Kemarin'
+    66→  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    67→}
+    68→
+    69→const formatMessageDate = (dateStr: string) => {
+    70→  const d = new Date(dateStr)
+    71→  const today = new Date()
+    72→  const yesterday = new Date(today)
+    73→  yesterday.setDate(yesterday.getDate() - 1)
+    74→
+    75→  if (d.toDateString() === today.toDateString()) return `Hari ini, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+    76→  if (d.toDateString() === yesterday.toDateString()) return `Kemarin, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+    77→  return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+    78→}
+    79→
+    80→export default function ChatWidget({ userId, userName, userRole, userPhone }: ChatWidgetProps) {
+    81→  const isAdmin = userRole === 'admin'
+    82→
+    83→  // Socket
+    84→  const socketRef = useRef<Socket | null>(null)
+    85→
+    86→  // Admin: conversation list + selected conversation
+    87→  // Customer: single conversation
+    88→  const [conversations, setConversations] = useState<Conversation[]>([])
+    89→  const [selectedConvId, setSelectedConvId] = useState<string | null>(null)
+    90→  const [messages, setMessages] = useState<ChatMessage[]>([])
+    91→  const [newMessage, setNewMessage] = useState('')
+    92→  const [sending, setSending] = useState(false)
+    93→  const [loadingMessages, setLoadingMessages] = useState(false)
+    94→  const [loadingConvs, setLoadingConvs] = useState(true)
+    95→  const [searchQuery, setSearchQuery] = useState('')
+    96→  const [typingUser, setTypingUser] = useState<{ name: string; role: string } | null>(null)
+    97→  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
+    98→  const [showChatView, setShowChatView] = useState(false) // mobile: toggle between list and chat
+    99→  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+   100→  const [allLoaded, setAllLoaded] = useState(false)
+   101→
+   102→  const messagesEndRef = useRef<HTMLDivElement>(null)
+   103→  const messagesContainerRef = useRef<HTMLDivElement>(null)
+   104→  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+   105→  const inputRef = useRef<HTMLInputElement>(null)
+   106→
+   107→  // selectedConvId is used in callbacks but shouldn't trigger socket re-init
+   108→  const selectedConvIdRef = useRef<string | null>(null)
+   109→  selectedConvIdRef.current = selectedConvId
+   110→
+   111→  // ─── Initialize Socket ───
+   112→  useEffect(() => {
+   113→    const socket = io('/?XTransformPort=3003', {
+   114→      transports: ['websocket', 'polling'],
+   115→    })
+   116→
+   117→    socket.on('connect', () => {
+   118→      console.log('[Chat] Socket connected')
+   119→      socket.emit('auth', { userId, role: userRole, name: userName })
+   120→    })
+   121→
+   122→    socket.on('new_message', (msg: ChatMessage) => {
+   123→      if (selectedConvIdRef.current === msg.conversationId) {
+   124→        setMessages((prev) => {
+   125→          if (prev.some((m) => m.id === msg.id)) return prev
+   126→          return [...prev, msg]
+   127→        })
+   128→        markAsRead(msg.conversationId)
+   129→      }
+   130→      refreshConversations()
+   131→    })
+   132→
+   133→    socket.on('conversation_update', () => {
+   134→      refreshConversations()
+   135→    })
+   136→
+   137→    socket.on('user_typing', (data: { conversationId: string; name: string; role: string }) => {
+   138→      if (data.conversationId === selectedConvIdRef.current) {
+   139→        setTypingUser({ name: data.name, role: data.role })
+   140→      }
+   141→    })
+   142→
+   143→    socket.on('user_stop_typing', (data: { conversationId: string }) => {
+   144→      if (data.conversationId === selectedConvIdRef.current) {
+   145→        setTypingUser(null)
+   146→      }
+   147→    })
+   148→
+   149→    socket.on('messages_read_by', (data: { conversationId: string; role: string }) => {
+   150→      if (data.conversationId === selectedConvIdRef.current) {
+   151→        setMessages((prev) =>
+   152→          prev.map((m) => {
+   153→            if (data.role === 'admin') return { ...m, readByAdmin: true }
+   154→            return { ...m, readByUser: true }
+   155→          })
+   156→        )
+   157→      }
+   158→    })
+   159→
+   160→    socket.on('user_status', (data: { userId: string; online: boolean }) => {
+   161→      setOnlineUsers((prev) => {
+   162→        const next = new Set(prev)
+   163→        if (data.online) next.add(data.userId)
+   164→        else next.delete(data.userId)
+   165→        return next
+   166→      })
+   167→    })
+   168→
+   169→    socketRef.current = socket
+   170→
+   171→    return () => {
+   172→      socket.disconnect()
+   173→    }
+   174→  }, [userId, userRole, userName])
+   175→
+   176→  // ─── Join/leave conversation room when selection changes ───
+   177→  useEffect(() => {
+   178→    if (!socketRef.current) return
+   179→    if (selectedConvId) {
+   180→      socketRef.current.emit('join_conversation', selectedConvId)
+   181→    }
+   182→    return () => {
+   183→      if (selectedConvId && socketRef.current) {
+   184→        socketRef.current.emit('leave_conversation', selectedConvId)
+   185→      }
+   186→    }
+   187→  }, [selectedConvId])
+   188→
+   189→  // ─── Auto-scroll to bottom on new messages ───
+   190→  useEffect(() => {
+   191→    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+   192→  }, [messages, typingUser])
+   193→
+   194→  // ─── Load conversations ───
+   195→  const refreshConversations = useCallback(async () => {
+   196→    try {
+   197→      const res = await fetch(`/api/chat/conversations?userId=${userId}&role=${userRole}`)
+   198→      const data = await res.json()
+   199→      setConversations(data)
+   200→      if (data.length > 0) {
+   201→        // For customer, auto-select their conversation
+   202→        if (!isAdmin) {
+   203→          setSelectedConvId(data[0].id)
+   204→        }
+   205→      }
+   206→    } catch {
+   207→      // silent
+   208→    } finally {
+   209→      setLoadingConvs(false)
+   210→    }
+   211→  }, [userId, userRole, isAdmin])
+   212→
+   213→  useEffect(() => { refreshConversations() }, [refreshConversations])
+   214→
+   215→  // ─── Load messages for a conversation ───
+   216→  const loadMessages = useCallback(async (convId: string) => {
+   217→    setLoadingMessages(true)
+   218→    setAllLoaded(false)
+   219→    try {
+   220→      const res = await fetch(`/api/chat/messages?conversationId=${convId}&limit=50`)
+   221→      const data = await res.json()
+   222→      setMessages(data)
+   223→    } catch {
+   224→      // silent
+   225→    } finally {
+   226→      setLoadingMessages(false)
+   227→    }
+   228→  }, [])
+   229→
+   230→  useEffect(() => {
+   231→    if (selectedConvId) {
+   232→      loadMessages(selectedConvId)
+   233→      if (!isAdmin) setShowChatView(true)
+   234→    }
+   235→  }, [selectedConvId, loadMessages, isAdmin])
+   236→
+   237→  // ─── Mark as read ───
+   238→  const markAsRead = async (convId: string) => {
+   239→    try {
+   240→      await fetch('/api/chat/mark-read', {
+   241→        method: 'POST',
+   242→        headers: { 'Content-Type': 'application/json' },
+   243→        body: JSON.stringify({ conversationId: convId, role: userRole }),
+   244→      })
+   245→      socketRef.current?.emit('messages_read', { conversationId: convId, role: userRole })
+   246→    } catch {
+   247→      // silent
+   248→    }
+   249→  }
+   250→
+   251→  // ─── Send message ───
+   252→  const sendMessage = async () => {
+   253→    if (!newMessage.trim() || !selectedConvId || sending) return
+   254→
+   255→    const content = newMessage.trim()
+   256→    setNewMessage('')
+   257→    setSending(true)
+   258→    setShowEmojiPicker(false)
+   259→
+   260→    try {
+   261→      // Save to DB first
+   262→      const res = await fetch('/api/chat/messages', {
+   263→        method: 'POST',
+   264→        headers: { 'Content-Type': 'application/json' },
+   265→        body: JSON.stringify({
+   266→          conversationId: selectedConvId,
+   267→          senderId: userId,
+   268→          senderRole: userRole,
+   269→          content,
+   270→          type: 'text',
+   271→        }),
+   272→      })
+   273→
+   274→      const savedMsg = await res.json()
+   275→
+   276→      // Emit via socket
+   277→      socketRef.current?.emit('send_message', {
+   278→        conversationId: selectedConvId,
+   279→        messageId: savedMsg.id,
+   280→        senderId: userId,
+   281→        senderRole: userRole,
+   282→        content,
+   283→        type: 'text',
+   284→        senderName: userName,
+   285→      })
+   286→
+   287→      // Add to local messages
+   288→      setMessages((prev) => [...prev, {
+   289→        ...savedMsg,
+   290→        conversationId: selectedConvId,
+   291→        senderName: userName,
+   292→      }])
+   293→
+   294→      // Refresh conversations
+   295→      refreshConversations()
+   296→    } catch {
+   297→      // Could add the message back
+   298→    } finally {
+   299→      setSending(false)
+   300→      inputRef.current?.focus()
+   301→    }
+   302→  }
+   303→
+   304→  // ─── Create conversation (for customer) ───
+   305→  const startConversation = async () => {
+   306→    try {
+   307→      const res = await fetch('/api/chat/conversations', {
+   308→        method: 'POST',
+   309→        headers: { 'Content-Type': 'application/json' },
+   310→        body: JSON.stringify({ userId, userName, userPhone: userPhone || null }),
+   311→      })
+   312→      const conv = await res.json()
+   313→      setSelectedConvId(conv.id)
+   314→      return conv
+   315→    } catch {
+   316→      return null
+   317→    }
+   318→  }
+   319→
+   320→  // ─── Typing handler ───
+   321→  const handleTyping = () => {
+   322→    if (!selectedConvId || !socketRef.current) return
+   323→    socketRef.current.emit('typing', { conversationId: selectedConvId, name: userName })
+   324→    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+   325→    typingTimeoutRef.current = setTimeout(() => {
+   326→      socketRef.current?.emit('stop_typing', { conversationId: selectedConvId })
+   327→    }, 2000)
+   328→  }
+   329→
+   330→  // ─── Emoji data ───
+   331→  const emojiCategories = [
+   332→    { label: 'Senyum', emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘'] },
+   333→    { label: 'Reaksi', emojis: ['👍', '👎', '👏', '🙏', '💪', '❤️', '🔥', '⭐', '💯', '🎉', '🎊', '✅', '❌', '⚠️', '💬'] },
+   334→    { label: 'Makanan', emojis: ['🍗', '🍖', '🍚', '🥤', '☕', '🌶️', '🧡', '😋', '🤤', '🫶', '👌', '✨', '👏', '🙏', '💯'] },
+   335→  ]
+   336→
+   337→  // ─── Filtered conversations for admin search ───
+   338→  const filteredConversations = searchQuery
+   339→    ? conversations.filter((c) =>
+   340→        c.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+   341→        c.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
+   342→      )
+   343→    : conversations
+   344→
+   345→  // ─── Group messages by date ───
+   346→  const getMessageGroups = () => {
+   347→    const groups: { date: string; messages: ChatMessage[] }[] = []
+   348→    let currentDate = ''
+   349→
+   350→    for (const msg of messages) {
+   351→      const msgDate = formatDate(msg.createdAt)
+   352→      if (msgDate !== currentDate) {
+   353→        currentDate = msgDate
+   354→        groups.push({ date: msgDate, messages: [msg] })
+   355→      } else {
+   356→        groups[groups.length - 1].messages.push(msg)
+   357→      }
+   358→    }
+   359→    return groups
+   360→  }
+   361→
+   362→  // ─── RENDER ───
+   363→  return (
+   364→    <motion.div
+   365→      initial={{ opacity: 0, y: 15 }}
+   366→      animate={{ opacity: 1, y: 0 }}
+   367→      transition={{ duration: 0.4, delay: 0.2 }}
+   368→      className="bg-white rounded-2xl shadow-md overflow-hidden"
+   369→    >
+   370→      {/* Header */}
+   371→      <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 flex items-center justify-between">
+   372→        <div className="flex items-center gap-2.5">
+   373→          <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+   374→            <MessageCircle className="w-5 h-5 text-white" />
+   375→          </div>
+   376→          <div>
+   377→            <h3 className="font-bold text-white text-sm">
+   378→              {isAdmin ? 'Chat Pelanggan' : 'Chat Admin'}
+   379→            </h3>
+   380→            <p className="text-orange-100 text-[10px]">
+   381→              {isAdmin
+   382→                ? `${conversations.length} percakapan${conversations.reduce((sum, c) => sum + c.unreadAdmin, 0) > 0 ? ` · ${conversations.reduce((sum, c) => sum + c.unreadAdmin, 0)} belum dibaca` : ''}`
+   383→                : onlineUsers.has('admin') ? '🟢 Admin sedang online' : '⚫ Admin sedang offline'}
+   384→            </p>
+   385→          </div>
+   386→        </div>
+   387→        {isAdmin && (
+   388→          <div className="flex items-center gap-2">
+   389→            <Badge className="bg-white/20 text-white border-0 text-[10px]">
+   390→              {conversations.reduce((sum, c) => sum + c.unreadAdmin, 0)} Baru
+   391→            </Badge>
+   392→          </div>
+   393→        )}
+   394→      </div>
+   395→
+   396→      {/* Chat Body */}
+   397→      <div className="flex" style={{ height: '420px' }}>
+   398→        {/* ─── CONVERSATION LIST (Admin) ─── */}
+   399→        {isAdmin && (
+   400→          <div className={`${showChatView ? 'hidden sm:flex' : 'flex'} flex-col w-full sm:w-80 border-r border-orange-100 bg-orange-50/30`}>
+   401→            {/* Search */}
+   402→            <div className="p-3 border-b border-orange-100">
+   403→              <div className="relative">
+   404→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+   405→                <Input
+   406→                  placeholder="Cari percakapan..."
+   407→                  value={searchQuery}
+   408→                  onChange={(e) => setSearchQuery(e.target.value)}
+   409→                  className="pl-9 h-9 text-xs bg-white border-orange-200 rounded-xl"
+   410→                />
+   411→              </div>
+   412→            </div>
+   413→
+   414→            {/* Conversation List */}
+   415→            <div className="flex-1 overflow-y-auto custom-scrollbar">
+   416→              {loadingConvs ? (
+   417→                <div className="p-3 space-y-2">
+   418→                  {[...Array(4)].map((_, i) => (
+   419→                    <Skeleton key={i} className="h-16 rounded-xl" />
+   420→                  ))}
+   421→                </div>
+   422→              ) : filteredConversations.length === 0 ? (
+   423→                <div className="flex flex-col items-center justify-center h-40 text-center px-4">
+   424→                  <MessageCircle className="w-10 h-10 text-gray-300 mb-2" />
+   425→                  <p className="text-xs text-gray-400">
+   426→                    {searchQuery ? 'Tidak ditemukan' : 'Belum ada percakapan'}
+   427→                  </p>
+   428→                </div>
+   429→              ) : (
+   430→                filteredConversations.map((conv) => {
+   431→                  const isSelected = selectedConvId === conv.id
+   432→                  const isOnline = onlineUsers.has(conv.userId)
+   433→                  return (
+   434→                    <motion.button
+   435→                      key={conv.id}
+   436→                      whileTap={{ scale: 0.98 }}
+   437→                      onClick={() => {
+   438→                        setSelectedConvId(conv.id)
+   439→                        setShowChatView(true)
+   440→                        markAsRead(conv.id)
+   441→                      }}
+   442→                      className={`w-full flex items-start gap-3 p-3 hover:bg-white transition-colors text-left border-b border-orange-50 ${
+   443→                        isSelected ? 'bg-white' : ''
+   444→                      }`}
+   445→                    >
+   446→                      {/* Avatar */}
+   447→                      <div className="relative flex-shrink-0">
+   448→                        <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold ${
+   449→                          isSelected ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-600'
+   450→                        }`}>
+   451→                          {conv.userName.charAt(0).toUpperCase()}
+   452→                        </div>
+   453→                        {isOnline && (
+   454→                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
+   455→                        )}
+   456→                      </div>
+   457→
+   458→                      {/* Content */}
+   459→                      <div className="flex-1 min-w-0">
+   460→                        <div className="flex items-center justify-between">
+   461→                          <p className={`text-sm font-semibold truncate ${isSelected ? 'text-gray-800' : 'text-gray-700'}`}>
+   462→                            {conv.userName}
+   463→                          </p>
+   464→                          {conv.lastMessageAt && (
+   465→                            <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
+   466→                              {formatTime(conv.lastMessageAt)}
+   467→                            </span>
+   468→                          )}
+   469→                        </div>
+   470→                        <p className="text-xs text-gray-400 truncate mt-0.5">
+   471→                          {conv.lastMessage || 'Belum ada pesan'}
+   472→                        </p>
+   473→                      </div>
+   474→
+   475→                      {/* Unread Badge */}
+   476→                      {conv.unreadAdmin > 0 && (
+   477→                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center">
+   478→                          {conv.unreadAdmin > 9 ? '9+' : conv.unreadAdmin}
+   479→                        </div>
+   480→                      )}
+   481→                    </motion.button>
+   482→                  )
+   483→                })
+   484→              )}
+   485→            </div>
+   486→          </div>
+   487→        )}
+   488→
+   489→        {/* ─── CHAT MESSAGES ─── */}
+   490→        <div className={`${showChatView ? 'flex' : 'hidden sm:flex'} ${isAdmin && selectedConvId ? 'flex' : ''} flex-col flex-1 ${!isAdmin && !selectedConvId ? 'items-center justify-center' : ''}`}>
+   491→          {/* No conversation selected (admin) */}
+   492→          {isAdmin && !selectedConvId && (
+   493→            <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+   494→              <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+   495→                <MessageCircle className="w-10 h-10 text-orange-300" />
+   496→              </div>
+   497→              <p className="font-semibold text-gray-600 text-sm">Pilih Percakapan</p>
+   498→              <p className="text-xs text-gray-400 mt-1">Pilih percakapan dari daftar untuk mulai chat</p>
+   499→            </div>
+   500→          )}
+   501→
+   502→          {/* Customer: no conversation yet */}
+   503→          {!isAdmin && !selectedConvId && !loadingConvs && (
+   504→            <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+   505→              <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+   506→                <MessageCircle className="w-10 h-10 text-orange-300" />
+   507→              </div>
+   508→              <p className="font-semibold text-gray-600 text-sm">Mulai Chat</p>
+   509→              <p className="text-xs text-gray-400 mt-1 mb-4">Hubungi admin untuk pertanyaan dan bantuan</p>
+   510→              <button
+   511→                onClick={startConversation}
+   512→                className="bg-orange-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 transition-colors shadow-md"
+   513→              >
+   514→                <MessageCircle className="w-4 h-4 inline mr-2" />
+   515→                Mulai Percakapan
+   516→              </button>
+   517→            </div>
+   518→          )}
+   519→
+   520→          {/* Chat View */}
+   521→          {selectedConvId && (
+   522→            <>
+   523→              {/* Chat Header */}
+   524→              <div className="px-4 py-3 border-b border-orange-100 flex items-center gap-3 bg-white">
+   525→                {isAdmin && (
+   526→                  <button
+   527→                    onClick={() => { setShowChatView(false); setSelectedConvId(null) }}
+   528→                    className="sm:hidden w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center"
+   529→                  >
+   530→                    <ArrowLeft className="w-4 h-4 text-orange-600" />
+   531→                  </button>
+   532→                )}
+   533→                {(() => {
+   534→                  const conv = conversations.find((c) => c.id === selectedConvId)
+   535→                  const chatName = isAdmin ? (conv?.userName || 'Customer') : 'Admin Toko'
+   536→                  const isOnline = isAdmin ? (conv ? onlineUsers.has(conv.userId) : false) : onlineUsers.has('admin')
+   537→                  return (
+   538→                    <>
+   539→                      <div className="relative">
+   540→                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm shadow-md">
+   541→                          {isAdmin ? (conv?.userName?.charAt(0).toUpperCase() || 'C') : 'A'}
+   542→                        </div>
+   543→                        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+   544→                          isOnline ? 'bg-green-500' : 'bg-gray-300'
+   545→                        }`} />
+   546→                      </div>
+   547→                      <div className="flex-1 min-w-0">
+   548→                        <p className="font-bold text-gray-800 text-sm">{chatName}</p>
+   549→                        <p className="text-[10px] text-gray-400">
+   550→                          {isOnline ? '🟢 Sedang online' : '⚫ Offline'}
+   551→                          {typingUser && ' · Mengetik...'}
+   552→                        </p>
+   553→                      </div>
+   554→                      {isAdmin && conv?.userPhone && (
+   555→                        <a
+   556→                          href={`tel:${conv.userPhone}`}
+   557→                          className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center hover:bg-green-100 transition-colors"
+   558→                        >
+   559→                          <Phone className="w-4 h-4 text-green-600" />
+   560→                        </a>
+   561→                      )}
+   562→                    </>
+   563→                  )
+   564→                })()}
+   565→              </div>
+   566→
+   567→              {/* Messages Area */}
+   568→              <div
+   569→                ref={messagesContainerRef}
+   570→                className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar bg-gray-50/50"
+   571→              >
+   572→                {loadingMessages ? (
+   573→                  <div className="space-y-3">
+   574→                    {[...Array(5)].map((_, i) => (
+   575→                      <Skeleton key={i} className={`h-12 rounded-2xl max-w-[75%] ${i % 2 === 0 ? 'ml-auto' : ''}`} />
+   576→                    ))}
+   577→                  </div>
+   578→                ) : (
+   579→                  <>
+   580→                    {getMessageGroups().map((group) => (
+   581→                      <div key={group.date}>
+   582→                        {/* Date separator */}
+   583→                        <div className="flex items-center justify-center my-3">
+   584→                          <span className="bg-white text-gray-400 text-[10px] px-3 py-1 rounded-full shadow-sm border border-gray-100">
+   585→                            {group.date}
+   586→                          </span>
+   587→                        </div>
+   588→                        {group.messages.map((msg) => {
+   589→                          const isMine = msg.senderRole === userRole
+   590→                          return (
+   591→                            <motion.div
+   592→                              key={msg.id}
+   593→                              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+   594→                              animate={{ opacity: 1, y: 0, scale: 1 }}
+   595→                              transition={{ duration: 0.2 }}
+   596→                              className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1.5`}
+   597→                            >
+   598→                              <div className={`max-w-[80%] sm:max-w-[70%] ${isMine ? 'order-1' : 'order-1'}`}>
+   599→                                {/* Sender name (admin view) */}
+   600→                                {isAdmin && !isMine && (
+   601→                                  <p className="text-[10px] text-gray-400 ml-1 mb-0.5">
+   602→                                    {msg.senderId === userId ? 'Anda' : (conversations.find(c => c.id === msg.conversationId)?.userName || 'Customer')}
+   603→                                  </p>
+   604→                                )}
+   605→                                <div
+   606→                                  className={`px-3.5 py-2.5 text-sm leading-relaxed relative ${
+   607→                                    isMine
+   608→                                      ? 'bg-gradient-to-br from-orange-500 to-orange-400 text-white rounded-2xl rounded-br-md shadow-md'
+   609→                                      : 'bg-white text-gray-700 rounded-2xl rounded-bl-md shadow-sm border border-gray-100'
+   610→                                  }`}
+   611→                                >
+   612→                                  {/* Link detection */}
+   613→                                  {msg.content.includes('http') ? (
+   614→                                    <p className="break-all">
+   615→                                      {msg.content.split(/(https?:\/\/[^\s]+)/).map((part, i) =>
+   616→                                        part.match(/^https?:\/\//) ? (
+   617→                                          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className={`underline ${isMine ? 'text-orange-100' : 'text-orange-500'}`}>
+   618→                                            {part}
+   619→                                          </a>
+   620→                                        ) : (
+   621→                                          <span key={i}>{part}</span>
+   622→                                        )
+   623→                                      )}
+   624→                                    </p>
+   625→                                  ) : (
+   626→                                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+   627→                                  )}
+   628→
+   629→                                  {/* Time & read receipt */}
+   630→                                  <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : 'justify-end'}`}>
+   631→                                    <span className={`text-[10px] ${isMine ? 'text-orange-100/70' : 'text-gray-400'}`}>
+   632→                                      {formatMessageDate(msg.createdAt)}
+   633→                                    </span>
+   634→                                    {isMine && (
+   635→                                      msg.readByAdmin
+   636→                                        ? <CheckCheck className="w-3.5 h-3.5 text-orange-100" />
+   637→                                        : msg.readByUser
+   638→                                          ? <Check className="w-3.5 h-3.5 text-orange-100/70" />
+   639→                                          : null
+   640→                                    )}
+   641→                                  </div>
+   642→                                </div>
+   643→                              </div>
+   644→                            </motion.div>
+   645→                          )
+   646→                        })}
+   647→                      </div>
+   648→                    ))}
+   649→
+   650→                    {/* Typing indicator */}
+   651→                    {typingUser && (
+   652→                      <motion.div
+   653→                        initial={{ opacity: 0, y: 5 }}
+   654→                        animate={{ opacity: 1, y: 0 }}
+   655→                        className="flex justify-start"
+   656→                      >
+   657→                        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-gray-100">
+   658→                          <div className="flex items-center gap-1">
+   659→                            <motion.div
+   660→                              animate={{ y: [0, -4, 0] }}
+   661→                              transition={{ duration: 0.5, repeat: Infinity, delay: 0 }}
+   662→                              className="w-2 h-2 rounded-full bg-gray-400"
+   663→                            />
+   664→                            <motion.div
+   665→                              animate={{ y: [0, -4, 0] }}
+   666→                              transition={{ duration: 0.5, repeat: Infinity, delay: 0.15 }}
+   667→                              className="w-2 h-2 rounded-full bg-gray-400"
+   668→                            />
+   669→                            <motion.div
+   670→                              animate={{ y: [0, -4, 0] }}
+   671→                              transition={{ duration: 0.5, repeat: Infinity, delay: 0.3 }}
+   672→                              className="w-2 h-2 rounded-full bg-gray-400"
+   673→                            />
+   674→                          </div>
+   675→                        </div>
+   676→                      </motion.div>
+   677→                    )}
+   678→
+   679→                    <div ref={messagesEndRef} />
+   680→                  </>
+   681→                )}
+   682→              </div>
+   683→
+   684→              {/* Emoji Picker */}
+   685→              <AnimatePresence>
+   686→                {showEmojiPicker && (
+   687→                  <motion.div
+   688→                    initial={{ height: 0, opacity: 0 }}
+   689→                    animate={{ height: 'auto', opacity: 1 }}
+   690→                    exit={{ height: 0, opacity: 0 }}
+   691→                    transition={{ duration: 0.2 }}
+   692→                    className="overflow-hidden border-t border-orange-100 bg-white"
+   693→                  >
+   694→                    <div className="p-3 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+   695→                      {emojiCategories.map((cat) => (
+   696→                        <div key={cat.label}>
+   697→                          <p className="text-[10px] text-gray-400 font-medium mb-1">{cat.label}</p>
+   698→                          <div className="flex flex-wrap gap-1">
+   699→                            {cat.emojis.map((emoji) => (
+   700→                              <button
+   701→                                key={emoji}
+   702→                                onClick={() => {
+   703→                                  setNewMessage((prev) => prev + emoji)
+   704→                                  inputRef.current?.focus()
+   705→                                }}
+   706→                                className="w-8 h-8 rounded-lg hover:bg-orange-50 flex items-center justify-center text-lg transition-colors"
+   707→                              >
+   708→                                {emoji}
+   709→                              </button>
+   710→                            ))}
+   711→                          </div>
+   712→                        </div>
+   713→                      ))}
+   714→                    </div>
+   715→                  </motion.div>
+   716→                )}
+   717→              </AnimatePresence>
+   718→
+   719→              {/* Message Input */}
+   720→              <div className="p-3 bg-white border-t border-orange-100">
+   721→                <div className="flex items-center gap-2">
+   722→                  <button
+   723→                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+   724→                    className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+   725→                      showEmojiPicker ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-500'
+   726→                    }`}
+   727→                  >
+   728→                    <Smile className="w-5 h-5" />
+   729→                  </button>
+   730→                  <div className="flex-1 relative">
+   731→                    <Input
+   732→                      ref={inputRef}
+   733→                      value={newMessage}
+   734→                      onChange={(e) => {
+   735→                        setNewMessage(e.target.value)
+   736→                        handleTyping()
+   737→                      }}
+   738→                      onKeyDown={(e) => {
+   739→                        if (e.key === 'Enter' && !e.shiftKey) {
+   740→                          e.preventDefault()
+   741→                          sendMessage()
+   742→                        }
+   743→                      }}
+   744→                      placeholder="Ketik pesan..."
+   745→                      className="pr-10 h-10 text-sm bg-gray-50 border-gray-200 rounded-xl focus:ring-orange-300 focus:border-orange-300"
+   746→                      disabled={sending}
+   747→                    />
+   748→                  </div>
+   749→                  <motion.button
+   750→                    whileTap={{ scale: 0.9 }}
+   751→                    onClick={sendMessage}
+   752→                    disabled={!newMessage.trim() || sending}
+   753→                    className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+   754→                      newMessage.trim()
+   755→                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 hover:bg-orange-600'
+   756→                        : 'bg-gray-100 text-gray-400'
+   757→                    }`}
+   758→                  >
+   759→                    <Send className="w-4 h-4" />
+   760→                  </motion.button>
+   761→                </div>
+   762→              </div>
+   763→            </>
+   764→          )}
+   765→        </div>
+   766→      </div>
+   767→    </motion.div>
+   768→  )
+   769→}

@@ -23,8 +23,12 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
-    // Return in chronological order (oldest first)
-    return NextResponse.json(messages.reverse())
+    // Return in chronological order (oldest first), serialize dates
+    const serialized = messages.reverse().map((m) => ({
+      ...m,
+      createdAt: m.createdAt.toISOString(),
+    }))
+    return NextResponse.json(serialized)
   } catch (error) {
     console.error('Chat messages error:', error)
     return NextResponse.json({ error: 'Gagal memuat pesan' }, { status: 500 })
