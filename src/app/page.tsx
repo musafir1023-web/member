@@ -442,6 +442,8 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [showBarcode, setShowBarcode] = useState(false)
   const barcodeRef = useRef<SVGSVGElement>(null)
+  const [showcaseFlipped, setShowcaseFlipped] = useState(false)
+  const showcaseBarcodeRef = useRef<SVGSVGElement>(null)
 
   const memberCode = user ? `AGSI-${user.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}` : ''
 
@@ -464,6 +466,23 @@ function HomePage() {
       } catch {}
     }
   }, [showBarcode, memberCode])
+
+  // Auto-flip showcase card
+  useEffect(() => {
+    const timer = setInterval(() => setShowcaseFlipped(f => !f), 6000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Generate showcase barcode
+  useEffect(() => {
+    if (showcaseFlipped && showcaseBarcodeRef.current) {
+      try {
+        JsBarcode(showcaseBarcodeRef.current, 'AGSI-BATIK2025', {
+          format: 'CODE128', width: 1.5, height: 40, displayValue: true, font: 'monospace', fontSize: 10, textMargin: 3, margin: 0, background: 'transparent', lineColor: '#ea580c',
+        })
+      } catch {}
+    }
+  }, [showcaseFlipped])
 
   // Fetch latest user points/voucher on mount
   useEffect(() => {
@@ -534,199 +553,120 @@ function HomePage() {
             <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
               Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
             </p>
-            {/* Member Card - Credit Card Size 3D Flip */}
+            {/* ═════════════════════════════════════════════════
+                 MEMBER CARD — Batik Parang Edition
+                 ═══════════════════════════════════════════════════ */}
             {user && user.role !== 'admin' && (
               <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 180, damping: 18 }}
+                initial={{ opacity: 0, y: 30, rotateX: 10 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                transition={{ duration: 0.9, delay: 0.3, type: 'spring', stiffness: 120, damping: 14 }}
                 className="mt-8 mx-auto w-full"
-                style={{ maxWidth: 340 }}
+                style={{ maxWidth: 400, perspective: 1500 }}
               >
-                <motion.div
-                  animate={{ y: [0, -3, 0] }}
-                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative w-full cursor-pointer"
-                  style={{ perspective: 1000 }}
-                  onClick={() => setShowBarcode(!showBarcode)}
-                >
-                  {/* Rotating glow ring */}
-                  <div className="absolute -inset-[2px] rounded-xl overflow-hidden">
-                    <motion.div
-                      className="absolute inset-[-50%]"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                      style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.3) 10%, transparent 20%)' }}
-                    />
+                {/* White firefly particles */}
+                <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 30 }}>
+                  {[{ left: '5%', delay: 0, dur: 4.2, size: 3 }, { left: '18%', delay: 1.1, dur: 3.5, size: 2.5 }, { left: '32%', delay: 0.5, dur: 4.8, size: 2 }, { left: '48%', delay: 2.0, dur: 3.8, size: 3 }, { left: '62%', delay: 0.8, dur: 4.0, size: 2.5 }, { left: '75%', delay: 1.6, dur: 3.2, size: 2 }, { left: '88%', delay: 0.3, dur: 4.5, size: 2.5 }].map((p, i) => (
+                    <div key={i} className="absolute bottom-0 rounded-full" style={{ left: p.left, width: p.size, height: p.size, background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,243,199,0.6) 40%, transparent 100%)', animation: `batik-particle ${p.dur}s ease-in-out ${p.delay}s infinite`, boxShadow: '0 0 8px 2px rgba(255,255,255,0.5)' }} />
+                  ))}
+                </div>
+
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="relative w-full cursor-pointer" style={{ perspective: 1200 }} onClick={() => setShowBarcode(!showBarcode)}>
+                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+                    <div className="absolute inset-[-100%]" style={{ animation: 'showcase-border-rotate 20s linear infinite', background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.7) 6%, transparent 12%, rgba(254,243,199,0.5) 18%, transparent 24%, rgba(255,255,255,0.6) 30%, transparent 36%)', filter: 'blur(1.5px)' }} />
                   </div>
+                  <div className="absolute -inset-8 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.3) 0%, rgba(234,88,12,0.15) 50%, transparent 70%)', animation: 'batik-pulse-ring 4s ease-in-out infinite', top: '50%', left: '50%' }} />
 
-                  <div
-                    className="relative w-full"
-                    style={{
-                      aspectRatio: '8.56 / 5.4',
-                      transformStyle: 'preserve-3d',
-                      transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                      transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
+                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                     {/* ═══ FRONT FACE ═══ */}
-                    <div
-                      className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-xl shadow-2xl border border-white/20 overflow-hidden"
-                      style={{ backfaceVisibility: 'hidden' }}
-                    >
-                      {/* Shimmer overlay */}
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full z-20 pointer-events-none"
-                        animate={{ translateX: ['-100%', '200%'] }}
-                        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
-                      />
-
-                      {/* Animated Top Border */}
-                      <motion.div
-                        className="h-0.5 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
-                        animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                        style={{ backgroundSize: '200% 100%' }}
-                      />
-
-                      {/* Bintang Aceh Watermark */}
-                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 text-white/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7">
-                        <circle cx="100" cy="100" r="90" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="50" />
-                        <line x1="100" y1="60" x2="100" y2="5" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="195" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="195" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="5" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
+                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-white/15 overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #7C2D12 0%, #C2410C 15%, #EA580C 30%, #F97316 50%, #FB923C 65%, #EA580C 80%, #C2410C 90%, #7C2D12 100%)' }}>
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                      <div className="batik-shine-sweep" />
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.06 }}>
+                        <rect width="100" height="100" fill="url(#batik-parang)" />
                       </svg>
-
-                      {/* Sparkle Particles */}
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute w-0.5 h-0.5 bg-white/50 rounded-full"
-                          style={{ top: `${20 + i * 25}%`, left: i % 2 === 0 ? '10%' : '87%' }}
-                          animate={{ y: [0, -5, 0], opacity: [0.2, 0.8, 0.2] }}
-                          transition={{ duration: 2.5 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
-                        />
+                      <div className="absolute top-[52px] left-0 right-0 h-px batik-tepian-top opacity-40" />
+                      <div className="absolute bottom-[44px] left-0 right-0 h-px batik-tepian-bottom opacity-30" style={{ animationDelay: '2.5s' }} />
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 252" fill="none" preserveAspectRatio="none">
+                        <rect x="5" y="5" width="390" height="242" rx="15" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+                        <rect x="10" y="10" width="380" height="232" rx="12" stroke="white" strokeWidth="0.3" strokeOpacity="0.12" strokeDasharray="6 4" style={{ animation: 'batik-border-dash 8s linear infinite' }} />
+                        <rect x="15" y="15" width="370" height="222" rx="9" stroke="white" strokeWidth="0.15" strokeOpacity="0.08" />
+                      </svg>
+                      {['top-1 left-1', 'top-1 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map((pos, i) => (
+                        <svg key={i} className={`absolute ${pos} w-20 h-20 text-white/[0.12]`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" style={{ animation: `batik-kawung-bloom 6s ease-in-out ${i * 1.3}s infinite` }}>
+                          {[0, 72, 144, 216, 288].map((a, j) => (<ellipse key={j} cx="50" cy="22" rx="11" ry="18" transform={`rotate(${a},50,50)`} fill="currentColor" fillOpacity="0.025" />))}
+                          <circle cx="50" cy="50" r="5" fill="currentColor" fillOpacity="0.06" />
+                          <circle cx="50" cy="50" r="2.5" fill="white" fillOpacity="0.12" />
+                        </svg>
                       ))}
-
-                      {/* ═══ FRONT CONTENT ═══ */}
-                      <div className="relative z-10 flex flex-col h-full px-4 pt-3 pb-2.5">
-                        {/* Top row: Crown + label | Gold badge */}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 220, height: 220, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 5s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.4" strokeLinecap="round">
+                        <path d="M40,120 C40,95 55,75 75,60 C90,48 115,42 130,42 C150,42 170,50 180,65 C188,78 185,95 185,110 C185,125 178,140 165,148 C150,155 125,158 110,158 C95,158 75,150 65,145 C55,140 45,132 40,125 Z" fill="rgba(255,255,255,0.02)" />
+                      </svg>
+                      {[{ top: '10%', left: '15%', delay: 0, s: 10 }, { top: '22%', left: '85%', delay: 1.5, s: 8 }, { top: '62%', left: '10%', delay: 2.8, s: 9 }, { top: '78%', left: '88%', delay: 0.7, s: 7 }, { top: '40%', left: '52%', delay: 2.0, s: 6 }, { top: '85%', left: '35%', delay: 1.2, s: 8 }].map((sp, i) => (
+                        <div key={i} className="absolute" style={{ top: sp.top, left: sp.left, animation: `aceh-sparkle 3.5s ease-in-out ${sp.delay}s infinite` }}>
+                          <svg width={sp.s} height={sp.s} viewBox="0 0 10 10" fill="none"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="rgba(255,255,255,0.6)" /></svg>
+                        </div>
+                      ))}
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <motion.div
-                              animate={{ rotate: [0, 5, -5, 3, -3, 0] }}
-                              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                              className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center"
-                            >
-                              <Crown className="w-4 h-4 text-yellow-200" />
+                          <div className="flex items-center gap-2.5">
+                            <motion.div animate={{ rotate: [0, 5, -5, 3, -3, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/25 shadow-lg shadow-orange-900/20">
+                              <Crown className="w-5 h-5 text-white" />
                             </motion.div>
-                            <div className="text-left">
-                              <motion.p initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="text-[7px] text-white/80 font-bold uppercase tracking-[0.15em] leading-none">Member Card</motion.p>
-                              <motion.p initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="text-white font-extrabold text-xs sm:text-sm truncate max-w-[130px] leading-tight mt-0.5">{user.name}</motion.p>
+                            <div>
+                              <p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p>
+                              <p className="text-white font-extrabold text-sm sm:text-base truncate max-w-[140px] leading-tight mt-1 batik-text-glow">{user.name}</p>
                             </div>
                           </div>
-                          <motion.div
-                            animate={{ scale: [1, 1.05, 1] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                            className="bg-white/20 backdrop-blur-sm rounded-md px-2.5 py-1"
-                          >
-                            <span className="text-[8px] text-white font-extrabold uppercase tracking-wider">Gold</span>
+                          <motion.div animate={{ scale: [1, 1.08, 1], boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 18px 4px rgba(255,255,255,0.25)', '0 0 0 0 rgba(255,255,255,0)'] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} className="bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/25">
+                            <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Exclusive</span>
                           </motion.div>
                         </div>
-
-                        {/* Stats row */}
-                        <div className="flex-1 flex items-end gap-2">
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.5 }}
-                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/15"
-                          >
-                            <div className="flex items-center justify-center gap-1 mb-0.5">
-                              <Star className="w-3 h-3 text-yellow-200" />
-                              <span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Poin</span>
+                        <div className="flex items-center gap-2 my-2.5">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                          <svg className="w-3 h-3 text-white/40" viewBox="0 0 16 16" fill="none"><path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.15" /><circle cx="8" cy="8" r="2" fill="currentColor" fillOpacity="0.3" /></svg>
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                        </div>
+                        <div className="flex-1 flex items-end gap-3">
+                          <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.97 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:border-white/35 transition-colors">
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                              <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}><Star className="w-3.5 h-3.5 text-white" /></motion.div>
+                              <span className="text-[8px] text-white/70 font-bold uppercase tracking-wider">Poin</span>
                             </div>
-                            <p className="text-white font-extrabold text-base leading-none">{user.points ?? 0}</p>
+                            <motion.p initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.8, type: 'spring', stiffness: 200 }} className="text-white font-extrabold text-xl leading-none">{user.points ?? 0}</motion.p>
                           </motion.div>
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.6 }}
-                            className="flex-1 bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/15"
-                          >
-                            <div className="flex items-center justify-center gap-1 mb-0.5">
-                              <Gift className="w-3 h-3 text-yellow-200" />
-                              <span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Voucher</span>
+                          <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.97 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:border-white/35 transition-colors">
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                              <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}><Gift className="w-3.5 h-3.5 text-white" /></motion.div>
+                              <span className="text-[8px] text-white/70 font-bold uppercase tracking-wider">Voucher</span>
                             </div>
-                            <p className="text-white font-extrabold text-base leading-none">{user.voucher ?? 0}</p>
+                            <motion.p initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.9, type: 'spring', stiffness: 200 }} className="text-white font-extrabold text-xl leading-none">{user.voucher ?? 0}</motion.p>
                           </motion.div>
                         </div>
-
-                        {/* Bottom hint */}
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: [0.25, 0.6, 0.25] }}
-                          transition={{ duration: 2.5, repeat: Infinity, delay: 0.8 }}
-                          className="text-center text-[7px] text-white/40 font-medium mt-1.5"
-                        >
-                          Ketuk untuk melihat barcode
-                        </motion.p>
+                        <motion.p animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 3, repeat: Infinity, delay: 1 }} className="text-center text-[7px] text-white/25 font-medium mt-2 tracking-wide">✦ Ketuk untuk melihat barcode ✦</motion.p>
                       </div>
                     </div>
-
                     {/* ═══ BACK FACE (Barcode) ═══ */}
-                    <div
-                      className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-xl shadow-2xl border border-white/20 overflow-hidden"
-                      style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                    >
-                      {/* Shimmer overlay */}
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full pointer-events-none"
-                        animate={{ translateX: ['-100%', '200%'] }}
-                        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
-                      />
-
-                      {/* Animated Top Border */}
-                      <motion.div
-                        className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
-                        animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                        style={{ backgroundSize: '200% 100%' }}
-                      />
-
-                      {/* Bintang Aceh Watermark (back) */}
-                      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-white/[0.05]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6">
-                        <circle cx="100" cy="100" r="80" /><circle cx="100" cy="100" r="55" />
+                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-white/15 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #7C2D12 0%, #C2410C 15%, #EA580C 30%, #F97316 50%, #FB923C 65%, #EA580C 80%, #C2410C 90%, #7C2D12 100%)' }}>
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                      <div className="batik-shine-sweep" />
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.04 }}><rect width="100" height="100" fill="url(#batik-parang)" /></svg>
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 252" fill="none" preserveAspectRatio="none">
+                        <rect x="5" y="5" width="390" height="242" rx="15" stroke="white" strokeWidth="0.6" strokeOpacity="0.15" /><rect x="10" y="10" width="380" height="232" rx="12" stroke="white" strokeWidth="0.25" strokeOpacity="0.1" strokeDasharray="6 4" style={{ animation: 'batik-border-dash 8s linear infinite' }} /><rect x="15" y="15" width="370" height="222" rx="9" stroke="white" strokeWidth="0.12" strokeOpacity="0.07" />
                       </svg>
-
-                      {/* ═══ BACK CONTENT ═══ */}
-                      <div className="relative z-10 flex flex-col h-full px-4 pt-2.5 pb-2.5">
-                        {/* Top: Crown + label */}
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-7 h-7 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                            <Crown className="w-3.5 h-3.5 text-yellow-200" />
-                          </motion.div>
-                          <div className="text-left">
-                            <p className="text-[7px] text-white/80 font-bold uppercase tracking-[0.15em] leading-none">Member Card</p>
-                            <p className="text-white font-bold text-[10px] truncate max-w-[120px] leading-tight mt-0.5">{user.name}</p>
-                          </div>
-                        </div>
-
-                        {/* White barcode area */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex-1 bg-white rounded-lg p-2 flex flex-col items-center justify-center min-h-0"
-                        >
-                          <svg ref={barcodeRef} className="w-full h-full" style={{ minHeight: 40 }} />
-                        </motion.div>
-
-                        {/* Member code + hint */}
-                        <div className="flex items-center justify-between mt-1.5">
-                          <p className="text-[8px] text-white/60 font-mono tracking-[0.15em] font-semibold">{memberCode}</p>
-                          <motion.p animate={{ opacity: [0.25, 0.6, 0.25] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[7px] text-white/40 font-medium">
-                            Ketuk untuk kembali
-                          </motion.p>
-                        </div>
+                      {['top-1.5 left-1.5', 'top-1.5 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
+                        <svg key={i} className={`absolute ${pos} w-14 h-14 text-white/[0.08]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.3" strokeLinecap="round">
+                          {[0, 60, 120, 180, 240, 300].map((a, j) => (<ellipse key={j} cx="30" cy="12" rx="6" ry="11" transform={`rotate(${a + i * 15},30,30)`} fill="currentColor" fillOpacity="0.02" />))}
+                          <circle cx="30" cy="30" r="3" fill="currentColor" fillOpacity="0.04" />
+                        </svg>
+                      ))}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 160, height: 160, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 6s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.3" strokeLinecap="round"><circle cx="100" cy="100" r="90" strokeDasharray="3 6" /><circle cx="100" cy="100" r="65" /><circle cx="100" cy="100" r="40" /><path d="M100,30 L106,85 L155,60 L115,100 L155,140 L106,115 L100,170 L94,115 L45,140 L85,100 L45,60 L94,85 Z" fill="rgba(255,255,255,0.005)" /></svg>
+                      <div className="absolute bottom-[40px] left-0 right-0 h-px batik-tepian-bottom opacity-30" />
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3">
+                        <div className="flex items-center gap-2.5 mb-2"><motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20"><Crown className="w-4 h-4 text-white" /></motion.div><div className="text-left"><p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p><p className="text-white font-bold text-xs truncate max-w-[130px] leading-tight mt-0.5">{user.name}</p></div></div>
+                        <div className="flex items-center gap-2 mb-2.5"><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" /><svg className="w-2.5 h-2.5 text-white/30" viewBox="0 0 16 16" fill="none"><path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.15" /></svg><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" /></div>
+                        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, type: 'spring', stiffness: 200 }} className="flex-1 bg-white/[0.1] backdrop-blur-sm rounded-xl p-3 flex flex-col items-center justify-center min-h-0 border border-white/20 shadow-inner"><svg ref={barcodeRef} className="w-full h-full" style={{ minHeight: 40 }} /></motion.div>
+                        <div className="flex items-center justify-between mt-2"><p className="text-[8px] text-white/50 font-mono tracking-[0.2em] font-semibold">{memberCode}</p><motion.p animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 3, repeat: Infinity }} className="text-[7px] text-white/30 font-medium">✦ Ketuk untuk kembali ✦</motion.p></div>
                       </div>
                     </div>
                   </div>
@@ -734,18 +674,245 @@ function HomePage() {
               </motion.div>
             )}
 
+            {/* ═════════════════════════════════════════════════
+                 SHOWCASE MEMBER CARD — Batik Premium Edition
+                 ═══════════════════════════════════════════════════ */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.82, y: 35, rotateX: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 1.2, delay: 0.2, type: 'spring', stiffness: 100, damping: 14 }}
+              className="mt-8 mx-auto w-full relative"
+              style={{ maxWidth: 380, perspective: 1200 }}
+            >
+              {/* Rising particles */}
+              <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 30 }}>
+                {[{ left: '6%', delay: 0, dur: 4.5, size: 3 }, { left: '20%', delay: 1.4, dur: 3.8, size: 2.5 }, { left: '36%', delay: 0.6, dur: 5.0, size: 2 }, { left: '50%', delay: 2.2, dur: 4.0, size: 3 }, { left: '64%', delay: 0.9, dur: 4.3, size: 2.5 }, { left: '78%', delay: 1.8, dur: 3.5, size: 2 }, { left: '93%', delay: 0.3, dur: 4.8, size: 2.5 }].map((p, i) => (
+                  <div key={i} className="absolute bottom-0 rounded-full" style={{ left: p.left, width: p.size, height: p.size, background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,243,199,0.5) 40%, transparent 100%)', animation: `batik-particle ${p.dur}s ease-in-out ${p.delay}s infinite`, boxShadow: '0 0 8px 2px rgba(255,255,255,0.5)' }} />
+                ))}
+              </div>
+
+              {/* Float wrapper (uses CSS translate, not transform, to preserve 3D) */}
+              <div className="relative w-full" style={{ animation: 'batik-float 6s ease-in-out infinite' }}>
+                {/* 3D context parent */}
+                <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowcaseFlipped(f => !f)}>
+                  {/* Rotating conic glow border */}
+                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden" style={{ zIndex: 0 }}>
+                    <div className="absolute inset-[-150%]" style={{ animation: 'showcase-border-rotate 12s linear infinite', background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.8) 4%, transparent 8%, rgba(254,215,170,0.6) 12%, transparent 16%, rgba(255,255,255,0.7) 20%, transparent 24%, rgba(249,115,22,0.4) 28%, transparent 32%)', filter: 'blur(2px)' }} />
+                  </div>
+                  {/* Pulsing glow */}
+                  <div className="absolute -inset-10 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.35) 0%, rgba(234,88,12,0.15) 40%, transparent 65%)', animation: 'batik-pulse-ring 5s ease-in-out infinite', top: '50%', left: '50%' }} />
+
+                  {/* 3D flip container */}
+                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showcaseFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 230 }}>
+
+                    {/* ═══════════ FRONT FACE ═══════════ */}
+                    <div className="relative rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(145deg, #7C2D12 0%, #9A3412 12%, #C2410C 28%, #EA580C 45%, #F97316 58%, #FB923C 72%, #EA580C 85%, #C2410C 95%, #7C2D12 100%)' }}>
+                      {/* Aurora bg */}
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                      <div className="batik-shine-sweep" />
+
+                      {/* ── BATIK PARANG (Diagonal Dagger) Pattern ── */}
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.07 }}>
+                        <defs><pattern id="batik-parang" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                          {/* Parang diagonal blades */}
+                          <path d="M0,20 L20,0 L40,20 L20,40 Z" fill="none" stroke="white" strokeWidth="0.5" />
+                          <path d="M10,10 L30,10 L30,30 L10,30 Z" fill="none" stroke="white" strokeWidth="0.3" />
+                          {/* Isen dots (filling) */}
+                          <circle cx="10" cy="0" r="1.2" fill="white" fillOpacity="0.3" />
+                          <circle cx="30" cy="0" r="1.2" fill="white" fillOpacity="0.3" />
+                          <circle cx="0" cy="10" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="20" cy="10" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="40" cy="10" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="10" cy="20" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="30" cy="20" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="20" cy="30" r="1" fill="white" fillOpacity="0.2" />
+                          <circle cx="0" cy="40" r="1.2" fill="white" fillOpacity="0.3" />
+                          <circle cx="40" cy="40" r="1.2" fill="white" fillOpacity="0.3" />
+                          {/* Isen tiny curves */}
+                          <path d="M5,5 Q8,3 10,5 Q12,7 15,5" fill="none" stroke="white" strokeWidth="0.2" />
+                          <path d="M25,15 Q28,13 30,15 Q34,17 39,15" fill="none" stroke="white" strokeWidth="0.2" />
+                          <path d="M5,25 Q8,23 10,25 Q12,27 15,25" fill="none" stroke="white" strokeWidth="0.2" />
+                          <path d="M25,35 Q28,33 30,35 Q34,37 39,35" fill="none" stroke="white" strokeWidth="0.2" />
+                        </pattern></defs>
+                        <rect width="100" height="100" fill="url(#batik-parang)" />
+                      </svg>
+
+                      {/* ── BATIK KAWUNG (Palm Fruit) Corner Ornaments ── */}
+                      {[
+                        { pos: 'top-1 left-1', size: 'w-20 h-20', angles: [0, 72, 144, 216, 288], op: 0.12, petalRx: 11, petalRy: 18, cxR: 5 },
+                        { pos: 'top-1 right-1', size: 'w-20 h-20', angles: [36, 108, 180, 252, 324], op: 0.12, petalRx: 11, petalRy: 18, cxR: 5 },
+                        { pos: 'bottom-1 left-1', size: 'w-16 h-16', angles: [15, 87, 159, 231, 303], op: 0.10, petalRx: 9, petalRy: 15, cxR: 4 },
+                        { pos: 'bottom-1 right-1', size: 'w-16 h-16', angles: [50, 122, 194, 266, 338], op: 0.10, petalRx: 9, petalRy: 15, cxR: 4 },
+                      ].map((c, i) => (
+                        <svg key={i} className={`absolute ${c.pos} ${c.size} text-white/[${c.op}]`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" style={{ animation: `batik-kawung-bloom 6s ease-in-out ${i * 1.3}s infinite` }}>
+                          {c.angles.map((a, j) => (
+                            <ellipse key={j} cx="50" cy="22" rx={c.petalRx} ry={c.petalRy} transform={`rotate(${a},50,50)`} fill="currentColor" fillOpacity="0.03" />
+                          ))}
+                          <circle cx="50" cy="50" r={c.cxR} fill="currentColor" fillOpacity="0.08" />
+                          <circle cx="50" cy="50" r={c.cxR * 0.5} fill="white" fillOpacity="0.15" />
+                        </svg>
+                      ))}
+
+                      {/* ── BATIK TEPIAN (Ornate Wavy Border) ── */}
+                      <svg className="absolute top-[54px] left-0 right-0 h-[3px] pointer-events-none" viewBox="0 0 400 4" preserveAspectRatio="none">
+                        <defs><pattern id="batik-tepian" x="0" y="0" width="40" height="4" patternUnits="userSpaceOnUse">
+                          <path d="M0,2 Q5,0 10,2 Q15,4 20,2 Q30,0 40,2" fill="none" stroke="white" strokeWidth="0.5" />
+                          <circle cx="10" cy="2" r="0.8" fill="white" fillOpacity="0.3" />
+                          <circle cx="30" cy="2" r="0.8" fill="white" fillOpacity="0.3" />
+                        </pattern></defs>
+                        <rect width="400" height="4" fill="url(#batik-tepian)" style={{ animation: 'batik-tepian-wave 4s linear infinite' }} />
+                      </svg>
+                      <svg className="absolute bottom-[40px] left-0 right-0 h-[3px] pointer-events-none" viewBox="0 0 400 4" preserveAspectRatio="none">
+                        <rect width="400" height="4" fill="url(#batik-tepian)" style={{ animation: 'batik-tepian-wave 5s linear infinite reverse' }} />
+                      </svg>
+
+                      {/* ── Triple ornate border frame ── */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 380 230" fill="none" preserveAspectRatio="none">
+                        <rect x="5" y="5" width="370" height="220" rx="16" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+                        <rect x="10" y="10" width="360" height="210" rx="12" stroke="white" strokeWidth="0.3" strokeOpacity="0.12" strokeDasharray="5 3" style={{ animation: 'batik-border-dash 8s linear infinite' }} />
+                        <rect x="15" y="15" width="350" height="200" rx="9" stroke="white" strokeWidth="0.15" strokeOpacity="0.08" />
+                      </svg>
+
+                      {/* ── BATIK MEGA MENDUNG (Cloud) Watermark (center) ── */}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 220, height: 220, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 5s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.5" strokeLinecap="round">
+                        {/* Main cloud shape */}
+                        <path d="M40,120 C40,95 55,75 75,60 C90,48 115,42 130,42 C150,42 170,50 180,65 C188,78 185,95 185,110 C185,125 178,140 165,148 C150,155 125,158 110,158 C95,158 75,150 65,145 C55,140 45,128 40,120 Z" fill="rgba(255,255,255,0.03)" />
+                        <path d="M50,115 C50,92 62,74 80,60 C93,48 122,42 138,42 C156,42 178,48 190,62 C196,75 200,92 200,108 C200,124 192,140 178,148 C162,156 132,160 118,160 C104,160 75,152 65,148 C55,145 45,132 40,125 C35,118 42,108 50,95 Z" fill="rgba(255,255,255,0.02)" />
+                        <path d="M60,110 C60,90 70,74 85,60 C97,48 130,42 145,42 C162,42 188,48 198,62 C204,75 210,90 210,105 C210,120 202,135 188,143 C175,150 158,155 145,155 C132,155 97,148 85,143 C72,140 52,132 45,125 C38,118 42,108 60,95 Z" fill="rgba(255,255,255,0.015)" />
+                        {/* Inner cloud */}
+                        <path d="M80,105 C80,90 88,78 98,72 C108,62 125,56 138,56 C152,56 175,62 185,75 C190,85 195,98 195,110 C195,122 190,135 185,143 C175,150 160,155 148,155 C136,155 108,148 98,143 C88,140 65,132 58,125" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.03)" strokeWidth="0.2" />
+                        {/* Cloud detail dots */}
+                        <circle cx="65" cy="58" r="1.5" fill="white" fillOpacity="0.06" /><circle cx="135" cy="58" r="1.5" fill="white" fillOpacity="0.06" />
+                        <circle cx="50" cy="72" r="1" fill="white" fillOpacity="0.05" /><circle cx="150" cy="72" r="1" fill="white" fillOpacity="0.05" />
+                      </svg>
+
+                      {/* ═══ FRONT CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3.5" style={{ minHeight: 230 }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <motion.div animate={{ rotate: [0, 5, -5, 3, -3, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/25 shadow-lg" style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.2), 0 0 20px rgba(249,115,22,0.15)' }}>
+                              <Crown className="w-5 h-5 text-white" />
+                            </motion.div>
+                            <div>
+                              <p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.3em] leading-none">Member Card</p>
+                              <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8, duration: 0.6 }} className="text-white font-extrabold text-sm sm:text-[15px] truncate max-w-[130px] leading-tight mt-1 batik-text-glow">
+                                Ahmad Rizky
+                              </motion.p>
+                            </div>
+                          </div>
+                          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="batik-badge-pulse bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30">
+                            <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Gold</span>
+                          </motion.div>
+                        </div>
+
+                        <div className="flex items-center gap-2 my-2">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                          <svg className="w-3 h-3 text-white/40" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.2" />
+                            <circle cx="8" cy="8" r="2" fill="currentColor" fillOpacity="0.35" />
+                          </svg>
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                        </div>
+
+                        {/* Member Number */}
+                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 0.5 }} className="text-center mb-2">
+                          <p className="text-[8px] text-white/40 font-medium uppercase tracking-[0.2em] mb-0.5">No. Member</p>
+                          <p className="text-white/90 font-mono text-[11px] sm:text-xs font-bold tracking-[0.25em]">AGSI-BATIK2025</p>
+                        </motion.div>
+
+                        <div className="flex-1 flex items-end gap-3">
+                          <motion.div initial={{ opacity: 0, scale: 0.8, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.6, type: 'spring', stiffness: 180 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}>
+                                <Star className="w-3.5 h-3.5 text-amber-300" />
+                              </motion.div>
+                              <span className="text-[7px] text-white/60 font-bold uppercase tracking-wider">Poin</span>
+                            </div>
+                            <p className="text-white font-extrabold text-xl leading-none">1.250</p>
+                          </motion.div>
+                          <motion.div initial={{ opacity: 0, scale: 0.8, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.4, duration: 0.6, type: 'spring', stiffness: 180 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}>
+                                <Gift className="w-3.5 h-3.5 text-amber-300" />
+                              </motion.div>
+                              <span className="text-[7px] text-white/60 font-bold uppercase tracking-wider">Voucher</span>
+                            </div>
+                            <p className="text-white font-extrabold text-xl leading-none">3</p>
+                          </motion.div>
+                        </div>
+
+                        <motion.p animate={{ opacity: [0.1, 0.45, 0.1] }} transition={{ duration: 3, repeat: Infinity, delay: 2 }} className="text-center text-[7px] text-white/25 font-medium mt-1.5 tracking-wide">
+                          ✦ Ketuk untuk melihat barcode ✦
+                        </motion.p>
+                      </div>
+                    </div>
+
+                    {/* ═══ BACK FACE (Barcode) ═══ */}
+                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(145deg, #7C2D12 0%, #9A3412 12%, #C2410C 28%, #EA580C 45%, #F97316 58%, #FB923C 72%, #EA580C 85%, #C2410C 95%, #7C2D12 100%)' }}>
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                      <div className="batik-shine-sweep" />
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.04 }}>
+                        <rect width="100" height="100" fill="url(#batik-parang)" />
+                      </svg>
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 380 230" fill="none" preserveAspectRatio="none">
+                        <rect x="5" y="5" width="370" height="220" rx="16" stroke="white" strokeWidth="0.6" strokeOpacity="0.18" />
+                        <rect x="10" y="10" width="360" height="210" rx="12" stroke="white" strokeWidth="0.25" strokeOpacity="0.12" strokeDasharray="5 3" style={{ animation: 'batik-border-dash 8s linear infinite' }} />
+                        <rect x="15" y="15" width="350" height="200" rx="9" stroke="white" strokeWidth="0.12" strokeOpacity="0.07" />
+                      </svg>
+                      {/* Kawung corners (back) */}
+                      {['top-1.5 left-1.5', 'top-1.5 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
+                        <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.08]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.3" strokeLinecap="round">
+                          {[0, 60, 120, 180, 240, 300].map((a, j) => (
+                            <ellipse key={j} cx="30" cy="12" rx="5" ry="10" transform={`rotate(${a + i * 15},30,30)`} fill="currentColor" fillOpacity="0.02" />
+                          ))}
+                          <circle cx="30" cy="30" r="3" fill="currentColor" fillOpacity="0.05" />
+                        </svg>
+                      ))}
+                      {/* Mega Mendung watermark (back) */}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 150, height: 150, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 6s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" strokeLinecap="round">
+                        <circle cx="100" cy="100" r="90" strokeDasharray="3 6" /><circle cx="100" cy="100" r="65" /><circle cx="100" cy="100" r="40" />
+                        <path d="M100,30 L106,85 L155,60 L115,100 L155,140 L106,115 L100,170 L94,115 L45,140 L85,100 L45,60 L94,85 Z" fill="rgba(255,255,255,0.005)" />
+                      </svg>
+                      <div className="absolute bottom-[42px] left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 80%, transparent 100%)', backgroundSize: '200% 100%', animation: 'batik-tepian-wave 5s linear infinite' }} />
+                      {/* ═══ BACK CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3" style={{ minHeight: 230 }}>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                            <Crown className="w-4 h-4 text-white" />
+                          </motion.div>
+                          <div className="text-left">
+                            <p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p>
+                            <p className="text-white font-bold text-[11px] leading-tight mt-0.5">Ahmad Rizky</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+                          <svg className="w-2.5 h-2.5 text-white/30" viewBox="0 0 16 16" fill="none"><path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.15" /></svg>
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+                        </div>
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, type: 'spring', stiffness: 200 }} className="flex-1 bg-white/[0.1] backdrop-blur-sm rounded-xl p-3 border border-white/20 flex flex-col items-center justify-center">
+                          <svg ref={showcaseBarcodeRef} className="w-full" style={{ minHeight: 44 }} />
+                        </motion.div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-[8px] text-white/45 font-mono tracking-[0.2em] font-semibold">AGSI-BATIK2025</p>
+                          <motion.p animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[7px] text-white/25 font-medium">✦ Ketuk untuk kembali ✦</motion.p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Login prompt for non-logged-in users */}
             {!user && (
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="mt-8"
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="mt-5"
               >
-                <button
-                  onClick={() => setPage('login')}
-                  className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 border border-white/20 rounded-xl px-4 py-2.5 transition-all group"
-                >
+                <button onClick={() => setPage('login')} className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 border border-white/20 rounded-xl px-4 py-2.5 transition-all group">
                   <User className="w-4 h-4 text-white/80 group-hover:text-white" />
                   <span className="text-white/80 group-hover:text-white text-sm font-medium">Masuk untuk mendapatkan poin & voucher</span>
                   <ChevronRight className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
@@ -2164,300 +2331,77 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* ═══ Admin Member Card with Animation ═══ */}
+          {/* ═══ Admin Member Card — Batik Parang Edition ═══ */}
           {isAdmin && user && (
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
-              className="mt-6 max-w-sm mx-auto w-full"
-            >
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative w-full cursor-pointer"
-                style={{ perspective: 1000 }}
-                onClick={() => setShowBarcode(!showBarcode)}
-              >
-                {/* Rotating glow ring */}
+            <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }} className="mt-6 max-w-sm mx-auto w-full">
+              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="relative w-full cursor-pointer" style={{ perspective: 1000 }} onClick={() => setShowBarcode(!showBarcode)}>
                 <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
-                  <motion.div
-                    className="absolute inset-[-50%]"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                    style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.3) 10%, transparent 20%)' }}
-                  />
+                  <motion.div className="absolute inset-[-50%]" animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.3) 10%, transparent 20%)' }} />
                 </div>
-
-                <div
-                  className="relative w-full"
-                  style={{
-                    transformStyle: 'preserve-3d',
-                    transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                    transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
-                  {/* ═══ FRONT FACE ═══ */}
-                  <div
-                    className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden"
-                    style={{ backfaceVisibility: 'hidden' }}
-                  >
-                    {/* Shimmer overlay */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full z-20 pointer-events-none"
-                      animate={{ translateX: ['-100%', '200%'] }}
-                      transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 3, ease: 'linear' }}
-                    />
-
-                    {/* ── Animated Top Border ── */}
-                    <motion.div
-                      className="h-1 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
-                      animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                      style={{ backgroundSize: '200% 100%' }}
-                    />
-
-                    {/* ── Pintu Aceh Arch Ornament ── */}
-                    <svg className="absolute top-1 left-0 right-0 w-full h-7 text-white/[0.15]" viewBox="0 0 300 30" fill="none" stroke="currentColor" strokeWidth="0.8">
-                      <path d="M10,28 L10,18 Q10,4 150,4 Q290,4 290,18 L290,28" /><path d="M10,28 L10,20 Q10,8 150,8 Q290,8 290,20 L290,28" />
-                      <circle cx="150" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="100" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="200" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="60" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="240" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="10" cy="20" r="1.5" fill="currentColor" stroke="none" /><circle cx="290" cy="20" r="1.5" fill="currentColor" stroke="none" />
+                <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  {/* FRONT FACE */}
+                  <div className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden' }}>
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                    <div className="batik-shine-sweep" />
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.06 }}><rect width="100" height="100" fill="url(#batik-parang)" /></svg>
+                    <svg className="absolute top-[48px] left-0 right-0 h-px batik-tepian-top opacity-40" />
+                    <svg className="absolute bottom-[38px] left-0 right-0 h-px batik-tepian-bottom opacity-30" style={{ animationDelay: '2s' }} />
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
+                      <rect x="5" y="5" width="390" height="190" rx="14" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+                      <rect x="10" y="10" width="380" height="180" rx="10" stroke="white" strokeWidth="0.3" strokeOpacity="0.12" strokeDasharray="5 3" style={{ animation: 'batik-border-dash 6s linear infinite' }} />
+                      <rect x="15" y="15" width="370" height="170" rx="7" stroke="white" strokeWidth="0.15" strokeOpacity="0.08" />
                     </svg>
-
-                    {/* ── Pucuk Rebung Corners ── */}
-                    <svg className="absolute top-11 left-1.5 w-14 h-14 text-white/[0.18]" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
-                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
-                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                    </svg>
-                    <svg className="absolute top-11 right-1.5 w-14 h-14 text-white/[0.18] rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
-                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
-                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                    </svg>
-                    <svg className="absolute bottom-1.5 left-1.5 w-14 h-14 text-white/[0.18] -rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
-                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
-                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                    </svg>
-                    <svg className="absolute bottom-1.5 right-1.5 w-14 h-14 text-white/[0.18] rotate-180" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
-                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
-                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
-                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
-                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
-                    </svg>
-
-                    {/* ── Pucuk Rebung Chain Border Top ── */}
-                    <svg className="absolute top-[60px] left-0 right-0 w-full h-5 text-white/[0.15]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
-                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
-                      <path d="M30,6 C32,10 36,12 35,16 C34,19 32,20 30,22 C28,20 26,19 25,16 C24,12 28,10 30,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="6" x2="30" y2="22" strokeWidth="0.4" /><circle cx="30" cy="4" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M90,6 C92,10 96,12 95,16 C94,19 92,20 90,22 C88,20 86,19 85,16 C84,12 88,10 90,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="6" x2="90" y2="22" strokeWidth="0.4" /><circle cx="90" cy="4" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M150,6 C152,10 156,12 155,16 C154,19 152,20 150,22 C148,20 146,19 145,16 C144,12 148,10 150,6 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="6" x2="150" y2="22" strokeWidth="0.4" /><circle cx="150" cy="4" r="1.8" fill="currentColor" stroke="none" />
-                      <path d="M210,6 C212,10 216,12 215,16 C214,19 212,20 210,22 C208,20 206,19 205,16 C204,12 208,10 210,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="6" x2="210" y2="22" strokeWidth="0.4" /><circle cx="210" cy="4" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M270,6 C272,10 276,12 275,16 C274,19 272,20 270,22 C268,20 266,19 265,16 C264,12 268,10 270,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="6" x2="270" y2="22" strokeWidth="0.4" /><circle cx="270" cy="4" r="1.5" fill="currentColor" stroke="none" />
-                    </svg>
-                    {/* ── Pucuk Rebung Chain Border Bottom ── */}
-                    <svg className="absolute bottom-0 left-0 right-0 w-full h-5 text-white/[0.15]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
-                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
-                      <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
-                      <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                    </svg>
-
-                    {/* ── Acehnese Floral Scroll Left ── */}
-                    <svg className="absolute left-0 top-14 bottom-5 w-2.5 text-white/[0.12]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
-                      <path d="M6,0 C6,8 6,12 6,20" /><path d="M6,20 C10,16 12,12 10,8 C8,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="8" r="1.5" />
-                      <path d="M6,20 C6,28 6,36 6,45" /><path d="M6,45 C2,41 0,37 2,33 C4,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="33" r="1.5" />
-                      <path d="M6,45 C6,53 6,61 6,70" /><path d="M6,70 C10,66 12,62 10,58 C8,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="58" r="1.5" />
-                      <path d="M6,70 C6,78 6,86 6,95" /><path d="M6,95 C2,91 0,87 2,83 C4,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="83" r="1.5" />
-                      <path d="M6,95 C6,103 6,111 6,120" /><path d="M6,120 C10,116 12,112 10,108 C8,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="108" r="1.5" />
-                      <path d="M6,120 C6,128 6,136 6,145" /><path d="M6,145 C2,141 0,137 2,133 C4,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="133" r="1.5" />
-                      <path d="M6,145 C6,153 6,161 6,170" /><path d="M6,170 C10,166 12,162 10,158 C8,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="158" r="1.5" />
-                      <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
-                    </svg>
-                    {/* ── Acehnese Floral Scroll Right ── */}
-                    <svg className="absolute right-0 top-14 bottom-5 w-2.5 text-white/[0.12]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
-                      <path d="M6,0 C6,8 6,12 6,20" /><path d="M6,20 C2,16 0,12 2,8 C4,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="8" r="1.5" />
-                      <path d="M6,20 C6,28 6,36 6,45" /><path d="M6,45 C10,41 12,37 10,33 C8,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="33" r="1.5" />
-                      <path d="M6,45 C6,53 6,61 6,70" /><path d="M6,70 C2,66 0,62 2,58 C4,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="58" r="1.5" />
-                      <path d="M6,70 C6,78 6,86 6,95" /><path d="M6,95 C10,91 12,87 10,83 C8,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="83" r="1.5" />
-                      <path d="M6,95 C6,103 6,111 6,120" /><path d="M6,120 C2,116 0,112 2,108 C4,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="108" r="1.5" />
-                      <path d="M6,120 C6,128 6,136 6,145" /><path d="M6,145 C10,141 12,137 10,133 C8,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="133" r="1.5" />
-                      <path d="M6,145 C6,153 6,161 6,170" /><path d="M6,170 C2,166 0,162 2,158 C4,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="158" r="1.5" />
-                      <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
-                    </svg>
-
-                    {/* ── Bintang Aceh Mandala Watermark ── */}
-                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 text-white/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="88" strokeWidth="0.4" strokeDasharray="4 4" />
-                      <circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" /><circle cx="100" cy="100" r="18" strokeWidth="0.4" />
-                      <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.03" />
-                      <line x1="100" y1="60" x2="100" y2="5" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="195" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="195" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="5" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
-                      <path d="M100,16 L102,22 L100,28 L98,22 Z" fill="currentColor" stroke="none" /><path d="M170.5,33.5 L166,37 L162,33 L166,29 Z" fill="currentColor" stroke="none" /><path d="M198,100 L192,102 L186,100 L192,98 Z" fill="currentColor" stroke="none" /><path d="M170.5,166.5 L166,163 L162,167 L166,171 Z" fill="currentColor" stroke="none" /><path d="M100,184 L102,178 L100,172 L98,178 Z" fill="currentColor" stroke="none" /><path d="M29.5,166.5 L34,163 L38,167 L34,171 Z" fill="currentColor" stroke="none" /><path d="M2,100 L8,98 L14,100 L8,102 Z" fill="currentColor" stroke="none" /><path d="M29.5,33.5 L34,37 L38,33 L34,29 Z" fill="currentColor" stroke="none" />
-                      <circle cx="100" cy="42" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="60" r="2.5" fill="currentColor" stroke="none" /><circle cx="158" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="100" cy="158" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="42" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="60" r="2.5" fill="currentColor" stroke="none" />
-                      <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.08" stroke="none" />
-                    </svg>
-
-                    {/* ── Rencong Watermark (right side, subtle) ── */}
-                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-16 text-white/[0.05]" viewBox="0 0 120 200" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M60,12 C58,24 55,46 51,70 C48,86 45,100 43,112 C41,120 39,126 37,133 C34,142 32,152 32,161 C32,170 35,178 42,184 C48,189 55,192 60,193 C65,192 72,189 78,184 C85,178 88,170 88,161 C88,152 86,142 83,133 C81,126 79,120 77,112 C75,100 72,86 69,70 C65,46 62,24 60,12 Z" fill="currentColor" fillOpacity="0.05" />
-                      <line x1="60" y1="20" x2="60" y2="108" strokeWidth="0.5" />
-                    </svg>
-
-                    <div className="relative z-10 px-4 pt-3 pb-5 sm:px-5 sm:pt-4 sm:pb-6">
-                      {/* Card Header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2.5">
-                          <motion.div
-                            animate={{ rotate: [0, 4, -4, 0] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
-                          >
-                            <Crown className="w-5 h-5 text-yellow-200" />
-                          </motion.div>
-                          <div className="text-left">
-                            <p className="text-[8px] text-white/80 font-bold uppercase tracking-[0.2em]">Admin Card</p>
-                            <p className="text-white font-bold text-xs sm:text-sm truncate max-w-[130px]">{user.name}</p>
-                          </div>
-                        </div>
-                        <motion.div
-                          animate={{ scale: [1, 1.06, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                          className="bg-white/25 backdrop-blur-sm rounded-lg px-2.5 py-1"
-                        >
-                          <span className="text-[8px] text-white font-extrabold uppercase tracking-wider">Premium</span>
-                        </motion.div>
-                      </div>
-
-                      {/* Diamond Divider */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                        <svg className="w-2.5 h-2.5 text-white/40" viewBox="0 0 12 12" fill="none">
-                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
-                        </svg>
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                      </div>
-
-                      {/* Stats Row */}
-                      <div className="flex gap-2">
-                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
-                          <div className="flex items-center justify-center gap-1 mb-0.5">
-                            <Star className="w-3.5 h-3.5 text-yellow-200" />
-                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Poin</span>
-                          </div>
-                          <p className="text-white font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
-                          <div className="flex items-center justify-center gap-1 mb-0.5">
-                            <Gift className="w-3.5 h-3.5 text-yellow-200" />
-                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Voucher</span>
-                          </div>
-                          <p className="text-white font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
-                          <div className="flex items-center justify-center gap-1 mb-0.5">
-                            <Shield className="w-3.5 h-3.5 text-yellow-200" />
-                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Role</span>
-                          </div>
-                          <p className="text-white font-extrabold text-[11px] leading-tight mt-0.5">Admin</p>
-                        </motion.div>
-                      </div>
-
-                      {/* Tap hint */}
-                      <motion.p
-                        animate={{ opacity: [0.3, 0.7, 0.3] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-center text-[8px] text-white/40 font-medium mt-3"
-                      >
-                        Ketuk untuk melihat barcode
-                      </motion.p>
-                    </div>
-                  </div>
-
-                  {/* ═══ BACK FACE (Barcode) ═══ */}
-                  <div
-                    className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col items-center justify-center"
-                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                  >
-                    {/* Shimmer overlay */}
-                    <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full pointer-events-none" animate={{ translateX: ['-100%', '200%'] }} transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 3, ease: 'linear' }} />
-
-                    {/* Animated Top Border */}
-                    <motion.div
-                      className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-300 via-white to-yellow-300"
-                      animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                      style={{ backgroundSize: '200% 100%' }}
-                    />
-
-                    {/* Pucuk Rebung Corners (back) */}
-                    {['top-11 left-1.5', 'top-11 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
-                      <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.15]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
-                        <line x1="30" y1="15" x2="30" y2="5" /><line x1="40.6" y1="19.4" x2="47.7" y2="12.3" /><line x1="45" y1="30" x2="55" y2="30" /><line x1="40.6" y1="40.6" x2="47.7" y2="47.7" /><line x1="30" y1="45" x2="30" y2="55" /><line x1="19.4" y1="40.6" x2="12.3" y2="47.7" /><line x1="15" y1="30" x2="5" y2="30" /><line x1="19.4" y1="19.4" x2="12.3" y2="12.3" />
-                        <circle cx="30" cy="5" r="1.2" fill="currentColor" stroke="none" /><circle cx="47.7" cy="12.3" r="1.2" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="47.7" cy="47.7" r="1.2" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.2" fill="currentColor" stroke="none" /><circle cx="12.3" cy="47.7" r="1.2" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="12.3" cy="12.3" r="1.2" fill="currentColor" stroke="none" />
+                    {/* Kawung corners */}
+                    {['top-1 left-1', 'top-1 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map((pos, i) => (
+                      <svg key={i} className={`absolute ${pos} w-16 h-16 text-white/[${i < 2 ? 0.12 : 0.10}]`} viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.4" strokeLinecap="round" style={{ animation: `batik-kawung-bloom 6s ease-in-out ${i * 1.5}s infinite` }}>
+                        {[0, 60, 120, 180, 240, 300].map((a, j) => (<ellipse key={j} cx="40" cy="16" rx={i < 2 ? 8 : 7} ry={i < 2 ? 14 : 12} transform={`rotate(${a + i * 15},40,40)`} fill="currentColor" fillOpacity="0.025" />))}<circle cx="40" cy="40" r="4" fill="currentColor" fillOpacity="0.06" />
                       </svg>
                     ))}
-
-                    {/* Pucuk Rebung Chain Border Bottom */}
-                    <svg className="absolute bottom-0 left-0 right-0 w-full h-5 text-amber-500/[0.18]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
-                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
-                      <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
-                      <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                      <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
-                    </svg>
-
-                    {/* Bintang Aceh Watermark (back) */}
-                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-amber-400/[0.08]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="100" cy="100" r="90" strokeWidth="0.4" strokeDasharray="4 4" /><circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" />
-                      <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.02" />
-                      <line x1="100" y1="60" x2="100" y2="10" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="190" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="190" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="10" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
-                      <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.06" stroke="none" />
-                    </svg>
-
-                    <div className="relative z-10 w-full flex flex-col items-center px-4 pt-11 pb-6 sm:px-5">
-                      {/* Card label */}
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
-                          <Crown className="w-4 h-4 text-white" />
-                        </motion.div>
-                        <div className="text-left">
-                          <p className="text-[8px] text-amber-400 font-bold uppercase tracking-[0.2em]">Admin Card</p>
-                          <p className="text-amber-100 font-bold text-[11px] truncate max-w-[110px]">{user.name}</p>
+                    {/* Mega Mendung watermark */}
+                    <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 140, height: 140, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 5s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" strokeLinecap="round"><circle cx="100" cy="100" r="90" strokeDasharray="3 6" /><circle cx="100" cy="100" r="65" /><circle cx="100" cy="100" r="40" /><path d="M100,30 L106,85 L155,60 L115,100 L155,140 L106,115 L100,170 L94,115 L45,140 L85,100 L45,60 L94,85 Z" fill="rgba(255,255,255,0.005)" /></svg>
+                    <div className="relative z-10 px-4 pt-3 pb-5 sm:px-5 sm:pt-4 sm:pb-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <motion.div animate={{ rotate: [0, 5, -5, 3, -3, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/25 shadow-lg"><Crown className="w-4 h-4 text-white" /></motion.div>
+                          <div className="text-left"><p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.15em] leading-none">Admin Card</p><p className="text-white font-extrabold text-xs truncate max-w-[120px] leading-tight mt-0.5">{user.name}</p></div>
                         </div>
+                        <motion.div animate={{ scale: [1, 1.1, 1], boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 14px 3px rgba(255,255,255,0.3)', '0 0 0 0 rgba(255,255,255,0)'] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} className="bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-sm rounded-lg px-2.5 py-1 border border-white/25"><span className="text-[8px] text-white font-extrabold uppercase tracking-wider">Admin</span></motion.div>
                       </div>
-
-                      {/* Diamond Divider */}
-                      <div className="flex items-center gap-2 mb-2.5 w-full">
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
-                        <svg className="w-2.5 h-2.5 text-amber-400/50" viewBox="0 0 12 12" fill="none">
-                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
-                        </svg>
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+                      <div className="flex items-center gap-2 my-2"><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" /><svg className="w-2.5 h-2.5 text-white/30" viewBox="0 0 16 16" fill="none"><path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" /></svg><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" /></div>
+                      <div className="flex-1 flex items-end gap-2.5">
+                        <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+                          <div className="flex items-center justify-center gap-1 mb-0.5"><Star className="w-3 h-3 text-white" /><span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Poin</span></div>
+                          <motion.p initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.5, type: 'spring', stiffness: 200 }} className="text-white font-extrabold text-lg leading-none">{user.points ?? 0}</motion.p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+                          <div className="flex items-center justify-center gap-1 mb-0.5"><Gift className="w-3 h-3 text-white" /><span className="text-[7px] text-white/70 font-bold uppercase tracking-wider">Voucher</span></div>
+                          <motion.p initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.6, type: 'spring', stiffness: 200 }} className="text-white font-extrabold text-lg leading-none">{user.voucher ?? 0}</motion.p>
+                        </motion.div>
                       </div>
-
-                      {/* Barcode */}
-                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-white/15 backdrop-blur-sm rounded-xl p-3.5 border border-white/20 w-full flex items-center justify-center">
-                        <svg ref={barcodeRef} className="w-full" />
-                      </motion.div>
-
-                      {/* Member code */}
-                      <p className="text-[9px] text-amber-400/60 font-mono mt-2 tracking-[0.2em] font-semibold">{memberCode}</p>
-
-                      {/* Tap hint */}
-                      <motion.p animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="text-[8px] text-amber-500/50 font-medium mt-2">
-                        Ketuk untuk kembali
-                      </motion.p>
+                      <motion.p animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 3, repeat: Infinity }} className="text-center text-[7px] text-white/30 font-medium mt-1.5">✦ Ketuk untuk melihat barcode ✦</motion.p>
+                    </div>
+                  </div>
+                  {/* BACK FACE */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #7C2D12 0%, #C2410C 15%, #EA580C 30%, #F97316 50%, #FB923C 65%, #EA580C 80%, #C2410C 90%, #7C2D12 100%)' }}>
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #F97316, #C2410C, #7C2D12)', opacity: 0.5, backgroundSize: '400% 400%', animation: 'batik-parang-flow 14s ease-in-out infinite' }} />
+                    <div className="batik-shine-sweep" />
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: 0.04 }}><rect width="100" height="100" fill="url(#batik-parang)" /></svg>
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
+                      <rect x="5" y="5" width="390" height="190" rx="14" stroke="white" strokeWidth="0.6" strokeOpacity="0.15" /><rect x="10" y="10" width="380" height="180" rx="10" stroke="white" strokeWidth="0.25" strokeOpacity="0.1" strokeDasharray="5 3" style={{ animation: 'batik-border-dash 6s linear infinite' }} /><rect x="15" y="15" width="370" height="170" rx="7" stroke="white" strokeWidth="0.12" strokeOpacity="0.07" />
+                    </svg>
+                    {['top-1 left-1', 'top-1 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map((pos, i) => (
+                      <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.08]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.3" strokeLinecap="round">
+                        {[0, 60, 120, 180, 240, 300].map((a, j) => (<ellipse key={j} cx="30" cy="12" rx="5" ry="10" transform={`rotate(${a + i * 15},30,30)`} fill="currentColor" fillOpacity="0.02" />))}
+                        <circle cx="30" cy="30" r="3" fill="currentColor" fillOpacity="0.05" />
+                      </svg>
+                    ))}
+                    <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 140, height: 140, transform: 'translate(-50%,-50%)', animation: 'batik-mega-glow 5s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.3" strokeLinecap="round"><circle cx="100" cy="100" r="90" strokeDasharray="3 6" /><circle cx="100" cy="100" r="65" /><circle cx="100" cy="100" r="40" /><path d="M100,30 L106,85 L155,60 L115,100 L155,140 L106,115 L100,170 L94,115 L45,140 L85,100 L45,60 L94,85 Z" fill="rgba(255,255,255,0.005)" /></svg>
+                    <div className="absolute bottom-[42px] left-0 right-0 h-px batik-tepian-bottom opacity-30" />
+                    <div className="relative z-10 w-full flex flex-col items-center px-4 pt-3 pb-2.5">
+                      <div className="flex items-center gap-2 mb-2"><motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} className="w-7 h-7 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20"><Crown className="w-3.5 h-3.5 text-white" /></motion.div><div className="text-left"><p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.15em] leading-none">Admin Card</p><p className="text-white font-bold text-[10px] truncate max-w-[110px] leading-tight mt-0.5">{user.name}</p></div></div>
+                      <div className="flex items-center gap-2 mb-2 w-full"><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" /><svg className="w-2 h-2 text-white/30" viewBox="0 0 12 12" fill="none"><path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" /></svg><div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" /></div>
+                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-white/[0.1] backdrop-blur-sm rounded-xl p-2.5 border border-white/20 w-full flex items-center justify-center"><svg ref={barcodeRef} className="w-full" /></motion.div>
+                      <div className="flex items-center justify-between mt-2"><p className="text-[8px] text-white/50 font-mono tracking-[0.15em] font-semibold">{memberCode}</p><motion.p animate={{ opacity: [0.25, 0.6, 0.25] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[7px] text-white/40 font-medium">Ketuk untuk kembali</motion.p></div>
                     </div>
                   </div>
                 </div>

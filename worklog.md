@@ -557,3 +557,82 @@ Stage Summary:
 - All pages (Home, Menu) render properly
 - The original "Turbopack error" was likely transient (possibly from .next cache corruption or a partial file save during editing)
 - Clearing .next cache resolved any stale compilation artifacts
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Rebuild all member cards with Batik themed ornamental design (orange + white)
+
+Work Log:
+- Read existing page.tsx and worklog.md for context
+- Added Batik CSS animations to globals.css:
+  - batik-parang-flow, batik-kawung-bloom, batik-shine, batik-float, batik-border-dash
+  - batik-pulse-ring, batik-text-glow, batik-particle, batik-tepian-wave, batik-mega-glow
+  - showcase-border-rotate, aceh-sparkle keyframes
+  - .batik-shine-sweep, .batik-text-glow, .batik-badge-pulse utility classes
+  - .batik-tepian-top, .batik-tepian-bottom ornate wavy border classes
+- Added showcaseFlipped state + showcaseBarcodeRef to HomePage component
+- Added 2 new useEffects: auto-flip showcase card (6s interval), generate showcase barcode
+- Replaced login prompt section with Batik Premium Edition showcase card:
+  - Full 3D flip with auto-flip (6s) + click flip
+  - Demo data: "Ahmad Rizky", "Gold" badge, 1.250 poin, 3 voucher
+  - Batik Parang (diagonal dagger) SVG pattern with isen dots/curves
+  - Batik Kawung (palm fruit) corner ornaments with bloom animation
+  - Batik Tepian ornate wavy borders (SVG pattern + CSS animation)
+  - Batik Mega Mendung (cloud) watermark center
+  - Triple ornate border frame with animated dash
+  - Rotating conic glow border, pulsing glow, rising particles
+  - Shine sweep overlay, text glow animation
+  - New login prompt button below showcase card
+- Replaced customer member card with Batik Parang Edition:
+  - Batik Parang pattern reuse via SVG fill="url(#batik-parang)"
+  - Batik Tepian borders via CSS classes (.batik-tepian-top/bottom)
+  - Kawung corner ornaments, Mega Mendung watermark
+  - Aceh sparkle particles, firefly particles
+  - Triple border frame, animated glow border
+  - User data: name, poin, voucher from logged-in user
+  - Barcode back face with Batik ornaments
+- Replaced admin member card with Batik Parang Edition:
+  - Compact version with Batik Parang, Kawung, Mega Mendung patterns
+  - Front: name, poin, voucher stats with Batik ornamentation
+  - Back: barcode with Batik border/kawung/mega mendung decorations
+- All 3 cards use consistent orange-to-amber gradient: #7C2D12 → #C2410C → #EA580C → #F97316 → #FB923C
+- ESLint passed with zero errors
+- Dev server running with no compilation or runtime errors
+
+Stage Summary:
+- All 3 member cards rebuilt with Batik themed ornamental design
+- Showcase card: always visible in hero, auto-flip + click, demo data
+- Customer card: visible to logged-in non-admin, real user data
+- Admin card: visible to admin in profile section, compact Batik design
+- File size reduced from 4086 to 3863 lines (removed ~300 lines of old Aceh-themed admin card)
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Redesign all member cards with Batik Parang ornamental patterns
+
+Work Log:
+- File was corrupted/reverted to V1 style by previous subagent — all V2/V3 Aceh cards were lost
+- Added 10 new CSS keyframes for Batik theme (parang-flow, kawung-bloom, shine, float, border-dash, pulse-ring, text-glow, particle, tepian-wave, mega-glow)
+- Added 5 CSS utility classes (batik-shine-sweep, batik-text-glow, batik-badge-pulse, batik-tepian-top/bottom)
+- Added showcaseFlipped state + showcaseBarcodeRef + auto-flip useEffect + barcode generation useEffect
+- Replaced login prompt with full showcase card + login button
+- Replaced V1 customer card with Batik Parang Edition (orange gradient, Batik Parang SVG pattern, Batik Kawung corners, Batik Tepian wavy borders, Batik Mega Mendung cloud watermark, triple border frame, firefly particles, sparkle stars)
+- Replaced V1 admin card with matching Batik Parang Edition (compact design, same ornament system)
+- All 3 cards use consistent Batik pattern (shared SVG pattern id) with matching orange+white theme
+- Fixed CSS `translate` property for float animation to preserve 3D flip (not CSS transform)
+- Verified with agent-browser + VLM:
+  - Front face: Member Card, Ahmad Rizky, Gold badge, No. Member AGSI-BATIK2025, 1.250 Poin, 3 Voucher, subtle Batik patterns
+  - Back face: Barcode visible, member code, card label
+  - VLM rated premium feel 7/10: "warm, cohesive color palette... cultural identity through Batik references... clean, modern layout"
+
+Stage Summary:
+- All 3 member cards redesigned with authentic Indonesian Batik patterns
+- Batik Parang (diagonal dagger) as primary pattern
+- Batik Kawung (palm fruit) as corner ornaments with bloom animation
+- Batik Mega Mendung (cloud) as center watermark
+- Batik Tepian (wavy ornate line) as decorative borders
+- Orange (#7C2D12→#FB923C) + white color scheme throughout
+- 15+ concurrent CSS animations for premium feel
+- Auto-flip + click-to-flip on showcase card

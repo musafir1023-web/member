@@ -147,3 +147,93 @@
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* ═══ Batik Member Card Edition ═══ */
+
+@keyframes batik-parang-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+@keyframes batik-kawung-bloom {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.08; }
+  50% { transform: scale(1.12) rotate(8deg); opacity: 0.18; }
+}
+
+@keyframes batik-shine {
+  0% { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(250%) skewX(-12deg); }
+}
+
+@keyframes batik-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+@keyframes batik-border-dash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -30; }
+}
+
+@keyframes batik-pulse-ring {
+  0%, 100% { opacity: 0.2; transform: scale(0.96); }
+  50% { opacity: 0.5; transform: scale(1.06); }
+}
+
+@keyframes batik-text-glow {
+  0%, 100% { text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+  50% { text-shadow: 0 0 16px rgba(255,255,255,0.7), 0 0 32px rgba(255,255,255,0.2); }
+}
+
+@keyframes batik-particle {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.7; }
+  80% { opacity: 0.2; }
+  100% { transform: translateY(-110px) scale(0.2); opacity: 0; }
+}
+
+@keyframes batik-tepian-wave {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes batik-mega-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.08)); }
+  50% { filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); }
+}
+
+@keyframes showcase-border-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes aceh-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+}
+
+.batik-shine-sweep {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 1rem; pointer-events: none; z-index: 20;
+}
+.batik-shine-sweep::after {
+  content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 45%, rgba(254,243,199,0.22) 50%, rgba(255,255,255,0.14) 55%, transparent 70%);
+  animation: batik-shine 4.5s ease-in-out 2s infinite;
+}
+
+.batik-text-glow { animation: batik-text-glow 3s ease-in-out infinite; }
+
+.batik-badge-pulse {
+  animation: batik-pulse-ring 3s ease-in-out infinite;
+}
+
+.batik-tepian-top {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.06) 80%, transparent 100%);
+  background-size: 200% 100%;
+  animation: batik-tepian-wave 4s linear infinite;
+}
+.batik-tepian-bottom {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.04) 80%, transparent 100%);
+  background-size: 200% 100%;
+  animation: batik-tepian-wave 5s linear infinite reverse;
+}
