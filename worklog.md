@@ -636,3 +636,41 @@ Stage Summary:
 - Orange (#7C2D12→#FB923C) + white color scheme throughout
 - 15+ concurrent CSS animations for premium feel
 - Auto-flip + click-to-flip on showcase card
+
+---
+Task ID: 1
+Agent: Sub Agent (general-purpose)
+Task: Simplify showcase member card design
+
+Work Log:
+- Replaced the "Batik Premium Edition" showcase member card (old lines 677-905, 229 lines) with a "Clean Minimal V7" design (~88 lines)
+- Removed: batik parang patterns, SVG kawung corners, mega mendung watermarks, particle systems, rotating conic glow borders, complex multi-stage animations, shine sweeps
+- New card features: simple gradient background (orange), subtle glow, clean 3D flip (front/back), minimal floating animation, front face with member info/stats, back face with barcode
+- Added `@keyframes v7-float` to globals.css using `translate` (not `transform`) to preserve CSS 3D flip context
+- File went from 3863 lines to 3746 lines (reduced by 117 lines)
+- Logged-in user card (lines 559-674) left completely untouched
+
+Stage Summary:
+- Showcase member card simplified from complex batik-themed design to clean minimal V7
+- Only cosmetic changes; no functionality removed (3D flip, barcode, showcaseFlipped state all preserved)
+
+---
+Task ID: 2
+Agent: General-purpose agent
+Task: Replace logged-in member card with simpler V7 clean minimal design
+
+Work Log:
+- Verified lines 556-675 of src/app/page.tsx contain the old "Batik Parang Edition" member card
+- Extracted lines 1-555 (before) and lines 676-end (after) using head/tail
+- Inserted new "Clean Minimal V7" member card (60 lines replacing 120-line Batik Parang edition)
+- New card: simpler gradient (#9A3412→#EA580C→#F97316), no batik patterns/particles/sparkles/border-rotate
+- Keeps same variable refs: showBarcode, barcodeRef, memberCode, user, setShowBarcode
+- Uses v7-float animation, 3D flip for barcode, front face with member info + points/voucher, back face with barcode
+- Cleared .next cache, restarted dev server
+- Page compiles successfully: GET / 200 in 6.9s, no errors
+
+Stage Summary:
+- Logged-in member card simplified from ornate Batik Parang Edition (120 lines) to Clean Minimal V7 (60 lines)
+- All visual clutter removed: firefly particles, conic border rotation, batik parang SVG patterns, kawung ornaments, mega-mendung glow, aceh sparkles, animated text glow, pulsing badge
+- Clean gradient with subtle circle decorations, simple glow backdrop
+- Dev server running, page renders without errors

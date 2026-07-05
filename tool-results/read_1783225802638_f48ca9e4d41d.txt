@@ -558,3 +558,99 @@
    558→- The original "Turbopack error" was likely transient (possibly from .next cache corruption or a partial file save during editing)
    559→- Clearing .next cache resolved any stale compilation artifacts
    560→
+   561→---
+   562→Task ID: 2
+   563→Agent: Main Agent
+   564→Task: Rebuild all member cards with Batik themed ornamental design (orange + white)
+   565→
+   566→Work Log:
+   567→- Read existing page.tsx and worklog.md for context
+   568→- Added Batik CSS animations to globals.css:
+   569→  - batik-parang-flow, batik-kawung-bloom, batik-shine, batik-float, batik-border-dash
+   570→  - batik-pulse-ring, batik-text-glow, batik-particle, batik-tepian-wave, batik-mega-glow
+   571→  - showcase-border-rotate, aceh-sparkle keyframes
+   572→  - .batik-shine-sweep, .batik-text-glow, .batik-badge-pulse utility classes
+   573→  - .batik-tepian-top, .batik-tepian-bottom ornate wavy border classes
+   574→- Added showcaseFlipped state + showcaseBarcodeRef to HomePage component
+   575→- Added 2 new useEffects: auto-flip showcase card (6s interval), generate showcase barcode
+   576→- Replaced login prompt section with Batik Premium Edition showcase card:
+   577→  - Full 3D flip with auto-flip (6s) + click flip
+   578→  - Demo data: "Ahmad Rizky", "Gold" badge, 1.250 poin, 3 voucher
+   579→  - Batik Parang (diagonal dagger) SVG pattern with isen dots/curves
+   580→  - Batik Kawung (palm fruit) corner ornaments with bloom animation
+   581→  - Batik Tepian ornate wavy borders (SVG pattern + CSS animation)
+   582→  - Batik Mega Mendung (cloud) watermark center
+   583→  - Triple ornate border frame with animated dash
+   584→  - Rotating conic glow border, pulsing glow, rising particles
+   585→  - Shine sweep overlay, text glow animation
+   586→  - New login prompt button below showcase card
+   587→- Replaced customer member card with Batik Parang Edition:
+   588→  - Batik Parang pattern reuse via SVG fill="url(#batik-parang)"
+   589→  - Batik Tepian borders via CSS classes (.batik-tepian-top/bottom)
+   590→  - Kawung corner ornaments, Mega Mendung watermark
+   591→  - Aceh sparkle particles, firefly particles
+   592→  - Triple border frame, animated glow border
+   593→  - User data: name, poin, voucher from logged-in user
+   594→  - Barcode back face with Batik ornaments
+   595→- Replaced admin member card with Batik Parang Edition:
+   596→  - Compact version with Batik Parang, Kawung, Mega Mendung patterns
+   597→  - Front: name, poin, voucher stats with Batik ornamentation
+   598→  - Back: barcode with Batik border/kawung/mega mendung decorations
+   599→- All 3 cards use consistent orange-to-amber gradient: #7C2D12 → #C2410C → #EA580C → #F97316 → #FB923C
+   600→- ESLint passed with zero errors
+   601→- Dev server running with no compilation or runtime errors
+   602→
+   603→Stage Summary:
+   604→- All 3 member cards rebuilt with Batik themed ornamental design
+   605→- Showcase card: always visible in hero, auto-flip + click, demo data
+   606→- Customer card: visible to logged-in non-admin, real user data
+   607→- Admin card: visible to admin in profile section, compact Batik design
+   608→- File size reduced from 4086 to 3863 lines (removed ~300 lines of old Aceh-themed admin card)
+   609→
+   610→---
+   611→Task ID: 7
+   612→Agent: Main Agent
+   613→Task: Redesign all member cards with Batik Parang ornamental patterns
+   614→
+   615→Work Log:
+   616→- File was corrupted/reverted to V1 style by previous subagent — all V2/V3 Aceh cards were lost
+   617→- Added 10 new CSS keyframes for Batik theme (parang-flow, kawung-bloom, shine, float, border-dash, pulse-ring, text-glow, particle, tepian-wave, mega-glow)
+   618→- Added 5 CSS utility classes (batik-shine-sweep, batik-text-glow, batik-badge-pulse, batik-tepian-top/bottom)
+   619→- Added showcaseFlipped state + showcaseBarcodeRef + auto-flip useEffect + barcode generation useEffect
+   620→- Replaced login prompt with full showcase card + login button
+   621→- Replaced V1 customer card with Batik Parang Edition (orange gradient, Batik Parang SVG pattern, Batik Kawung corners, Batik Tepian wavy borders, Batik Mega Mendung cloud watermark, triple border frame, firefly particles, sparkle stars)
+   622→- Replaced V1 admin card with matching Batik Parang Edition (compact design, same ornament system)
+   623→- All 3 cards use consistent Batik pattern (shared SVG pattern id) with matching orange+white theme
+   624→- Fixed CSS `translate` property for float animation to preserve 3D flip (not CSS transform)
+   625→- Verified with agent-browser + VLM:
+   626→  - Front face: Member Card, Ahmad Rizky, Gold badge, No. Member AGSI-BATIK2025, 1.250 Poin, 3 Voucher, subtle Batik patterns
+   627→  - Back face: Barcode visible, member code, card label
+   628→  - VLM rated premium feel 7/10: "warm, cohesive color palette... cultural identity through Batik references... clean, modern layout"
+   629→
+   630→Stage Summary:
+   631→- All 3 member cards redesigned with authentic Indonesian Batik patterns
+   632→- Batik Parang (diagonal dagger) as primary pattern
+   633→- Batik Kawung (palm fruit) as corner ornaments with bloom animation
+   634→- Batik Mega Mendung (cloud) as center watermark
+   635→- Batik Tepian (wavy ornate line) as decorative borders
+   636→- Orange (#7C2D12→#FB923C) + white color scheme throughout
+   637→- 15+ concurrent CSS animations for premium feel
+   638→- Auto-flip + click-to-flip on showcase card
+   639→
+   640→---
+   641→Task ID: 1
+   642→Agent: Sub Agent (general-purpose)
+   643→Task: Simplify showcase member card design
+   644→
+   645→Work Log:
+   646→- Replaced the "Batik Premium Edition" showcase member card (old lines 677-905, 229 lines) with a "Clean Minimal V7" design (~88 lines)
+   647→- Removed: batik parang patterns, SVG kawung corners, mega mendung watermarks, particle systems, rotating conic glow borders, complex multi-stage animations, shine sweeps
+   648→- New card features: simple gradient background (orange), subtle glow, clean 3D flip (front/back), minimal floating animation, front face with member info/stats, back face with barcode
+   649→- Added `@keyframes v7-float` to globals.css using `translate` (not `transform`) to preserve CSS 3D flip context
+   650→- File went from 3863 lines to 3746 lines (reduced by 117 lines)
+   651→- Logged-in user card (lines 559-674) left completely untouched
+   652→
+   653→Stage Summary:
+   654→- Showcase member card simplified from complex batik-themed design to clean minimal V7
+   655→- Only cosmetic changes; no functionality removed (3D flip, barcode, showcaseFlipped state all preserved)
+   656→
