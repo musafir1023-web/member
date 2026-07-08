@@ -1,13 +1,17 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     const body = await request.json()
-    const { id, status } = body
+    const { status } = body
 
-    if (!id || !status) {
-      return NextResponse.json({ error: 'ID dan status diperlukan' }, { status: 400 })
+    if (!status) {
+      return NextResponse.json({ error: 'Status diperlukan' }, { status: 400 })
     }
 
     const validStatuses = ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled']
@@ -28,14 +32,12 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID diperlukan' }, { status: 400 })
-    }
+    const { id } = await params
 
     await db.orderItem.deleteMany({ where: { orderId: id } })
     await db.order.delete({ where: { id } })

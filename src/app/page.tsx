@@ -1969,10 +1969,10 @@ function ProfilePage() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(`/api/orders/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()
       addToast('Status pesanan berhasil diupdate', 'success')

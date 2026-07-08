@@ -780,3 +780,20 @@ Stage Summary:
 - Empty state with reset button verified working
 - All changes verified via VLM on both mobile (390x844) and desktop (1280x800) viewports
 - No compilation or runtime errors
+
+---
+Task ID: 13
+Agent: Main Agent
+Task: Fix gagal update status pesanan (Fix order status update failure)
+
+Work Log:
+- Identified root cause: Frontend `updateStatus()` called `PATCH /api/orders` but the PATCH handler lived in `/api/orders/[id]/route.ts`, not `/api/orders/route.ts` (which only had GET/POST). This caused 405 Method Not Allowed.
+- Fixed `/api/orders/[id]/route.ts`: Updated both PATCH and DELETE handlers to use Next.js 16 Promise-based `params` (`{ params }: { params: Promise<{ id: string }> }`) and read `id` from URL params instead of request body.
+- Fixed frontend `updateStatus()`: Changed fetch URL from `/api/orders` to `/api/orders/${encodeURIComponent(id)}` and removed `id` from the request body (only sending `{ status }`).
+- Verified fix via direct curl test: PATCH returned 200 with updated order JSON.
+- Verified fix via Agent Browser: Logged in as admin, clicked "Konfirmasi" button, confirmed status changed from "pending" to "Dikonfirmasi" in the admin dashboard.
+
+Stage Summary:
+- Root cause: Frontend PATCH hitting wrong route (no PATCH handler at /api/orders)
+- Files changed: `src/app/api/orders/[id]/route.ts`, `src/app/page.tsx` (line ~1972)
+- Status update now works correctly through the admin dashboard UI
