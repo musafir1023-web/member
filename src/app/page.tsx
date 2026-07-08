@@ -61,6 +61,7 @@ import {
   X,
   Camera,
   PackageSearch,
+  Search,
   MessageCircle,
   Send,
   Smile,
@@ -442,8 +443,6 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [showBarcode, setShowBarcode] = useState(false)
   const barcodeRef = useRef<SVGSVGElement>(null)
-  const [showcaseFlipped, setShowcaseFlipped] = useState(false)
-  const showcaseBarcodeRef = useRef<SVGSVGElement>(null)
 
   const memberCode = user ? `AGSI-${user.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}` : ''
 
@@ -453,36 +452,16 @@ function HomePage() {
       try {
         JsBarcode(barcodeRef.current, memberCode, {
           format: 'CODE128',
-          width: 1.5,
-          height: 44,
-          displayValue: true,
-          font: 'monospace',
-          fontSize: 11,
-          textMargin: 4,
+          width: 1.8,
+          height: 52,
+          displayValue: false,
           margin: 0,
           background: 'transparent',
-          lineColor: '#ea580c',
+          lineColor: '#1a1a1a',
         })
       } catch {}
     }
   }, [showBarcode, memberCode])
-
-  // Auto-flip showcase card
-  useEffect(() => {
-    const timer = setInterval(() => setShowcaseFlipped(f => !f), 6000)
-    return () => clearInterval(timer)
-  }, [])
-
-  // Generate showcase barcode
-  useEffect(() => {
-    if (showcaseFlipped && showcaseBarcodeRef.current) {
-      try {
-        JsBarcode(showcaseBarcodeRef.current, 'AGSI-BATIK2025', {
-          format: 'CODE128', width: 1.5, height: 40, displayValue: true, font: 'monospace', fontSize: 10, textMargin: 3, margin: 0, background: 'transparent', lineColor: '#ea580c',
-        })
-      } catch {}
-    }
-  }, [showcaseFlipped])
 
   // Fetch latest user points/voucher on mount
   useEffect(() => {
@@ -554,91 +533,114 @@ function HomePage() {
               Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
             </p>
 
+
+
             {/* ═════════════════════════════════════════════════
-                 MEMBER CARD — Clean Minimal V7
+                 MEMBER CARD
                  ═══════════════════════════════════════════════════ */}
             {user && user.role !== 'admin' && (
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
                 className="mt-8 mx-auto w-full"
-                style={{ maxWidth: 340, perspective: 1200 }}
+                style={{ maxWidth: 360, perspective: 1200 }}
               >
                 <div className="relative w-full" style={{ animation: 'v7-float 5s ease-in-out infinite' }}>
                   <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowBarcode(!showBarcode)}>
-                    {/* Subtle glow */}
-                    <div className="absolute -inset-4 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.25) 0%, transparent 70%)', filter: 'blur(20px)' }} />
 
-                    {/* 3D flip container */}
-                    <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 200 }}>
+                    <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 210 }}>
 
                       {/* ═══ FRONT FACE ═══ */}
-                      <div className="relative rounded-2xl shadow-xl overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #9A3412 0%, #EA580C 50%, #F97316 100%)' }}>
-                        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                        <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 200 }}>
+                      <div className="relative rounded-2xl overflow-hidden shadow-xl" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #EA580C 0%, #F97316 50%, #FB923C 100%)' }}>
+                        {/* Decorative circles */}
+                        <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-white/[0.07]" />
+                        <div className="absolute -bottom-8 -left-8 w-20 h-20 rounded-full bg-white/[0.05]" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-white/[0.03]" />
+
+                        <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 210 }}>
+                          {/* Header */}
                           <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                                <Crown className="w-5 h-5 text-white" />
+                            <div className="flex items-center gap-2">
+                              <div className="w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <Crown className="w-4.5 h-4.5 text-white" />
                               </div>
                               <div>
-                                <p className="text-[7px] text-white/50 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
-                                <p className="text-white font-bold text-sm mt-1 truncate max-w-[130px]">{user.name}</p>
+                                <p className="text-[7px] text-white/60 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
+                                <p className="text-white font-bold text-[13px] sm:text-sm truncate max-w-[120px] leading-tight mt-1">{user.name}</p>
                               </div>
                             </div>
-                            <div className="bg-white/15 backdrop-blur-sm rounded-lg px-2.5 py-1 border border-white/20">
-                              <span className="text-[9px] text-white font-bold uppercase tracking-wider">Premium</span>
+                            <div className="bg-white/20 backdrop-blur-sm rounded-full px-2.5 py-1">
+                              <span className="text-[8px] text-white font-bold uppercase tracking-wider">Premium</span>
                             </div>
                           </div>
-                          <div className="text-center mb-3">
-                            <p className="text-[8px] text-white/40 font-medium uppercase tracking-[0.2em] mb-0.5">No. Member</p>
-                            <p className="text-white/80 font-mono text-[11px] font-semibold tracking-[0.2em]">{memberCode}</p>
-                          </div>
-                          <div className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-3" />
+
+                          {/* Member Number */}
+                          <p className="text-center text-white/50 font-mono text-[10px] tracking-[0.35em] uppercase mb-3">{memberCode}</p>
+
+                          {/* Divider */}
+                          <div className="h-px bg-white/20 mb-3" />
+
+                          {/* Stats */}
                           <div className="flex gap-3">
-                            <div className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/15">
-                              <div className="flex items-center justify-center gap-1 mb-0.5">
-                                <Star className="w-3 h-3 text-amber-300" />
-                                <span className="text-[7px] text-white/60 font-semibold uppercase tracking-wider">Poin</span>
-                              </div>
-                              <p className="text-white font-bold text-lg leading-none">{user.points ?? 0}</p>
+                            <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+                              <Star className="w-3.5 h-3.5 text-white/80 mx-auto mb-1" />
+                              <p className="text-[7px] text-white/60 font-semibold uppercase tracking-wider mb-0.5">Poin</p>
+                              <p className="text-white font-extrabold text-xl leading-none">{user.points ?? 0}</p>
                             </div>
-                            <div className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/15">
-                              <div className="flex items-center justify-center gap-1 mb-0.5">
-                                <Gift className="w-3 h-3 text-amber-300" />
-                                <span className="text-[7px] text-white/60 font-semibold uppercase tracking-wider">Voucher</span>
-                              </div>
-                              <p className="text-white font-bold text-lg leading-none">{user.voucher ?? 0}</p>
+                            <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+                              <Gift className="w-3.5 h-3.5 text-white/80 mx-auto mb-1" />
+                              <p className="text-[7px] text-white/60 font-semibold uppercase tracking-wider mb-0.5">Voucher</p>
+                              <p className="text-white font-extrabold text-xl leading-none">{user.voucher ?? 0}</p>
                             </div>
                           </div>
-                          <p className="text-center text-[7px] text-white/25 font-medium mt-2.5 tracking-wide">Ketuk untuk melihat barcode</p>
+
+                          <p className="text-center text-[7px] text-white/30 font-medium mt-3 tracking-wide">Ketuk untuk melihat barcode</p>
                         </div>
                       </div>
 
                       {/* ═══ BACK FACE (Barcode) ═══ */}
-                      <div className="absolute inset-0 rounded-2xl shadow-xl overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #9A3412 0%, #EA580C 50%, #F97316 100%)' }}>
-                        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                        <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 200 }}>
-                          <div className="flex items-center gap-2.5 mb-3">
-                            <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                              <Crown className="w-4 h-4 text-white" />
+                      <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-xl" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #EA580C 0%, #F97316 50%, #FB923C 100%)' }}>
+                        {/* Decorative circles */}
+                        <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full bg-white/[0.07]" />
+                        <div className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full bg-white/[0.05]" />
+
+                        <div className="relative z-10 flex flex-col px-5 pt-4 pb-4" style={{ minHeight: 210 }}>
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <Crown className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-[7px] text-white/60 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
+                                <p className="text-white font-bold text-[11px] leading-tight mt-0.5">{user.name}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-[7px] text-white/50 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
-                              <p className="text-white font-bold text-[11px] mt-0.5">{user.name}</p>
+                            <div className="bg-white/20 backdrop-blur-sm rounded-full px-2.5 py-1">
+                              <span className="text-[8px] text-white font-bold uppercase tracking-wider">Premium</span>
                             </div>
                           </div>
-                          <div className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-3" />
-                          <div className="flex-1 bg-white rounded-xl p-4 flex flex-col items-center justify-center">
-                            <svg ref={barcodeRef} className="w-full" style={{ minHeight: 40 }} />
+
+                          {/* Barcode Container */}
+                          <div className="flex-1 bg-white rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+                            {/* Corner accents */}
+                            <svg className="absolute top-0 left-0 w-5 h-5" viewBox="0 0 20 20" fill="none"><path d="M0 6 L0 0 L6 0" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" /></svg>
+                            <svg className="absolute top-0 right-0 w-5 h-5" viewBox="0 0 20 20" fill="none"><path d="M14 0 L20 0 L20 6" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" /></svg>
+                            <svg className="absolute bottom-0 left-0 w-5 h-5" viewBox="0 0 20 20" fill="none"><path d="M0 14 L0 20 L6 20" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" /></svg>
+                            <svg className="absolute bottom-0 right-0 w-5 h-5" viewBox="0 0 20 20" fill="none"><path d="M20 14 L20 20 L14 20" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" /></svg>
+
+                            {/* Scan line label */}
+                            <p className="text-[8px] text-gray-400 font-semibold uppercase tracking-[0.3em] mb-2">Scan Barcode</p>
+
+                            {/* Barcode */}
+                            <svg ref={barcodeRef} className="w-full max-w-[260px]" style={{ minHeight: 48 }} />
+
+                            {/* Member code below barcode */}
+                            <p className="text-[9px] text-gray-500 font-mono tracking-[0.25em] mt-2 font-semibold">{memberCode}</p>
                           </div>
-                          <div className="flex items-center justify-between mt-2.5">
-                            <p className="text-[8px] text-white/50 font-mono tracking-[0.2em] font-semibold">{memberCode}</p>
-                            <p className="text-[7px] text-white/25 font-medium">Ketuk untuk kembali</p>
-                          </div>
+
+                          <p className="text-center text-[7px] text-white/30 font-medium mt-2.5 tracking-wide">Ketuk untuk kembali</p>
                         </div>
                       </div>
                     </div>
@@ -647,118 +649,6 @@ function HomePage() {
               </motion.div>
             )}
 
-
-            {/* ═════════════════════════════════════════════════
-                 SHOWCASE MEMBER CARD — Clean Minimal V7
-                 ═══════════════════════════════════════════════════ */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-8 mx-auto w-full"
-              style={{ maxWidth: 340, perspective: 1200 }}
-            >
-              <div className="relative w-full" style={{ animation: 'v7-float 5s ease-in-out infinite' }}>
-                <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowcaseFlipped(f => !f)}>
-                  {/* Subtle glow behind card */}
-                  <div className="absolute -inset-4 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.25) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-
-                  {/* 3D flip container */}
-                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showcaseFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 200 }}>
-
-                    {/* ═══════════ FRONT FACE ═══════════ */}
-                    <div className="relative rounded-2xl shadow-xl overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #9A3412 0%, #EA580C 50%, #F97316 100%)' }}>
-                      {/* Subtle diagonal accent */}
-                      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                      <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
-
-                      {/* Content */}
-                      <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 200 }}>
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                              <Crown className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-[7px] text-white/50 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
-                              <p className="text-white font-bold text-sm mt-1 truncate max-w-[130px]">Ahmad Rizky</p>
-                            </div>
-                          </div>
-                          <div className="bg-white/15 backdrop-blur-sm rounded-lg px-2.5 py-1 border border-white/20">
-                            <span className="text-[9px] text-white font-bold uppercase tracking-wider">Premium</span>
-                          </div>
-                        </div>
-
-                        {/* Member Number */}
-                        <div className="text-center mb-3">
-                          <p className="text-[8px] text-white/40 font-medium uppercase tracking-[0.2em] mb-0.5">No. Member</p>
-                          <p className="text-white/80 font-mono text-[11px] font-semibold tracking-[0.2em]">AGSI-BATIK2025</p>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-3" />
-
-                        {/* Stats */}
-                        <div className="flex gap-3">
-                          <div className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/15">
-                            <div className="flex items-center justify-center gap-1 mb-0.5">
-                              <Star className="w-3 h-3 text-amber-300" />
-                              <span className="text-[7px] text-white/60 font-semibold uppercase tracking-wider">Poin</span>
-                            </div>
-                            <p className="text-white font-bold text-lg leading-none">1.250</p>
-                          </div>
-                          <div className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/15">
-                            <div className="flex items-center justify-center gap-1 mb-0.5">
-                              <Gift className="w-3 h-3 text-amber-300" />
-                              <span className="text-[7px] text-white/60 font-semibold uppercase tracking-wider">Voucher</span>
-                            </div>
-                            <p className="text-white font-bold text-lg leading-none">3</p>
-                          </div>
-                        </div>
-
-                        <p className="text-center text-[7px] text-white/25 font-medium mt-2.5 tracking-wide">Ketuk untuk melihat barcode</p>
-                      </div>
-                    </div>
-
-                    {/* ═══════════ BACK FACE (Barcode) ═══════════ */}
-                    <div className="absolute inset-0 rounded-2xl shadow-xl overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #9A3412 0%, #EA580C 50%, #F97316 100%)' }}>
-                      {/* Subtle circles */}
-                      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                      <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
-
-                      {/* Content */}
-                      <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 200 }}>
-                        {/* Header */}
-                        <div className="flex items-center gap-2.5 mb-3">
-                          <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                            <Crown className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-[7px] text-white/50 font-semibold uppercase tracking-[0.25em] leading-none">Member Card</p>
-                            <p className="text-white font-bold text-[11px] mt-0.5">Ahmad Rizky</p>
-                          </div>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-3" />
-
-                        {/* Barcode container */}
-                        <div className="flex-1 bg-white rounded-xl p-4 flex flex-col items-center justify-center">
-                          <svg ref={showcaseBarcodeRef} className="w-full" style={{ minHeight: 40 }} />
-                        </div>
-
-                        {/* Member code */}
-                        <div className="flex items-center justify-between mt-2.5">
-                          <p className="text-[8px] text-white/50 font-mono tracking-[0.2em] font-semibold">AGSI-BATIK2025</p>
-                          <p className="text-[7px] text-white/25 font-medium">Ketuk untuk kembali</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
 
 
             {/* Login prompt for non-logged-in users */}
@@ -1018,6 +908,7 @@ function MenuPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('Semua')
+  const [searchQuery, setSearchQuery] = useState('')
   const addToCart = useAppStore((s) => s.addToCart)
   const addToast = useAppStore((s) => s.addToast)
 
@@ -1035,40 +926,70 @@ function MenuPage() {
   }, [addToast])
 
   const categories = ['Semua', ...Array.from(new Set(products.map((p) => p.category)))]
-  const filtered = activeCategory === 'Semua' ? products : products.filter((p) => p.category === activeCategory)
+
+  const filtered = products
+    .filter((p) => activeCategory === 'Semua' || p.category === activeCategory)
+    .filter((p) => !searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.toLowerCase().trim()))
 
   const handleAdd = (p: Product) => {
+    if (!p.available) return
     addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
     addToast(`${p.name} ditambahkan ke keranjang`)
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero mini */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-5 relative">
-        <div className="absolute inset-0 aceh-pattern opacity-30" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <h2 className="text-xl font-extrabold text-white mb-1">
-            <UtensilsCrossed className="w-6 h-6 inline-block mr-1.5 -mt-1" />
-            Menu Kami
-          </h2>
-          <p className="text-orange-50 text-xs max-w-md mx-auto leading-relaxed">
-            Pilih berbagai varian ayam geprek sambal ijo dan minuman segar dengan kualitas terbaik.
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100/80">
+      {/* Header + Search Section */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 pt-4 pb-3">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-orange-500" />
+                Menu
+              </h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">Temukan menu favorit kamu</p>
+            </div>
+            {!loading && (
+              <span className="text-[11px] text-gray-500 bg-orange-50 border border-orange-100 rounded-full px-3 py-1 font-medium">
+                {filtered.length} item
+              </span>
+            )}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Cari menu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-300 hover:text-gray-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-4">
-        {/* Category filter — horizontal scroll */}
-        <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {/* Category Filter */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
                 activeCategory === cat
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
+                  : 'bg-white text-gray-500 border border-gray-200 hover:border-orange-200 hover:text-orange-600 hover:shadow-sm'
               }`}
             >
               {cat}
@@ -1076,89 +997,125 @@ function MenuPage() {
           ))}
         </div>
 
-        {/* Product count */}
-        {!loading && (
-          <p className="text-xs text-gray-400 mb-3">{filtered.length} menu tersedia</p>
-        )}
-
-        {/* Product grid — 2 col mobile, 3 col tablet+ */}
+        {/* Product Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm">
-                <Skeleton className="w-full aspect-square" />
-                <div className="p-3 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-4 w-1/2" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                <Skeleton className="w-full aspect-[4/3]" />
+                <div className="p-3 space-y-2.5">
+                  <Skeleton className="h-3.5 w-3/4 rounded" />
+                  <Skeleton className="h-3 w-full rounded" />
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-20 rounded" />
+                    <Skeleton className="h-8 w-16 rounded-lg" />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <UtensilsCrossed className="w-12 h-12 text-white/30 mx-auto mb-3" />
-            <p className="text-white/60 text-sm">Tidak ada menu di kategori ini</p>
-          </div>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              {searchQuery.trim() ? (
+                <Search className="w-7 h-7 text-gray-300" />
+              ) : (
+                <UtensilsCrossed className="w-7 h-7 text-gray-300" />
+              )}
+            </div>
+            <p className="text-gray-500 text-sm font-semibold mb-1">
+              {searchQuery.trim() ? 'Tidak ditemukan' : 'Tidak ada menu'}
+            </p>
+            <p className="text-gray-400 text-xs">
+              {searchQuery.trim()
+                ? `Tidak ada menu untuk "${searchQuery.trim()}"`
+                : 'Tidak ada menu di kategori ini'}
+            </p>
+            {searchQuery.trim() && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-3 text-xs text-orange-500 font-semibold hover:text-orange-600 transition-colors"
+              >
+                Reset pencarian
+              </button>
+            )}
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {filtered.map((p) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {filtered.map((p, idx) => (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileTap={{ scale: 0.97 }}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col group"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.4) }}
+                className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col group ${
+                  !p.available ? 'opacity-60' : 'hover:-translate-y-0.5'
+                }`}
               >
-                {/* Image */}
-                <div className="relative aspect-square overflow-hidden">
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                {/* Image Area */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <UtensilsCrossed className="w-8 h-8 text-gray-200" />
+                    </div>
+                  )}
+
+                  {/* Badges */}
                   {p.originalPrice && p.originalPrice > p.price && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
                       -{Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}%
                     </span>
                   )}
-                  {p.tag === 'terlaris' && !p.originalPrice && (
-                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                  {p.tag === 'terlaris' && !(p.originalPrice && p.originalPrice > p.price) && (
+                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
                       <Flame className="w-2.5 h-2.5" /> Laris
                     </span>
                   )}
-                  {/* Quick add button overlay */}
-                  <button
-                    onClick={() => handleAdd(p)}
-                    className="absolute bottom-2 right-2 w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  {p.tag === 'terbaru' && !(p.originalPrice && p.originalPrice > p.price) && p.tag !== 'terlaris' && (
+                    <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
+                      <Sparkles className="w-2.5 h-2.5" /> Baru
+                    </span>
+                  )}
+
+                  {/* Sold Out Overlay */}
+                  {!p.available && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-lg shadow">Habis</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Info */}
-                <div className="p-3 flex-1 flex flex-col">
-                  <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2">{p.name}</h3>
-                  <p className="text-[11px] text-gray-400 mt-1 leading-relaxed flex-1 line-clamp-2">{p.description}</p>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-extrabold text-orange-600 text-sm">{fmt(p.price)}</span>
+                {/* Product Info */}
+                <div className="p-3 flex flex-col flex-1">
+                  <h3 className="font-semibold text-gray-800 text-[13px] leading-snug line-clamp-2 min-h-[2.5em]">{p.name}</h3>
+                  {p.description && (
+                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-1">{p.description}</p>
+                  )}
+                  <div className="mt-auto pt-2.5">
+                    <div className="flex items-baseline gap-1.5 mb-2.5">
+                      <span className="font-extrabold text-orange-600 text-[14px] leading-none">{fmt(p.price)}</span>
                       {p.originalPrice && p.originalPrice > p.price && (
                         <span className="text-[10px] text-gray-300 line-through">{fmt(p.originalPrice)}</span>
                       )}
                     </div>
                     <button
                       onClick={() => handleAdd(p)}
-                      className="sm:hidden bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-sm active:scale-95 transition-all"
-                    >
-                      + Tambah
-                    </button>
-                    <button
-                      onClick={() => handleAdd(p)}
-                      className="hidden sm:flex bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors items-center gap-1"
+                      disabled={!p.available}
+                      className={`w-full rounded-xl py-2.5 text-[11px] font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        p.available
+                          ? 'bg-orange-500 hover:bg-orange-600 active:bg-orange-700 active:scale-[0.97] text-white shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Tambah
+                      {p.available ? 'Tambah' : 'Habis'}
                     </button>
                   </div>
                 </div>

@@ -1,0 +1,502 @@
+     1→  2396→                style={{ perspective: 1200 }}
+     2→  2397→                onClick={() => setShowBarcode(!showBarcode)}
+     3→  2398→              >
+     4→  2399→                {/* Animated Glow Border (conic gradient rotation) */}
+     5→  2400→                <div className="absolute -inset-[3px] rounded-2xl overflow-hidden">
+     6→  2401→                  <div className="absolute inset-[-100%] animate-aceh-ornament-spin" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(253,224,71,0.5) 8%, transparent 16%, rgba(255,255,255,0.3) 24%, transparent 32%)', filter: 'blur(1px)' }} />
+     7→  2402→                </div>
+     8→  2403→                {/* Pulsing Outer Glow */}
+     9→  2404→                <div className="absolute -inset-6 rounded-3xl animate-aceh-glow-pulse pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.25) 0%, transparent 70%)' }} />
+    10→  2405→
+    11→  2406→                <div
+    12→  2407→                  className="relative w-full"
+    13→  2408→                  style={{
+    14→  2409→                    transformStyle: 'preserve-3d',
+    15→  2410→                    transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)',
+    16→  2411→                    transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+    17→  2412→                  }}
+    18→  2413→                >
+    19→  2414→                  {/* ═══ FRONT FACE ═══ */}
+    20→  2415→                  <div
+    21→  2416→                    className="relative rounded-2xl shadow-2xl border border-yellow-300/30 overflow-hidden"
+    22→  2417→                    style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #C2410C 0%, #EA580C 25%, #F97316 50%, #FB923C 75%, #F59E0B 100%)' }}
+    23→  2418→                  >
+    24→  2419→                    {/* Holographic shimmer */}
+    25→  2420→                    <div className="absolute inset-0 animate-aceh-shimmer z-20 pointer-events-none rounded-2xl" />
+    26→  2421→
+    27→  2422→                    {/* Animated Sparkle Stars */}
+    28→  2423→                    {[{ top: '12%', left: '15%', delay: 0.5 }, { top: '20%', left: '85%', delay: 1.5 }, { top: '75%', left: '10%', delay: 2.2 }, { top: '82%', left: '88%', delay: 0.9 }].map((s, i) => (
+    29→  2424→                      <div key={i} className="absolute" style={{ top: s.top, left: s.left, animation: `aceh-sparkle 3s ease-in-out ${s.delay}s infinite` }}>
+    30→  2425→                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 0 L4.8 3.2 L8 4 L4.8 4.8 L4 8 L3.2 4.8 L0 4 L3.2 3.2 Z" fill="rgba(253,224,71,0.6)" /></svg>
+    31→  2426→                      </div>
+    32→  2427→                    ))}
+    33→  2428→
+    34→  2429→                    {/* ── Animated Top Border ── */}
+    35→  2430→                    <svg className="absolute top-0 left-0 right-0 w-full h-3" viewBox="0 0 380 14" fill="none" preserveAspectRatio="none">
+    36→  2431→                      <path d="M4,12 L4,8 Q4,2 190,2 Q376,2 376,8 L376,12" stroke="url(#aceh-top-gold)" strokeWidth="2.5" className="animate-aceh-border-flow" />
+    37→  2432→                      <circle cx="190" cy="2" r="2.5" fill="#FDE68A" opacity="0.6" />
+    38→  2433→                    </svg>
+    39→  2434→
+    40→  2435→                    {/* ── Pintu Aceh Arch Ornament ── */}
+    41→  2436→                    <svg className="absolute top-1 left-0 right-0 w-full h-7 text-white/[0.15]" viewBox="0 0 300 30" fill="none" stroke="currentColor" strokeWidth="0.8">
+    42→  2437→                      <path d="M10,28 L10,18 Q10,4 150,4 Q290,4 290,18 L290,28" /><path d="M10,28 L10,20 Q10,8 150,8 Q290,8 290,20 L290,28" />
+    43→  2438→                      <circle cx="150" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="100" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="200" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="60" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="240" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="10" cy="20" r="1.5" fill="currentColor" stroke="none" /><circle cx="290" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    44→  2439→                    </svg>
+    45→  2440→
+    46→  2441→                    {/* ── Pucuk Rebung Corners ── */}
+    47→  2442→                    <svg className="absolute top-11 left-1.5 w-14 h-14 text-white/[0.18]" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+    48→  2443→                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+    49→  2444→                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+    50→  2445→                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+    51→  2446→                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+    52→  2447→                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+    53→  2448→                    </svg>
+    54→  2449→                    <svg className="absolute top-11 right-1.5 w-14 h-14 text-white/[0.18] rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+    55→  2450→                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+    56→  2451→                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+    57→  2452→                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+    58→  2453→                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+    59→  2454→                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+    60→  2455→                    </svg>
+    61→  2456→                    <svg className="absolute bottom-1.5 left-1.5 w-14 h-14 text-white/[0.18] -rotate-90" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+    62→  2457→                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+    63→  2458→                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+    64→  2459→                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+    65→  2460→                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+    66→  2461→                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+    67→  2462→                    </svg>
+    68→  2463→                    <svg className="absolute bottom-1.5 right-1.5 w-14 h-14 text-white/[0.18] rotate-180" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+    69→  2464→                      <path d="M40,4 L68.3,17.2 L76,46 L58.7,70.8 L21.3,70.8 L4,46 L11.7,17.2 Z" /><path d="M40,16 L55.6,23.2 L60.5,40 L52.1,54.2 L27.9,54.2 L19.5,40 L24.4,23.2 Z" />
+    70→  2465→                      <line x1="40" y1="16" x2="40" y2="4" /><line x1="55.6" y1="23.2" x2="68.3" y2="17.2" /><line x1="60.5" y1="40" x2="76" y2="46" /><line x1="52.1" y1="54.2" x2="58.7" y2="70.8" /><line x1="27.9" y1="54.2" x2="21.3" y2="70.8" /><line x1="19.5" y1="40" x2="4" y2="46" /><line x1="24.4" y1="23.2" x2="11.7" y2="17.2" />
+    71→  2466→                      <path d="M40,24 C43,30 50,34 48,42 C46,48 42,52 40,56 C38,52 34,48 32,42 C30,34 37,30 40,24 Z" fill="currentColor" fillOpacity="0.06" /><line x1="40" y1="24" x2="40" y2="56" strokeWidth="0.5" />
+    72→  2467→                      <path d="M40,30 L44,34 M40,36 L45,38 M40,42 L44,44" strokeWidth="0.4" />
+    73→  2468→                      <circle cx="40" cy="4" r="2" fill="currentColor" stroke="none" /><circle cx="68.3" cy="17.2" r="2" fill="currentColor" stroke="none" /><circle cx="76" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="58.7" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="21.3" cy="70.8" r="2" fill="currentColor" stroke="none" /><circle cx="4" cy="46" r="2" fill="currentColor" stroke="none" /><circle cx="11.7" cy="17.2" r="2" fill="currentColor" stroke="none" />
+    74→  2469→                    </svg>
+    75→  2470→
+    76→  2471→                    {/* ── Pucuk Rebung Chain Border Top ── */}
+    77→  2472→                    <svg className="absolute top-[60px] left-0 right-0 w-full h-5 text-white/[0.15]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+    78→  2473→                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+    79→  2474→                      <path d="M30,6 C32,10 36,12 35,16 C34,19 32,20 30,22 C28,20 26,19 25,16 C24,12 28,10 30,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="6" x2="30" y2="22" strokeWidth="0.4" /><circle cx="30" cy="4" r="1.5" fill="currentColor" stroke="none" />
+    80→  2475→                      <path d="M90,6 C92,10 96,12 95,16 C94,19 92,20 90,22 C88,20 86,19 85,16 C84,12 88,10 90,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="6" x2="90" y2="22" strokeWidth="0.4" /><circle cx="90" cy="4" r="1.5" fill="currentColor" stroke="none" />
+    81→  2476→                      <path d="M150,6 C152,10 156,12 155,16 C154,19 152,20 150,22 C148,20 146,19 145,16 C144,12 148,10 150,6 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="6" x2="150" y2="22" strokeWidth="0.4" /><circle cx="150" cy="4" r="1.8" fill="currentColor" stroke="none" />
+    82→  2477→                      <path d="M210,6 C212,10 216,12 215,16 C214,19 212,20 210,22 C208,20 206,19 205,16 C204,12 208,10 210,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="6" x2="210" y2="22" strokeWidth="0.4" /><circle cx="210" cy="4" r="1.5" fill="currentColor" stroke="none" />
+    83→  2478→                      <path d="M270,6 C272,10 276,12 275,16 C274,19 272,20 270,22 C268,20 266,19 265,16 C264,12 268,10 270,6 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="6" x2="270" y2="22" strokeWidth="0.4" /><circle cx="270" cy="4" r="1.5" fill="currentColor" stroke="none" />
+    84→  2479→                    </svg>
+    85→  2480→                    {/* ── Pucuk Rebung Chain Border Bottom ── */}
+    86→  2481→                    <svg className="absolute bottom-0 left-0 right-0 w-full h-5 text-white/[0.15]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+    87→  2482→                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+    88→  2483→                      <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    89→  2484→                      <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    90→  2485→                      <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
+    91→  2486→                      <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    92→  2487→                      <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    93→  2488→                    </svg>
+    94→  2489→
+    95→  2490→                    {/* ── Acehnese Floral Scroll Left ── */}
+    96→  2491→                    <svg className="absolute left-0 top-14 bottom-5 w-2.5 text-white/[0.12]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+    97→  2492→                      <path d="M6,0 C6,8 6,12 6,20" /><path d="M6,20 C10,16 12,12 10,8 C8,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="8" r="1.5" />
+    98→  2493→                      <path d="M6,20 C6,28 6,36 6,45" /><path d="M6,45 C2,41 0,37 2,33 C4,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="33" r="1.5" />
+    99→  2494→                      <path d="M6,45 C6,53 6,61 6,70" /><path d="M6,70 C10,66 12,62 10,58 C8,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="58" r="1.5" />
+   100→  2495→                      <path d="M6,70 C6,78 6,86 6,95" /><path d="M6,95 C2,91 0,87 2,83 C4,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="83" r="1.5" />
+   101→  2496→                      <path d="M6,95 C6,103 6,111 6,120" /><path d="M6,120 C10,116 12,112 10,108 C8,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="108" r="1.5" />
+   102→  2497→                      <path d="M6,120 C6,128 6,136 6,145" /><path d="M6,145 C2,141 0,137 2,133 C4,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="133" r="1.5" />
+   103→  2498→                      <path d="M6,145 C6,153 6,161 6,170" /><path d="M6,170 C10,166 12,162 10,158 C8,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="158" r="1.5" />
+   104→  2499→                      <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
+   105→  2500→                    </svg>
+   106→  2501→                    {/* ── Acehnese Floral Scroll Right ── */}
+   107→  2502→                    <svg className="absolute right-0 top-14 bottom-5 w-2.5 text-white/[0.12]" viewBox="0 0 12 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   108→  2503→                      <path d="M6,0 C6,8 6,12 6,20" /><path d="M6,20 C2,16 0,12 2,8 C4,5 6,8 6,12" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="8" r="1.5" />
+   109→  2504→                      <path d="M6,20 C6,28 6,36 6,45" /><path d="M6,45 C10,41 12,37 10,33 C8,30 6,33 6,37" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="33" r="1.5" />
+   110→  2505→                      <path d="M6,45 C6,53 6,61 6,70" /><path d="M6,70 C2,66 0,62 2,58 C4,55 6,58 6,62" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="58" r="1.5" />
+   111→  2506→                      <path d="M6,70 C6,78 6,86 6,95" /><path d="M6,95 C10,91 12,87 10,83 C8,80 6,83 6,87" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="83" r="1.5" />
+   112→  2507→                      <path d="M6,95 C6,103 6,111 6,120" /><path d="M6,120 C2,116 0,112 2,108 C4,105 6,108 6,112" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="108" r="1.5" />
+   113→  2508→                      <path d="M6,120 C6,128 6,136 6,145" /><path d="M6,145 C10,141 12,137 10,133 C8,130 6,133 6,137" fill="currentColor" fillOpacity="0.05" /><circle cx="10" cy="133" r="1.5" />
+   114→  2509→                      <path d="M6,145 C6,153 6,161 6,170" /><path d="M6,170 C2,166 0,162 2,158 C4,155 6,158 6,162" fill="currentColor" fillOpacity="0.05" /><circle cx="2" cy="158" r="1.5" />
+   115→  2510→                      <path d="M6,170 C6,178 6,186 6,195" /><circle cx="6" cy="198" r="1.8" />
+   116→  2511→                    </svg>
+   117→  2512→
+   118→  2513→                    {/* ── Bintang Aceh Mandala Watermark ── */}
+   119→  2514→                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 text-white/[0.07]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round">
+   120→  2515→                      <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="88" strokeWidth="0.4" strokeDasharray="4 4" />
+   121→  2516→                      <circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" /><circle cx="100" cy="100" r="18" strokeWidth="0.4" />
+   122→  2517→                      <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.03" />
+   123→  2518→                      <line x1="100" y1="60" x2="100" y2="5" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="195" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="195" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="5" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
+   124→  2519→                      <path d="M100,16 L102,22 L100,28 L98,22 Z" fill="currentColor" stroke="none" /><path d="M170.5,33.5 L166,37 L162,33 L166,29 Z" fill="currentColor" stroke="none" /><path d="M198,100 L192,102 L186,100 L192,98 Z" fill="currentColor" stroke="none" /><path d="M170.5,166.5 L166,163 L162,167 L166,171 Z" fill="currentColor" stroke="none" /><path d="M100,184 L102,178 L100,172 L98,178 Z" fill="currentColor" stroke="none" /><path d="M29.5,166.5 L34,163 L38,167 L34,171 Z" fill="currentColor" stroke="none" /><path d="M2,100 L8,98 L14,100 L8,102 Z" fill="currentColor" stroke="none" /><path d="M29.5,33.5 L34,37 L38,33 L34,29 Z" fill="currentColor" stroke="none" />
+   125→  2520→                      <circle cx="100" cy="42" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="60" r="2.5" fill="currentColor" stroke="none" /><circle cx="158" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="140" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="100" cy="158" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="140" r="2.5" fill="currentColor" stroke="none" /><circle cx="42" cy="100" r="2.5" fill="currentColor" stroke="none" /><circle cx="60" cy="60" r="2.5" fill="currentColor" stroke="none" />
+   126→  2521→                      <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.08" stroke="none" />
+   127→  2522→                    </svg>
+   128→  2523→
+   129→  2524→                    {/* ── Rencong Watermark (right side, subtle) ── */}
+   130→  2525→                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-16 text-white/[0.05]" viewBox="0 0 120 200" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+   131→  2526→                      <path d="M60,12 C58,24 55,46 51,70 C48,86 45,100 43,112 C41,120 39,126 37,133 C34,142 32,152 32,161 C32,170 35,178 42,184 C48,189 55,192 60,193 C65,192 72,189 78,184 C85,178 88,170 88,161 C88,152 86,142 83,133 C81,126 79,120 77,112 C75,100 72,86 69,70 C65,46 62,24 60,12 Z" fill="currentColor" fillOpacity="0.05" />
+   132→  2527→                      <line x1="60" y1="20" x2="60" y2="108" strokeWidth="0.5" />
+   133→  2528→                    </svg>
+   134→  2529→
+   135→  2530→                    <div className="relative z-10 px-4 pt-3 pb-5 sm:px-5 sm:pt-4 sm:pb-6">
+   136→  2531→                      {/* Card Header */}
+   137→  2532→                      <div className="flex items-center justify-between mb-3">
+   138→  2533→                        <div className="flex items-center gap-2.5">
+   139→  2534→                          <motion.div
+   140→  2535→                            animate={{ rotate: [0, 4, -4, 0] }}
+   141→  2536→                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   142→  2537→                            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+   143→  2538→                          >
+   144→  2539→                            <Crown className="w-5 h-5 text-yellow-200" />
+   145→  2540→                          </motion.div>
+   146→  2541→                          <div className="text-left">
+   147→  2542→                            <p className="text-[8px] text-white/80 font-bold uppercase tracking-[0.2em]">Admin Card</p>
+   148→  2543→                            <p className="text-white font-bold text-xs sm:text-sm truncate max-w-[130px]">{user.name}</p>
+   149→  2544→                          </div>
+   150→  2545→                        </div>
+   151→  2546→                        <motion.div
+   152→  2547→                          animate={{ scale: [1, 1.06, 1], boxShadow: ['0 0 0 0 rgba(253,224,71,0)', '0 0 12px 2px rgba(253,224,71,0.3)', '0 0 0 0 rgba(253,224,71,0)'] }}
+   153→  2548→                          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+   154→  2549→                          className="bg-white/25 backdrop-blur-sm rounded-lg px-2.5 py-1 border border-yellow-300/20"
+   155→  2550→                        >
+   156→  2551→                          <span className="text-[8px] text-yellow-100 font-extrabold uppercase tracking-wider">Premium</span>
+   157→  2552→                        </motion.div>
+   158→  2553→                      </div>
+   159→  2554→
+   160→  2555→                      {/* Diamond Divider */}
+   161→  2556→                      <div className="flex items-center gap-2 mb-3">
+   162→  2557→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+   163→  2558→                        <svg className="w-2.5 h-2.5 text-white/40" viewBox="0 0 12 12" fill="none">
+   164→  2559→                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+   165→  2560→                        </svg>
+   166→  2561→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+   167→  2562→                      </div>
+   168→  2563→
+   169→  2564→                      {/* Stats Row */}
+   170→  2565→                      <div className="flex gap-2">
+   171→  2566→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+   172→  2567→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+   173→  2568→                            <Star className="w-3.5 h-3.5 text-yellow-200" />
+   174→  2569→                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Poin</span>
+   175→  2570→                          </div>
+   176→  2571→                          <p className="text-white font-extrabold text-lg leading-tight">{user.points ?? 0}</p>
+   177→  2572→                        </motion.div>
+   178→  2573→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+   179→  2574→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+   180→  2575→                            <Gift className="w-3.5 h-3.5 text-yellow-200" />
+   181→  2576→                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Voucher</span>
+   182→  2577→                          </div>
+   183→  2578→                          <p className="text-white font-extrabold text-lg leading-tight">{user.voucher ?? 0}</p>
+   184→  2579→                        </motion.div>
+   185→  2580→                        <motion.div whileHover={{ scale: 1.03 }} className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+   186→  2581→                          <div className="flex items-center justify-center gap-1 mb-0.5">
+   187→  2582→                            <Shield className="w-3.5 h-3.5 text-yellow-200" />
+   188→  2583→                            <span className="text-[8px] text-white/80 font-semibold uppercase tracking-wider">Role</span>
+   189→  2584→                          </div>
+   190→  2585→                          <p className="text-white font-extrabold text-[11px] leading-tight mt-0.5">Admin</p>
+   191→  2586→                        </motion.div>
+   192→  2587→                      </div>
+   193→  2588→
+   194→  2589→                      {/* Tap hint */}
+   195→  2590→                      <motion.p
+   196→  2591→                        animate={{ opacity: [0.3, 0.7, 0.3] }}
+   197→  2592→                        transition={{ duration: 2, repeat: Infinity }}
+   198→  2593→                        className="text-center text-[8px] text-white/40 font-medium mt-3"
+   199→  2594→                      >
+   200→  2595→                        Ketuk untuk melihat barcode
+   201→  2596→                      </motion.p>
+   202→  2597→                    </div>
+   203→  2598→                  </div>
+   204→  2599→
+   205→  2600→                  {/* ═══ BACK FACE (Barcode) ═══ */}
+   206→  2601→                  <div
+   207→  2602→                    className="absolute inset-0 rounded-2xl shadow-2xl border border-yellow-300/30 overflow-hidden flex flex-col items-center justify-center"
+   208→  2603→                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg, #C2410C 0%, #EA580C 25%, #F97316 50%, #FB923C 75%, #F59E0B 100%)' }}
+   209→  2604→                  >
+   210→  2605→                    {/* Holographic shimmer */}
+   211→  2606→                    <div className="absolute inset-0 animate-aceh-shimmer z-20 pointer-events-none rounded-2xl" />
+   212→  2607→
+   213→  2608→                    {/* Animated Top Border */}
+   214→  2609→                    <svg className="absolute top-0 left-0 right-0 w-full h-3" viewBox="0 0 380 14" fill="none" preserveAspectRatio="none">
+   215→  2610→                      <path d="M4,12 L4,8 Q4,2 190,2 Q376,2 376,8 L376,12" stroke="url(#aceh-top-gold)" strokeWidth="2.5" className="animate-aceh-border-flow" />
+   216→  2611→                    </svg>
+   217→  2612→
+   218→  2613→                    {/* Pucuk Rebung Corners (back) */}
+   219→  2614→                    {['top-11 left-1.5', 'top-11 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
+   220→  2615→                      <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.15]`} viewBox="0 0 60 60" fill="none" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" strokeLinejoin="round">
+   221→  2616→                        <path d="M30,5 L47.7,12.3 L55,30 L47.7,47.7 L30,55 L12.3,47.7 L5,30 L12.3,12.3 Z" /><path d="M30,15 L40.6,19.4 L45,30 L40.6,40.6 L30,45 L19.4,40.6 L15,30 L19.4,19.4 Z" />
+   222→  2617→                        <line x1="30" y1="15" x2="30" y2="5" /><line x1="40.6" y1="19.4" x2="47.7" y2="12.3" /><line x1="45" y1="30" x2="55" y2="30" /><line x1="40.6" y1="40.6" x2="47.7" y2="47.7" /><line x1="30" y1="45" x2="30" y2="55" /><line x1="19.4" y1="40.6" x2="12.3" y2="47.7" /><line x1="15" y1="30" x2="5" y2="30" /><line x1="19.4" y1="19.4" x2="12.3" y2="12.3" />
+   223→  2618→                        <circle cx="30" cy="5" r="1.2" fill="currentColor" stroke="none" /><circle cx="47.7" cy="12.3" r="1.2" fill="currentColor" stroke="none" /><circle cx="55" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="47.7" cy="47.7" r="1.2" fill="currentColor" stroke="none" /><circle cx="30" cy="55" r="1.2" fill="currentColor" stroke="none" /><circle cx="12.3" cy="47.7" r="1.2" fill="currentColor" stroke="none" /><circle cx="5" cy="30" r="1.2" fill="currentColor" stroke="none" /><circle cx="12.3" cy="12.3" r="1.2" fill="currentColor" stroke="none" />
+   224→  2619→                      </svg>
+   225→  2620→                    ))}
+   226→  2621→
+   227→  2622→                    {/* Pucuk Rebung Chain Border Bottom */}
+   228→  2623→                    <svg className="absolute bottom-0 left-0 right-0 w-full h-5 text-amber-500/[0.18]" viewBox="0 0 300 24" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" preserveAspectRatio="none">
+   229→  2624→                      <line x1="0" y1="2" x2="300" y2="2" /><line x1="0" y1="22" x2="300" y2="22" />
+   230→  2625→                      <path d="M30,2 C32,6 36,8 35,12 C34,15 32,16 30,18 C28,16 26,15 25,12 C24,8 28,6 30,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="30" y1="2" x2="30" y2="18" strokeWidth="0.4" /><circle cx="30" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   231→  2626→                      <path d="M90,2 C92,6 96,8 95,12 C94,15 92,16 90,18 C88,16 86,15 85,12 C84,8 88,6 90,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="90" y1="2" x2="90" y2="18" strokeWidth="0.4" /><circle cx="90" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   232→  2627→                      <path d="M150,2 C152,6 156,8 155,12 C154,15 152,16 150,18 C148,16 146,15 145,12 C144,8 148,6 150,2 Z" fill="currentColor" fillOpacity="0.05" /><line x1="150" y1="2" x2="150" y2="18" strokeWidth="0.4" /><circle cx="150" cy="20" r="1.8" fill="currentColor" stroke="none" />
+   233→  2628→                      <path d="M210,2 C212,6 216,8 215,12 C214,15 212,16 210,18 C208,16 206,15 205,12 C204,8 208,6 210,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="210" y1="2" x2="210" y2="18" strokeWidth="0.4" /><circle cx="210" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   234→  2629→                      <path d="M270,2 C272,6 276,8 275,12 C274,15 272,16 270,18 C268,16 266,15 265,12 C264,8 268,6 270,2 Z" fill="currentColor" fillOpacity="0.04" /><line x1="270" y1="2" x2="270" y2="18" strokeWidth="0.4" /><circle cx="270" cy="20" r="1.5" fill="currentColor" stroke="none" />
+   235→  2630→                    </svg>
+   236→  2631→
+   237→  2632→                    {/* Bintang Aceh Watermark (back) */}
+   238→  2633→                    <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-amber-400/[0.08]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round">
+   239→  2634→                      <circle cx="100" cy="100" r="90" strokeWidth="0.4" strokeDasharray="4 4" /><circle cx="100" cy="100" r="65" strokeWidth="0.5" /><circle cx="100" cy="100" r="40" strokeWidth="0.5" />
+   240→  2635→                      <path d="M100,20 C108,45 125,55 148,52 C130,68 125,85 130,108 C110,95 90,95 70,108 C75,85 70,68 52,52 C75,55 92,45 100,20 Z" fill="currentColor" fillOpacity="0.02" />
+   241→  2636→                      <line x1="100" y1="60" x2="100" y2="10" /><line x1="124.3" y1="75.7" x2="167.1" y2="32.9" /><line x1="140" y1="100" x2="190" y2="100" /><line x1="124.3" y1="124.3" x2="167.1" y2="167.1" /><line x1="100" y1="140" x2="100" y2="190" /><line x1="75.7" y1="124.3" x2="32.9" y2="167.1" /><line x1="60" y1="100" x2="10" y2="100" /><line x1="75.7" y1="75.7" x2="32.9" y2="32.9" />
+   242→  2637→                      <circle cx="100" cy="100" r="5" fill="currentColor" fillOpacity="0.06" stroke="none" />
+   243→  2638→                    </svg>
+   244→  2639→
+   245→  2640→                    <div className="relative z-10 w-full flex flex-col items-center px-4 pt-11 pb-6 sm:px-5">
+   246→  2641→                      {/* Card label */}
+   247→  2642→                      <div className="flex items-center gap-2 mb-2.5">
+   248→  2643→                        <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
+   249→  2644→                          <Crown className="w-4 h-4 text-white" />
+   250→  2645→                        </motion.div>
+   251→  2646→                        <div className="text-left">
+   252→  2647→                          <p className="text-[8px] text-amber-400 font-bold uppercase tracking-[0.2em]">Admin Card</p>
+   253→  2648→                          <p className="text-amber-100 font-bold text-[11px] truncate max-w-[110px]">{user.name}</p>
+   254→  2649→                        </div>
+   255→  2650→                      </div>
+   256→  2651→
+   257→  2652→                      {/* Diamond Divider */}
+   258→  2653→                      <div className="flex items-center gap-2 mb-2.5 w-full">
+   259→  2654→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   260→  2655→                        <svg className="w-2.5 h-2.5 text-amber-400/50" viewBox="0 0 12 12" fill="none">
+   261→  2656→                          <path d="M6 1 L11 6 L6 11 L1 6 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.25" />
+   262→  2657→                        </svg>
+   263→  2658→                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+   264→  2659→                      </div>
+   265→  2660→
+   266→  2661→                      {/* Barcode */}
+   267→  2662→                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-white/15 backdrop-blur-sm rounded-xl p-3.5 border border-white/20 w-full flex items-center justify-center">
+   268→  2663→                        <svg ref={barcodeRef} className="w-full" />
+   269→  2664→                      </motion.div>
+   270→  2665→
+   271→  2666→                      {/* Member code */}
+   272→  2667→                      <p className="text-[9px] text-amber-400/60 font-mono mt-2 tracking-[0.2em] font-semibold">{memberCode}</p>
+   273→  2668→
+   274→  2669→                      {/* Tap hint */}
+   275→  2670→                      <motion.p animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="text-[8px] text-amber-500/50 font-medium mt-2">
+   276→  2671→                        Ketuk untuk kembali
+   277→  2672→                      </motion.p>
+   278→  2673→                    </div>
+   279→  2674→                  </div>
+   280→  2675→                </div>
+   281→  2676→              </motion.div>
+   282→  2677→            </motion.div>
+   283→  2678→          )}
+   284→  2679→        </div>
+   285→  2680→      </div>
+   286→  2681→
+   287→  2682→      {/* ─── Tabs ─── */}
+   288→  2683→      <div className="sticky top-[52px] z-40 bg-orange-500 shadow-sm">
+   289→  2684→        <div className="max-w-2xl mx-auto px-2">
+   290→  2685→          <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
+   291→  2686→            {tabs.map((tab) => (
+   292→  2687→              <button
+   293→  2688→                key={tab.id}
+   294→  2689→                onClick={() => setActiveTab(tab.id)}
+   295→  2690→                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+   296→  2691→                  activeTab === tab.id
+   297→  2692→                    ? 'bg-white text-orange-600 shadow-md'
+   298→  2693→                    : 'text-white/80 hover:text-white hover:bg-white/10'
+   299→  2694→                }`}
+   300→  2695→              >
+   301→  2696→                {tab.icon}
+   302→  2697→                <span className="hidden sm:inline">{tab.label}</span>
+   303→  2698→              </button>
+   304→  2699→            ))}
+   305→  2700→          </div>
+   306→  2701→        </div>
+   307→  2702→      </div>
+   308→  2703→
+   309→  2704→      {/* ─── Tab Content ─── */}
+   310→  2705→      <div className="max-w-2xl mx-auto px-4 mt-5 space-y-4">
+   311→  2706→        {/* ═══ OVERVIEW TAB ═══ */}
+   312→  2707→        {activeTab === 'overview' && (
+   313→  2708→          <>
+   314→  2709→            {/* Quick Stats */}
+   315→  2710→            {loading ? (
+   316→  2711→              <div className="grid grid-cols-2 gap-3">
+   317→  2712→                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+   318→  2713→              </div>
+   319→  2714→            ) : isAdmin ? (
+   320→  2715→              <div className="grid grid-cols-2 gap-3">
+   321→  2716→                {[
+   322→  2717→                  { label: 'Total Pesanan', value: adminStats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+   323→  2718→                  { label: 'Menunggu', value: adminStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+   324→  2719→                  { label: 'Selesai', value: adminStats.delivered, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+   325→  2720→                  { label: 'Pendapatan', value: fmt(adminStats.revenue), icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+   326→  2721→                ].map((s, i) => (
+   327→  2722→                  <motion.div
+   328→  2723→                    key={i}
+   329→  2724→                    initial={{ opacity: 0, y: 10 }}
+   330→  2725→                    animate={{ opacity: 1, y: 0 }}
+   331→  2726→                    transition={{ delay: i * 0.05 }}
+   332→  2727→                    className="bg-white rounded-xl p-4 shadow-md"
+   333→  2728→                  >
+   334→  2729→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+   335→  2730→                      {s.icon}
+   336→  2731→                    </div>
+   337→  2732→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+   338→  2733→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+   339→  2734→                  </motion.div>
+   340→  2735→                ))}
+   341→  2736→              </div>
+   342→  2737→            ) : (
+   343→  2738→              <div className="grid grid-cols-2 gap-3">
+   344→  2739→                {[
+   345→  2740→                  { label: 'Total Pesanan', value: customerStats.totalOrders, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+   346→  2741→                  { label: 'Sedang Proses', value: customerStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+   347→  2742→                  { label: 'Selesai', value: customerStats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+   348→  2743→                  { label: 'Total Belanja', value: fmt(customerStats.totalSpent), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+   349→  2744→                ].map((s, i) => (
+   350→  2745→                  <motion.div
+   351→  2746→                    key={i}
+   352→  2747→                    initial={{ opacity: 0, y: 10 }}
+   353→  2748→                    animate={{ opacity: 1, y: 0 }}
+   354→  2749→                    transition={{ delay: i * 0.05 }}
+   355→  2750→                    className="bg-white rounded-xl p-4 shadow-md"
+   356→  2751→                  >
+   357→  2752→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+   358→  2753→                      {s.icon}
+   359→  2754→                    </div>
+   360→  2755→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+   361→  2756→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+   362→  2757→                  </motion.div>
+   363→  2758→                ))}
+   364→  2759→              </div>
+   365→  2760→            )}
+   366→  2761→
+   367→  2762→            {/* Info Cards */}
+   368→  2763→            <div className="bg-white rounded-xl p-5 shadow-md">
+   369→  2764→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+   370→  2765→                <Info className="w-4 h-4 text-orange-500" />
+   371→  2766→                Informasi Akun
+   372→  2767→              </h3>
+   373→  2768→              <div className="space-y-3">
+   374→  2769→                {[
+   375→  2770→                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Nama', value: user?.name || '-' },
+   376→  2771→                  { icon: <Mail className="w-4 h-4 text-gray-400" />, label: 'Email', value: user?.email || '-' },
+   377→  2772→                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Telepon', value: user?.phone || 'Belum diatur' },
+   378→  2773→                  { icon: <Shield className="w-4 h-4 text-gray-400" />, label: 'Role', value: isAdmin ? 'Administrator' : 'Customer' },
+   379→  2774→                  { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Bergabung', value: memberSince },
+   380→  2775→                ].map((row, i) => (
+   381→  2776→                  <div key={i} className="flex items-center gap-3">
+   382→  2777→                    {row.icon}
+   383→  2778→                    <div className="flex-1">
+   384→  2779→                      <p className="text-[11px] text-gray-400">{row.label}</p>
+   385→  2780→                      <p className="text-sm text-gray-700 font-medium">{row.value}</p>
+   386→  2781→                    </div>
+   387→  2782→                  </div>
+   388→  2783→                ))}
+   389→  2784→              </div>
+   390→  2785→              <Button onClick={startEdit} variant="outline" className="w-full mt-4 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm">
+   391→  2786→                <Edit3 className="w-4 h-4 mr-2" />
+   392→  2787→                Edit Profil
+   393→  2788→              </Button>
+   394→  2789→            </div>
+   395→  2790→
+   396→  2791→            {/* Quick Actions */}
+   397→  2792→            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+   398→  2793→              {[
+   399→  2794→                { icon: <Package className="w-5 h-5" />, label: 'Lihat Pesanan Saya', desc: 'Lihat riwayat dan status pesanan Anda', onClick: () => setActiveTab('orders') },
+   400→  2795→                { icon: <UtensilsCrossed className="w-5 h-5" />, label: 'Jelajahi Menu', desc: 'Temukan varian ayam geprek favorit Anda', onClick: () => setPage('menu') },
+   401→  2796→                { icon: <HelpCircle className="w-5 h-5" />, label: 'Bantuan', desc: 'Hubungi kami untuk pertanyaan dan bantuan', onClick: () => addToast('Fitur bantuan segera hadir', 'info') },
+   402→  2797→              ].map((action, i) => (
+   403→  2798→                <button
+   404→  2799→                  key={i}
+   405→  2800→                  onClick={action.onClick}
+   406→  2801→                  className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left border-b border-orange-50 last:border-0"
+   407→  2802→                >
+   408→  2803→                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+   409→  2804→                    {action.icon}
+   410→  2805→                  </div>
+   411→  2806→                  <div className="flex-1 min-w-0">
+   412→  2807→                    <p className="text-sm font-semibold text-gray-800">{action.label}</p>
+   413→  2808→                    <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{action.desc}</p>
+   414→  2809→                  </div>
+   415→  2810→                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+   416→  2811→                </button>
+   417→  2812→              ))}
+   418→  2813→            </div>
+   419→  2814→
+   420→  2815→            {/* Logout */}
+   421→  2816→            <button
+   422→  2817→              onClick={handleLogout}
+   423→  2818→              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+   424→  2819→            >
+   425→  2820→              <LogOut className="w-4 h-4" />
+   426→  2821→              Keluar dari Akun
+   427→  2822→            </button>
+   428→  2823→          </>
+   429→  2824→        )}
+   430→  2825→
+   431→  2826→        {/* ═══ ORDERS TAB (Customer) ═══ */}
+   432→  2827→        {activeTab === 'orders' && !isAdmin && (
+   433→  2828→          <>
+   434→  2829→            <div className="bg-white rounded-xl p-4 shadow-md">
+   435→  2830→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+   436→  2831→                <Package className="w-4 h-4 text-orange-500" />
+   437→  2832→                Riwayat Pesanan Saya
+   438→  2833→              </h3>
+   439→  2834→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+   440→  2835→                Berikut adalah daftar semua pesanan yang pernah Anda buat. Klik detail untuk melihat informasi lengkap setiap pesanan termasuk produk yang dipesan dan status pengiriman saat ini.
+   441→  2836→              </p>
+   442→  2837→            </div>
+   443→  2838→
+   444→  2839→            {loading ? (
+   445→  2840→              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+   446→  2841→            ) : orders.length === 0 ? (
+   447→  2842→              <div className="bg-white rounded-xl p-8 shadow-md text-center">
+   448→  2843→                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+   449→  2844→                <p className="text-gray-500 font-medium mb-1">Belum ada pesanan</p>
+   450→  2845→                <p className="text-xs text-gray-400 text-justify max-w-xs mx-auto leading-relaxed">
+   451→  2846→                  Anda belum pernah membuat pesanan. Mulai dengan menjelajahi menu kami dan tambahkan item favorit ke keranjang.
+   452→  2847→                </p>
+   453→  2848→                <Button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('menu')}>
+   454→  2849→                  <UtensilsCrossed className="w-4 h-4 mr-2" /> Pesan Sekarang
+   455→  2850→                </Button>
+   456→  2851→              </div>
+   457→  2852→            ) : (
+   458→  2853→              <div className="space-y-3 max-h-[60vh] overflow-y-auto card-scrollbar pr-1">
+   459→  2854→                {orders.map((order) => (
+   460→  2855→                  <motion.div
+   461→  2856→                    key={order.id}
+   462→  2857→                    initial={{ opacity: 0, y: 10 }}
+   463→  2858→                    animate={{ opacity: 1, y: 0 }}
+   464→  2859→                    className="bg-white rounded-xl p-4 shadow-md"
+   465→  2860→                  >
+   466→  2861→                    <div className="flex items-start justify-between mb-2">
+   467→  2862→                      <div>
+   468→  2863→                        <p className="text-xs text-gray-400 flex items-center gap-1">
+   469→  2864→                          <Clock className="w-3 h-3" /> {fmtDate(order.createdAt)}
+   470→  2865→                        </p>
+   471→  2866→                        <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
+   472→  2867→                      </div>
+   473→  2868→                      <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+   474→  2869→                    </div>
+   475→  2870→                    <div className="space-y-1 mb-2">
+   476→  2871→                      {order.items.slice(0, 3).map((item) => (
+   477→  2872→                        <div key={item.id} className="flex justify-between text-xs text-gray-500">
+   478→  2873→                          <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+   479→  2874→                          <span className="flex-shrink-0">{fmt(item.subtotal)}</span>
+   480→  2875→                        </div>
+   481→  2876→                      ))}
+   482→  2877→                      {order.items.length > 3 && (
+   483→  2878→                        <p className="text-[11px] text-gray-400">+{order.items.length - 3} item lainnya</p>
+   484→  2879→                      )}
+   485→  2880→                    </div>
+   486→  2881→                    <Separator className="mb-2" />
+   487→  2882→                    <div className="flex items-center justify-between">
+   488→  2883→                      <div className="text-xs text-gray-400">
+   489→  2884→                        <span>{order.items.length} item</span>
+   490→  2885→                        <span className="mx-1">&middot;</span>
+   491→  2886→                        <span>{order.paymentMethod}</span>
+   492→  2887→                      </div>
+   493→  2888→                      <div className="flex items-center gap-2">
+   494→  2889→                        <span className="font-bold text-orange-600 text-sm">{fmt(order.total)}</span>
+   495→  2890→                        <Button
+   496→  2891→                          size="sm"
+   497→  2892→                          variant="outline"
+   498→  2893→                          className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+   499→  2894→                          onClick={() => { setReceipt(order); setPage('receipt') }}
+   500→  2895→                        >
+   501→
+   502→[showing lines 2396-2895 of 4131; use offset=2896 with limit to continue reading]

@@ -1,0 +1,336 @@
+{/* ═══════════════════════════════════════════════════════════════
+                 SHOWCASE MEMBER CARD — Pintu Aceh × Rencong V7 — Aceh Heritage Black Gold
+                 ═══════════════════════════════════════════════════════════════ */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, y: 50, rotateX: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 1.4, delay: 0.4, type: 'spring', stiffness: 80, damping: 12 }}
+              className="mt-8 mx-auto w-full relative"
+              style={{ maxWidth: 400, perspective: 1200 }}
+            >
+              {/* Ascending gold particles */}
+              <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 30 }}>
+                {[{ left: '4%', delay: 0, dur: 4.5, size: 3.5, color: '#FFD700' }, { left: '16%', delay: 1.5, dur: 3.8, size: 2.5, color: '#D4AF37' }, { left: '30%', delay: 0.7, dur: 5.2, size: 2, color: '#FFD700' }, { left: '44%', delay: 2.3, dur: 4.0, size: 3, color: '#B8860B' }, { left: '58%', delay: 0.9, dur: 4.7, size: 2.5, color: '#FFD700' }, { left: '72%', delay: 1.9, dur: 3.4, size: 2, color: '#D4AF37' }, { left: '88%', delay: 0.3, dur: 5.5, size: 3, color: '#FFD700' }, { left: '95%', delay: 2.8, dur: 3.6, size: 2, color: '#B8860B' }].map((p, i) => (
+                  <div key={i} className="absolute bottom-0 rounded-full" style={{ left: p.left, width: p.size, height: p.size, background: `radial-gradient(circle, ${p.color} 0%, ${p.color}66 40%, transparent 100%)`, animation: `v7-particle-gold ${p.dur}s ease-in-out ${p.delay}s infinite`, boxShadow: `0 0 12px 4px ${p.color}88` }} />
+                ))}
+              </div>
+
+              {/* Starburst accents — gold tinted */}
+              <div className="absolute -top-6 -right-4 pointer-events-none" style={{ zIndex: 25 }}>
+                <svg width="40" height="40" viewBox="0 0 40 40" style={{ animation: 'v5-starburst 4s ease-in-out 1s infinite' }}><path d="M20 0 L23 15 L38 12 L26 20 L38 28 L23 25 L20 40 L17 25 L2 28 L14 20 L2 12 L17 15 Z" fill="rgba(212,175,55,0.2)" /></svg>
+              </div>
+              <div className="absolute -bottom-4 -left-3 pointer-events-none" style={{ zIndex: 25 }}>
+                <svg width="28" height="28" viewBox="0 0 40 40" style={{ animation: 'v5-starburst 5s ease-in-out 2.5s infinite' }}><path d="M20 0 L23 15 L38 12 L26 20 L38 28 L23 25 L20 40 L17 25 L2 28 L14 20 L2 12 L17 15 Z" fill="rgba(184,134,11,0.15)" /></svg>
+              </div>
+
+              {/* Float wrapper — CSS translate (not transform) to preserve 3D */}
+              <div className="relative w-full" style={{ animation: 'v5-float 8s ease-in-out infinite' }}>
+                {/* 3D flip context */}
+                <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowcaseFlipped(f => !f)}>
+                  {/* Gold orbiting conic glow border */}
+                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden" style={{ zIndex: 0 }}>
+                    <div className="absolute inset-[-180%]" style={{ animation: 'v7-border-gold-orbit 16s linear infinite', background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,215,0,0.9) 3%, transparent 6%, rgba(212,175,55,0.7) 10%, transparent 14%, rgba(255,215,0,0.6) 18%, transparent 22%, rgba(184,134,11,0.5) 26%, transparent 30%)', filter: 'blur(2.5px)' }} />
+                  </div>
+                  {/* Outer pulsing aura — gold */}
+                  <div className="absolute -inset-14 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(212,175,55,0.3) 0%, rgba(184,134,11,0.12) 40%, transparent 60%)', animation: 'v5-pulse-outer 6s ease-in-out infinite', top: '50%', left: '50%' }} />
+
+                  {/* ── 3D Flip Container ── */}
+                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showcaseFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 1.1s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 270 }}>
+
+                    {/* ═══════════ FRONT FACE ═══════════ */}
+                    <div className="relative rounded-2xl shadow-2xl border border-[#D4AF37]/30 overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(160deg, #0a0604, #1a0e04, #2d1a08, #1a0e04, #0a0604)' }}>
+                      {/* Hero-matched aceh-pattern overlay */}
+                      <div className="absolute inset-0 aceh-pattern opacity-10" />
+                      {/* Holographic rainbow overlay */}
+                      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700, #B8860B, #FFD700, #D4AF37, #B8860B, #D4AF37)', opacity: 0.06, backgroundSize: '500% 500%', animation: 'v7-holo-rainbow 10s ease-in-out infinite' }} />
+                      {/* Gold shine sweep */}
+                      <div className="v7-gold-shine" />
+
+                      {/* ── PINTU ADAT ACEH — CENTER ORNAMENT with GOLD stroke ── */}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: '70%', height: '85%', transform: 'translate(-50%,-50%)', animation: 'v7-gold-pulse 7s ease-in-out infinite' }} viewBox="0 0 300 320" fill="none">
+                        <defs>
+                          <linearGradient id="archGradV7" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FFD700" stopOpacity="0.35" />
+                            <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#B8860B" stopOpacity="0.06" />
+                          </linearGradient>
+                        </defs>
+                        {/* Outer frame of Pintu Aceh */}
+                        <rect x="45" y="10" width="210" height="300" rx="105" fill="none" stroke="url(#archGradV7)" strokeWidth="2.5" strokeDasharray="800" style={{ animation: 'v7-arch-reveal 3s ease-out 0.5s forwards', strokeDashoffset: 800 }} />
+                        {/* Inner arch door */}
+                        <path d="M70 310 L70 140 Q70 50 150 50 Q230 50 230 140 L230 310" fill="none" stroke="rgba(212,175,55,0.18)" strokeWidth="1.8" />
+                        {/* Second inner arch */}
+                        <path d="M90 310 L90 148 Q90 72 150 72 Q210 72 210 148 L210 310" fill="none" stroke="rgba(212,175,55,0.10)" strokeWidth="1" />
+                        {/* Third inner arch */}
+                        <path d="M105 310 L105 155 Q105 90 150 90 Q195 90 195 155 L195 310" fill="none" stroke="rgba(212,175,55,0.06)" strokeWidth="0.6" />
+                        {/* Keystone top */}
+                        <path d="M120 50 Q150 28 180 50" fill="none" stroke="rgba(255,215,0,0.25)" strokeWidth="1.5" />
+                        <circle cx="150" cy="38" r="5" fill="rgba(212,175,55,0.06)" stroke="rgba(255,215,0,0.20)" strokeWidth="1" />
+                        {/* Decorative step tiers left */}
+                        <path d="M45 130 L45 180 L70 180 L70 130" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.6" />
+                        <path d="M70 150 L70 200 L90 200 L90 150" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.4" />
+                        {/* Decorative step tiers right */}
+                        <path d="M255 130 L255 180 L230 180 L230 130" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.6" />
+                        <path d="M230 150 L230 200 L210 200 L210 150" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.4" />
+                        {/* Sulur (floral scroll) left */}
+                        <path d="M45 200 Q18 175 14 148 Q10 125 28 118 Q42 114 50 132" fill="none" stroke="rgba(212,175,55,0.18)" strokeWidth="0.8" strokeLinecap="round" />
+                        <path d="M14 148 Q-2 140 0 158 Q2 172 18 168" fill="none" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" />
+                        <circle cx="0" cy="158" r="4" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" />
+                        <path d="M50 132 Q42 122 38 135 Q36 145 48 140" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="0.4" />
+                        {/* Sulur (floral scroll) right */}
+                        <path d="M255 200 Q282 175 286 148 Q290 125 272 118 Q258 114 250 132" fill="none" stroke="rgba(212,175,55,0.18)" strokeWidth="0.8" strokeLinecap="round" />
+                        <path d="M286 148 Q302 140 300 158 Q298 172 282 168" fill="none" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" />
+                        <circle cx="300" cy="158" r="4" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" />
+                        <path d="M250 132 Q258 122 262 135 Q264 145 252 140" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="0.4" />
+                        {/* Door handle circles */}
+                        <circle cx="110" cy="230" r="5" fill="none" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" />
+                        <circle cx="110" cy="230" r="1.5" fill="rgba(255,215,0,0.15)" />
+                        <circle cx="190" cy="230" r="5" fill="none" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" />
+                        <circle cx="190" cy="230" r="1.5" fill="rgba(255,215,0,0.15)" />
+                        {/* Light trace along outer arch — gold */}
+                        <path d="M70 310 L70 140 Q70 50 150 50 Q230 50 230 140 L230 310" fill="none" stroke="rgba(255,215,0,0.7)" strokeWidth="2" strokeDasharray="40 1200" strokeLinecap="round" style={{ animation: 'v5-light-trace 8s linear 2s infinite' }} />
+                        {/* Bottom base decoration */}
+                        <line x1="45" y1="310" x2="255" y2="310" stroke="rgba(212,175,55,0.12)" strokeWidth="1" />
+                        <path d="M90 310 L150 295 L210 310" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" />
+                      </svg>
+
+                      {/* ── RENCONG DAGGER — PROMINENT RIGHT SIDE ── */}
+                      <svg className="absolute top-1/2 right-2 sm:right-4 pointer-events-none" style={{ width: 80, height: 200, transform: 'translateY(-50%) scaleX(-1)', animation: 'v7-rencong-glow 5s ease-in-out infinite' }} viewBox="0 0 100 260" fill="none">
+                        <defs>
+                          <linearGradient id="rencongGradV7" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#FFD700" stopOpacity="0.30" />
+                            <stop offset="100%" stopColor="#B8860B" stopOpacity="0.06" />
+                          </linearGradient>
+                        </defs>
+                        {/* Main blade */}
+                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="url(#rencongGradV7)" stroke="rgba(255,215,0,0.25)" strokeWidth="0.8" strokeDasharray="400" style={{ animation: 'v7-dagger-reveal 4s ease-out 1.5s forwards', strokeDashoffset: 400 }} />
+                        {/* Blade edge highlight */}
+                        <path d="M50 5 L63 55 L59 180 L50 240" fill="none" stroke="rgba(255,215,0,0.18)" strokeWidth="0.4" strokeDasharray="400" style={{ animation: 'v7-dagger-reveal 4s ease-out 1.7s forwards', strokeDashoffset: 400 }} />
+                        {/* Hilt / sarung (sheath) */}
+                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(212,175,55,0.10)" stroke="rgba(255,215,0,0.22)" strokeWidth="0.6" strokeDasharray="400" style={{ animation: 'v7-dagger-reveal 4s ease-out 1.8s forwards', strokeDashoffset: 400 }} />
+                        {/* Hilt guard detail */}
+                        <path d="M20 62 L80 62" stroke="rgba(212,175,55,0.12)" strokeWidth="0.4" />
+                        {/* Sheath body */}
+                        <path d="M32 62 L37 150 L50 158 L63 150 L68 62" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.12)" strokeWidth="0.5" />
+                        {/* Sheath decorative line */}
+                        <path d="M40 80 L60 80" stroke="rgba(212,175,55,0.08)" strokeWidth="0.3" />
+                        <path d="M42 95 L58 95" stroke="rgba(212,175,55,0.07)" strokeWidth="0.3" />
+                        {/* Tip accent */}
+                        <circle cx="50" cy="240" r="2" fill="rgba(255,215,0,0.10)" />
+                      </svg>
+
+                      {/* ── RENCONG DAGGER — LEFT SIDE (mirrored, subtle, 40% opacity) ── */}
+                      <svg className="absolute top-1/2 left-2 sm:left-4 pointer-events-none" style={{ width: 60, height: 150, transform: 'translateY(-50%)', opacity: 0.4 }} viewBox="0 0 100 260" fill="none">
+                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="rgba(212,175,55,0.02)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" strokeDasharray="400" style={{ animation: 'v7-dagger-reveal 5s ease-out 2.5s forwards', strokeDashoffset: 400 }} />
+                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.4" strokeDasharray="400" style={{ animation: 'v7-dagger-reveal 5s ease-out 2.8s forwards', strokeDashoffset: 400 }} />
+                      </svg>
+
+                      {/* ── ORNATE GOLD BORDER FRAME ── */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 270" fill="none" preserveAspectRatio="none">
+                        <rect x="4" y="4" width="392" height="262" rx="16" stroke="#D4AF37" strokeWidth="0.8" strokeOpacity="0.25" />
+                        <rect x="9" y="9" width="382" height="252" rx="13" stroke="#D4AF37" strokeWidth="0.25" strokeOpacity="0.15" strokeDasharray="4 3" style={{ animation: 'v5-border-march 12s linear infinite' }} />
+                        <rect x="14" y="14" width="372" height="242" rx="10" stroke="#D4AF37" strokeWidth="0.12" strokeOpacity="0.08" />
+                        {/* Gold corner accents */}
+                        <path d="M20 8 L8 8 L8 20" fill="none" stroke="#FFD700" strokeWidth="1" strokeOpacity="0.40" />
+                        <path d="M380 8 L392 8 L392 20" fill="none" stroke="#FFD700" strokeWidth="1" strokeOpacity="0.40" />
+                        <path d="M8 250 L8 262 L20 262" fill="none" stroke="#FFD700" strokeWidth="1" strokeOpacity="0.40" />
+                        <path d="M392 250 L392 262 L380 262" fill="none" stroke="#FFD700" strokeWidth="1" strokeOpacity="0.40" />
+                      </svg>
+
+                      {/* ═══ FRONT CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3.5" style={{ minHeight: 270 }}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <motion.div animate={{ rotate: [0, 6, -6, 3, -3, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} className="w-11 h-11 rounded-xl bg-[#D4AF37]/15 backdrop-blur-md flex items-center justify-center border border-[#D4AF37]/30" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3), 0 0 20px rgba(212,175,55,0.2)' }}>
+                              <Crown className="w-5 h-5 text-[#FFD700]" />
+                            </motion.div>
+                            <div>
+                              <p className="text-[7px] text-[#D4AF37]/60 font-bold uppercase tracking-[0.35em] leading-none">Member Card</p>
+                              <motion.p initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1, duration: 0.7 }} className="text-[#FFD700] font-extrabold text-sm sm:text-base truncate max-w-[140px] leading-tight mt-1" style={{ animation: 'v7-name-gold 3s ease-in-out infinite' }}>
+                                Ahmad Rizky
+                              </motion.p>
+                            </div>
+                          </div>
+                          <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="bg-gradient-to-br from-[#D4AF37]/30 to-[#B8860B]/15 backdrop-blur-md rounded-lg px-3 py-1.5 border border-[#FFD700]/35">
+                            <span className="text-[9px] text-[#FFD700] font-extrabold uppercase tracking-[0.15em]">Elite</span>
+                          </motion.div>
+                        </div>
+
+                        {/* Ornate divider */}
+                        <div className="flex items-center gap-2 my-2.5">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+                          <svg className="w-4 h-3 text-[#D4AF37]/40" viewBox="0 0 24 12" fill="none">
+                            <path d="M12 0 L14 5 L24 6 L14 7 L12 12 L10 7 L0 6 L10 5 Z" fill="currentColor" fillOpacity="0.4" />
+                          </svg>
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+                        </div>
+
+                        {/* Member Number */}
+                        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.5 }} className="text-center mb-2">
+                          <p className="text-[7px] text-[#D4AF37]/50 font-semibold uppercase tracking-[0.25em] mb-0.5">No. Member</p>
+                          <p className="text-[#D4AF37] font-mono text-[10px] sm:text-xs font-bold tracking-[0.25em]">{showcaseMemberNo}</p>
+                        </motion.div>
+
+                        {/* Points & Voucher — Dark gold panels */}
+                        <div className="flex-1 flex items-end gap-3">
+                          <motion.div initial={{ opacity: 0, scale: 0.7, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.4, duration: 0.7, type: 'spring', stiffness: 160 }} whileHover={{ scale: 1.05, y: -3 }} className="flex-1 bg-[#1a0e04]/80 backdrop-blur-md rounded-2xl p-3 text-center border border-[#D4AF37]/25" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(212,175,55,0.15)' }}>
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                              <motion.div animate={{ rotate: [0, 18, -18, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}>
+                                <Star className="w-4 h-4 text-[#FFD700]" />
+                              </motion.div>
+                              <span className="text-[7px] text-[#D4AF37]/65 font-bold uppercase tracking-[0.2em]">Poin</span>
+                            </div>
+                            <motion.p initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.8, duration: 0.5, type: 'spring', stiffness: 250 }} className="text-[#FFD700] font-black text-2xl leading-none">1.250</motion.p>
+                          </motion.div>
+                          <motion.div initial={{ opacity: 0, scale: 0.7, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.6, duration: 0.7, type: 'spring', stiffness: 160 }} whileHover={{ scale: 1.05, y: -3 }} className="flex-1 bg-[#1a0e04]/80 backdrop-blur-md rounded-2xl p-3 text-center border border-[#D4AF37]/25" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(212,175,55,0.15)' }}>
+                            <div className="flex items-center justify-center gap-1.5 mb-1">
+                              <motion.div animate={{ y: [0, -3, 0], rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}>
+                                <Gift className="w-4 h-4 text-[#FFD700]" />
+                              </motion.div>
+                              <span className="text-[7px] text-[#D4AF37]/65 font-bold uppercase tracking-[0.2em]">Voucher</span>
+                            </div>
+                            <motion.p initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2, duration: 0.5, type: 'spring', stiffness: 250 }} className="text-[#FFD700] font-black text-2xl leading-none">3</motion.p>
+                          </motion.div>
+                        </div>
+
+                        <motion.p animate={{ opacity: [0.08, 0.45, 0.08] }} transition={{ duration: 3.5, repeat: Infinity, delay: 2.5 }} className="text-center text-[7px] text-[#D4AF37]/30 font-medium mt-2 tracking-wider">
+                          ✦ Ketuk untuk melihat barcode ✦
+                        </motion.p>
+                      </div>
+                    </div>
+
+                    {/* ═══════════ BACK FACE (Barcode) ═══════════ */}
+                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-[#D4AF37]/30 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(160deg, #0a0604, #1a0e04, #2d1a08, #1a0e04, #0a0604)' }}>
+                      <div className="absolute inset-0 aceh-pattern opacity-8" />
+                      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700, #B8860B, #FFD700, #D4AF37, #B8860B, #D4AF37)', opacity: 0.05, backgroundSize: '500% 500%', animation: 'v7-holo-rainbow 10s ease-in-out infinite' }} />
+                      <div className="v7-gold-shine" />
+
+                      {/* Pintu Aceh watermark (back, subtle) */}
+                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 180, height: 180, transform: 'translate(-50%,-50%)', animation: 'v7-gold-pulse 8s ease-in-out infinite' }} viewBox="0 0 300 300" fill="none">
+                        <path d="M70 290 L70 140 Q70 55 150 55 Q230 55 230 140 L230 290" fill="none" stroke="rgba(212,175,55,0.10)" strokeWidth="1.2" />
+                        <path d="M90 290 L90 148 Q90 72 150 72 Q210 72 210 148 L210 290" fill="none" stroke="rgba(212,175,55,0.05)" strokeWidth="0.6" />
+                        {/* Sulur left */}
+                        <path d="M70 190 Q50 170 46 150 Q42 130 58 126 Q68 124 72 138" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" strokeLinecap="round" />
+                        {/* Sulur right */}
+                        <path d="M230 190 Q250 170 254 150 Q258 130 242 126 Q232 124 228 138" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" strokeLinecap="round" />
+                      </svg>
+
+                      {/* Rencong watermark back */}
+                      <svg className="absolute top-1/2 left-3 pointer-events-none" style={{ width: 50, height: 130, transform: 'translateY(-50%)' }} viewBox="0 0 100 260" fill="none">
+                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" />
+                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.10)" strokeWidth="0.4" />
+                      </svg>
+
+                      {/* Border frame (back) — gold */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 270" fill="none" preserveAspectRatio="none">
+                        <rect x="4" y="4" width="392" height="262" rx="16" stroke="#D4AF37" strokeWidth="0.6" strokeOpacity="0.20" />
+                        <rect x="9" y="9" width="382" height="252" rx="13" stroke="#D4AF37" strokeWidth="0.2" strokeOpacity="0.12" strokeDasharray="4 3" style={{ animation: 'v5-border-march 12s linear infinite' }} />
+                        <rect x="14" y="14" width="372" height="242" rx="10" stroke="#D4AF37" strokeWidth="0.1" strokeOpacity="0.08" />
+                        <path d="M20 8 L8 8 L8 20" fill="none" stroke="#FFD700" strokeWidth="0.8" strokeOpacity="0.30" />
+                        <path d="M380 8 L392 8 L392 20" fill="none" stroke="#FFD700" strokeWidth="0.8" strokeOpacity="0.30" />
+                        <path d="M8 250 L8 262 L20 262" fill="none" stroke="#FFD700" strokeWidth="0.8" strokeOpacity="0.30" />
+                        <path d="M392 250 L392 262 L380 262" fill="none" stroke="#FFD700" strokeWidth="0.8" strokeOpacity="0.30" />
+                      </svg>
+
+                      {/* ═══ BACK CONTENT ═══ */}
+                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3" style={{ minHeight: 270 }}>
+                        {/* Header row */}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2.5">
+                            <motion.div animate={{ rotate: [0, -5, 5, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-[#D4AF37]/15 backdrop-blur-md flex items-center justify-center border border-[#D4AF37]/25">
+                              <Crown className="w-4 h-4 text-[#FFD700]" />
+                            </motion.div>
+                            <div className="text-left">
+                              <p className="text-[7px] text-[#D4AF37]/55 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p>
+                              <p className="text-[#FFD700] font-bold text-[11px] leading-tight mt-0.5">Ahmad Rizky</p>
+                            </div>
+                          </div>
+                          {/* Animated ping dot — amber "scanning" indicator */}
+                          <div className="relative flex items-center gap-1.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" style={{ animation: 'v6-dot-ping 1.5s cubic-bezier(0,0,0.2,1) infinite' }} />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+                            </span>
+                            <span className="text-[8px] text-amber-300/80 font-semibold tracking-wider">SCAN</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent" />
+                          <svg className="w-3 h-2.5 text-[#D4AF37]/35" viewBox="0 0 24 12" fill="none"><path d="M12 0 L14 5 L24 6 L14 7 L12 12 L10 7 L0 6 L10 5 Z" fill="currentColor" fillOpacity="0.4" /></svg>
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent" />
+                        </div>
+
+                        {/* ── COMPACT GOLD BARCODE CONTAINER ── */}
+                        <div className="flex-1 flex items-center justify-center">
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.7, type: 'spring', stiffness: 200, damping: 15 }}
+                            className="relative w-full max-w-[260px]"
+                          >
+                            {/* Outer glow pulse ring */}
+                            <div className="absolute -inset-3 rounded-2xl pointer-events-none" style={{ animation: 'v6-pulse-ring 3s ease-in-out infinite', border: '1px solid rgba(212,175,55,0.12)' }} />
+
+                            {/* Main dark barcode card */}
+                            <div
+                              className="relative bg-[#1a0e04] rounded-xl overflow-hidden py-4 px-5 border border-[#D4AF37]/20"
+                              style={{ animation: 'v7-gold-pulse 4s ease-in-out infinite' }}
+                            >
+                              {/* Animated gold corner brackets */}
+                              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 260 100" fill="none">
+                                {/* Top-left corner */}
+                                <path d="M18 1 L1 1 L1 18" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="40" style={{ animation: 'v7-corner-gold 0.6s ease-out 0.3s forwards', strokeDashoffset: 40 }} />
+                                {/* Top-right corner */}
+                                <path d="M242 1 L259 1 L259 18" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="40" style={{ animation: 'v7-corner-gold 0.6s ease-out 0.45s forwards', strokeDashoffset: 40 }} />
+                                {/* Bottom-left corner */}
+                                <path d="M1 82 L1 99 L18 99" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="40" style={{ animation: 'v7-corner-gold 0.6s ease-out 0.6s forwards', strokeDashoffset: 40 }} />
+                                {/* Bottom-right corner */}
+                                <path d="M259 82 L259 99 L242 99" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="40" style={{ animation: 'v7-corner-gold 0.6s ease-out 0.75s forwards', strokeDashoffset: 40 }} />
+                              </svg>
+
+                              {/* Barcode with reveal animation */}
+                              <div className="relative" style={{ animation: 'v6-float-soft 6s ease-in-out infinite' }}>
+                                {/* Gold scan line overlay */}
+                                <div className="absolute inset-x-0 h-[2px] pointer-events-none z-10" style={{ background: 'linear-gradient(90deg, transparent, #FFD700, #D4AF37, #FFD700, transparent)', animation: 'v7-scan-gold 2.5s ease-in-out 1s infinite', filter: 'blur(0.5px)' }} />
+
+                                {/* Gold shimmer sweep on barcode */}
+                                <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 rounded">
+                                  <div className="absolute inset-0" style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(212,175,55,0.12) 45%, rgba(255,215,0,0.18) 50%, rgba(212,175,55,0.12) 55%, transparent 70%)', animation: 'v7-panel-shine 3s ease-in-out 1.5s infinite' }} />
+                                </div>
+
+                                {/* The barcode SVG */}
+                                <div className="relative" style={{ animation: 'v7-barcode-wipe 0.8s ease-out 0.4s both' }}>
+                                  <svg ref={showcaseBarcodeRef} className="w-full" style={{ height: 38, display: 'block' }} />
+                                </div>
+                              </div>
+
+                              {/* Member number with reveal */}
+                              <p className="text-center text-[9px] text-[#D4AF37]/70 font-mono font-bold mt-2 tracking-[0.3em]" style={{ animation: 'v7-text-reveal 1s ease-out 0.8s both' }}>
+                                {showcaseMemberNo}
+                              </p>
+
+                              {/* Tiny decorative line under number */}
+                              <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                                <div className="h-px w-6 bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+                                <div className="w-1 h-1 rounded-full bg-[#FFD700]/50" />
+                                <div className="h-px w-10 bg-[#D4AF37]/40" />
+                                <div className="w-1 h-1 rounded-full bg-[#FFD700]/50" />
+                                <div className="h-px w-6 bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+                              </div>
+                            </div>
+                          </motion.div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1.5">
+                          <p className="text-[7px] text-[#D4AF37]/35 font-mono tracking-[0.15em]">AGSI MEMBER</p>
+                          <motion.p animate={{ opacity: [0.12, 0.45, 0.12] }} transition={{ duration: 3, repeat: Infinity }} className="text-[7px] text-[#D4AF37]/30 font-medium">✦ Ketuk untuk kembali ✦</motion.p>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </motion.div>

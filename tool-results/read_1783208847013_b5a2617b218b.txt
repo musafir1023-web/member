@@ -1,0 +1,2002 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { useAppStore, type CartItem, type OrderData, type Page } from '@/lib/store'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Label } from '@/components/ui/label'
+     9→import { Textarea } from '@/components/ui/textarea'
+    10→import { Badge } from '@/components/ui/badge'
+    11→import { Separator } from '@/components/ui/separator'
+    12→import { Skeleton } from '@/components/ui/skeleton'
+    13→import {
+    14→  ChefHat,
+    15→  Home,
+    16→  UtensilsCrossed,
+    17→  ShoppingCart,
+    18→  Package,
+    19→  LogIn,
+    20→  LayoutDashboard,
+    21→  Plus,
+    22→  Minus,
+    23→  Trash2,
+    24→  ArrowLeft,
+    25→  Phone,
+    26→  MapPin,
+    27→  CreditCard,
+    28→  Banknote,
+    29→  Clock,
+    30→  CheckCircle2,
+    31→  XCircle,
+    32→  Eye,
+    33→  UserPlus,
+    34→  Lock,
+    35→  Mail,
+    36→  User,
+    37→  Star,
+    38→  Truck,
+    39→  AlertCircle,
+    40→  ChevronRight,
+    41→  Copy,
+    42→  KeyRound,
+    43→  ReceiptText,
+    44→  UserCircle,
+    45→  Settings,
+    46→  Edit3,
+    47→  LogOut,
+    48→  Shield,
+    49→  TrendingUp,
+    50→  Calendar,
+    51→  BadgeCheck,
+    52→  Bell,
+    53→  HelpCircle,
+    54→  Info,
+    55→  Share2,
+    56→  Flame,
+    57→  Sparkles,
+    58→  Crown,
+    59→  Percent,
+    60→  X,
+    61→  Camera,
+    62→  PackageSearch,
+    63→  MessageCircle,
+    64→  Send,
+    65→  Smile,
+    66→  Gift,
+    67→} from 'lucide-react'
+    68→import JsBarcode from 'jsbarcode'
+    69→
+    70→/* ─────────────────────── FORMATTERS ─────────────────────── */
+    71→const fmt = (n: number) =>
+    72→  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n)
+    73→
+    74→const fmtDate = (d: string) =>
+    75→  new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    76→
+    77→const statusColor: Record<string, string> = {
+    78→  pending: 'bg-yellow-100 text-yellow-800',
+    79→  confirmed: 'bg-blue-100 text-blue-800',
+    80→  preparing: 'bg-orange-100 text-orange-800',
+    81→  delivered: 'bg-green-100 text-green-800',
+    82→  cancelled: 'bg-red-100 text-red-800',
+    83→}
+    84→
+    85→const statusLabel: Record<string, string> = {
+    86→  pending: 'Menunggu',
+    87→  confirmed: 'Dikonfirmasi',
+    88→  preparing: 'Diproses',
+    89→  delivered: 'Selesai',
+    90→  cancelled: 'Dibatalkan',
+    91→}
+    92→
+    93→/* ─────────────────────── TOAST COMPONENT ─────────────────────── */
+    94→function ToastContainer() {
+    95→  const toasts = useAppStore((s) => s.toasts)
+    96→  const removeToast = useAppStore((s) => s.removeToast)
+    97→
+    98→  return (
+    99→    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+   100→      <AnimatePresence>
+   101→        {toasts.map((t) => (
+   102→          <motion.div
+   103→            key={t.id}
+   104→            initial={{ opacity: 0, x: 50 }}
+   105→            animate={{ opacity: 1, x: 0 }}
+   106→            exit={{ opacity: 0, x: 50 }}
+   107→            className={`pointer-events-auto px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${
+   108→              t.type === 'success' ? 'bg-green-500' : t.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+   109→            }`}
+   110→          >
+   111→            {t.message}
+   112→          </motion.div>
+   113→        ))}
+   114→      </AnimatePresence>
+   115→    </div>
+   116→  )
+   117→}
+   118→
+   119→/* ─────────────────────── STORE INFO ─────────────────────── */
+   120→const STORE_INFO = {
+   121→  name: 'Ayam Geprek Sambal Ijo',
+   122→  tagline: 'Sambal Ijo Khas Aceh',
+   123→  address: 'Jl. Medan - Banda Aceh, Simpang Camat, Gampong Tijue, Kec. Pidie, Kab. Pidie, 24151',
+   124→  phone: '085260812758',
+   125→  whatsapp: '6285260812758',
+   126→  hours: '10:00 - 22:00',
+   127→  timezone: 'WIB',
+   128→  openHour: 10,
+   129→  closeHour: 22,
+   130→} as const
+   131→
+   132→function getStoreStatus(): { open: boolean; label: string } {
+   133→  const now = new Date()
+   134→  const jakartaStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })
+   135→  const jakartaDate = new Date(jakartaStr)
+   136→  const hour = jakartaDate.getHours()
+   137→  // Open every day 10:00 - 22:00 WIB
+   138→  const isOpen = hour >= STORE_INFO.openHour && hour < STORE_INFO.closeHour
+   139→  return { open: isOpen, label: isOpen ? 'Buka Sekarang' : 'Tutup' }
+   140→}
+   141→
+   142→/* ─────────────────────── TOP BAR (SUPER COMPLETE) ─────────────────────── */
+   143→function TopBar() {
+   144→  const { currentPage, setPage, getCartCount } = useAppStore()
+   145→  const cartCount = useAppStore(getCartCount)
+   146→  const showBack = currentPage !== 'home'
+   147→  const storeStatus = getStoreStatus()
+   148→  const [showInfo, setShowInfo] = useState(false)
+   149→  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+   150→
+   151→  return (
+   152→    <header className="sticky top-0 z-50">
+   153→      {/* ═══ Header Bar ═══ */}
+   154→      <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 relative overflow-hidden">
+   155→        <div className="absolute inset-0 aceh-pattern opacity-20" />
+   156→
+   157→        <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-3">
+   158→          <div className="flex items-center justify-between gap-2">
+   159→            {/* Left: Back + Logo + Name + Info Chip */}
+   160→            <div className="flex items-center gap-2 min-w-0 flex-1">
+   161→              {showBack && (
+   162→                <button
+   163→                  onClick={() => setPage('home')}
+   164→                  className="p-1.5 -ml-1 text-white/80 hover:text-white hover:bg-white/10 transition-all rounded-lg flex-shrink-0"
+   165→                  aria-label="Kembali ke Beranda"
+   166→                >
+   167→                  <ArrowLeft className="w-5 h-5" />
+   168→                </button>
+   169→              )}
+   170→              <button
+   171→                onClick={() => setPage('home')}
+   172→                className="flex items-center gap-2 hover:opacity-90 transition-opacity min-w-0"
+   173→              >
+   174→                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+   175→                  <ChefHat className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+   176→                </div>
+   177→                <div className="min-w-0">
+   178→                  <h1 className="font-extrabold text-xs sm:text-sm text-white uppercase tracking-wider leading-tight truncate">
+   179→                    {STORE_INFO.name}
+   180→                  </h1>
+   181→                  <p className="text-[9px] sm:text-[11px] text-orange-100/80 leading-tight truncate">
+   182→                    Jl. Medan - Banda Aceh, Kec. Pidie
+   183→                  </p>
+   184→                </div>
+   185→              </button>
+   186→
+   187→              {/* Info Chip (clickable) */}
+   188→              <button
+   189→                onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo) }}
+   190→                className="ml-2 flex items-center gap-1.5 px-2.5 py-1.5 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
+   191→                aria-label="Info Toko"
+   192→              >
+   193→                <Info className="w-3.5 h-3.5 text-white/90" />
+   194→                <span className="text-[9px] sm:text-[11px] text-white/90 font-medium hidden sm:inline">Info</span>
+   195→              </button>
+   196→            </div>
+   197→
+   198→            {/* Right: Actions */}
+   199→            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+   200→              {/* Notification Bell */}
+   201→              <button
+   202→                onClick={() => setPage('orders')}
+   203→                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+   204→                aria-label="Notifikasi"
+   205→              >
+   206→                <Bell className="w-5 h-5" />
+   207→                <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full" />
+   208→              </button>
+   209→
+   210→              {/* Cart Shortcut */}
+   211→              <button
+   212→                onClick={() => setPage('cart')}
+   213→                className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-xl relative"
+   214→                aria-label="Keranjang"
+   215→              >
+   216→                <ShoppingCart className="w-5 h-5" />
+   217→                {mounted && cartCount > 0 && (
+   218→                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+   219→                    {cartCount > 99 ? '99+' : cartCount}
+   220→                  </span>
+   221→                )}
+   222→              </button>
+   223→            </div>
+   224→          </div>
+   225→        </div>
+   226→
+   227→        {/* ═══ Info Detail Panel (Dropdown) ═══ */}
+   228→        <AnimatePresence>
+   229→          {showInfo && (
+   230→            <>
+   231→              {/* Backdrop */}
+   232→              <motion.div
+   233→                initial={{ opacity: 0 }}
+   234→                animate={{ opacity: 1 }}
+   235→                exit={{ opacity: 0 }}
+   236→                className="fixed inset-0 bg-black/30 z-[-1]"
+   237→                onClick={() => setShowInfo(false)}
+   238→              />
+   239→              <motion.div
+   240→                initial={{ opacity: 0, height: 0 }}
+   241→                animate={{ opacity: 1, height: 'auto' }}
+   242→                exit={{ opacity: 0, height: 0 }}
+   243→                transition={{ duration: 0.25, ease: 'easeInOut' }}
+   244→                className="overflow-hidden"
+   245→              >
+   246→                <div className="bg-white shadow-xl border-b border-orange-100">
+   247→                  <div className="max-w-5xl mx-auto px-4 py-4">
+   248→                    {/* Aceh ornament top divider */}
+   249→                    <div className="flex items-center gap-2 mb-4">
+   250→                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+   251→                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
+   252→                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
+   253→                      </svg>
+   254→                      <span className="text-[10px] text-orange-400 font-semibold uppercase tracking-widest">Informasi Toko</span>
+   255→                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
+   256→                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
+   257→                      </svg>
+   258→                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
+   259→                    </div>
+   260→
+   261→                    <div className="space-y-3">
+   262→                      {/* Status */}
+   263→                      <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100">
+   264→                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+   265→                          storeStatus.open ? 'bg-green-100' : 'bg-red-100'
+   266→                        }`}>
+   267→                          <Clock className={`w-5 h-5 ${storeStatus.open ? 'text-green-600' : 'text-red-500'}`} />
+   268→                        </div>
+   269→                        <div>
+   270→                          <p className="text-sm font-bold text-gray-800">{storeStatus.label}</p>
+   271→                          <p className="text-xs text-gray-500">{STORE_INFO.hours} {STORE_INFO.timezone} · Setiap Hari</p>
+   272→                        </div>
+   273→                      </div>
+   274→
+   275→                      {/* Address */}
+   276→                      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   277→                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+   278→                          <MapPin className="w-5 h-5 text-orange-600" />
+   279→                        </div>
+   280→                        <div className="min-w-0">
+   281→                          <p className="text-sm font-bold text-gray-800">Alamat</p>
+   282→                          <p className="text-xs text-gray-500 leading-relaxed">{STORE_INFO.address}</p>
+   283→                        </div>
+   284→                      </div>
+   285→
+   286→                      {/* Phone */}
+   287→                      <a
+   288→                        href={`tel:${STORE_INFO.phone}`}
+   289→                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+   290→                      >
+   291→                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+   292→                          <Phone className="w-5 h-5 text-blue-600" />
+   293→                        </div>
+   294→                        <div>
+   295→                          <p className="text-sm font-bold text-gray-800">Telepon</p>
+   296→                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+   297→                        </div>
+   298→                      </a>
+   299→
+   300→                      {/* WhatsApp */}
+   301→                      <a
+   302→                        href={`https://wa.me/${STORE_INFO.whatsapp}`}
+   303→                        target="_blank"
+   304→                        rel="noopener noreferrer"
+   305→                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+   306→                      >
+   307→                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+   308→                          <Phone className="w-5 h-5 text-green-600" />
+   309→                        </div>
+   310→                        <div>
+   311→                          <p className="text-sm font-bold text-gray-800">WhatsApp</p>
+   312→                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+   313→                        </div>
+   314→                      </a>
+   315→
+   316→                      {/* Share */}
+   317→                      <button
+   318→                        onClick={() => {
+   319→                          if (navigator.share) {
+   320→                            navigator.share({
+   321→                              title: STORE_INFO.name,
+   322→                              text: `${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`,
+   323→                            }).catch(() => {})
+   324→                          } else {
+   325→                            navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
+   326→                          }
+   327→                        }}
+   328→                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors w-full"
+   329→                      >
+   330→                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+   331→                          <Share2 className="w-5 h-5 text-amber-600" />
+   332→                        </div>
+   333→                        <div className="text-left">
+   334→                          <p className="text-sm font-bold text-gray-800">Bagikan</p>
+   335→                          <p className="text-xs text-gray-500">Salin info toko ke clipboard</p>
+   336→                        </div>
+   337→                      </button>
+   338→                    </div>
+   339→
+   340→                    {/* Close button */}
+   341→                    <button
+   342→                      onClick={() => setShowInfo(false)}
+   343→                      className="mt-3 w-full py-2 text-center text-sm font-semibold text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-colors"
+   344→                    >
+   345→                      Tutup
+   346→                    </button>
+   347→                  </div>
+   348→                </div>
+   349→              </motion.div>
+   350→            </>
+   351→          )}
+   352→        </AnimatePresence>
+   353→      </div>
+   354→    </header>
+   355→  )
+   356→}
+   357→
+   358→/* ─────────────────────── BOTTOM NAVIGATION ─────────────────────── */
+   359→function BottomNav() {
+   360→  const { currentPage, setPage, user, logout, getCartCount } = useAppStore()
+   361→  const cartCount = useAppStore(getCartCount)
+   362→  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+   363→
+   364→  const navItems: { page: Page; label: string; icon: React.ReactNode; show: boolean }[] = [
+   365→    { page: 'home', label: 'Beranda', icon: <Home className="w-5 h-5" />, show: true },
+   366→    { page: 'menu', label: 'Menu', icon: <UtensilsCrossed className="w-5 h-5" />, show: true },
+   367→    { page: 'cart', label: 'Keranjang', icon: <ShoppingCart className="w-5 h-5" />, show: true },
+   368→    { page: 'orders', label: 'Pesanan', icon: <Package className="w-5 h-5" />, show: true },
+   369→    { page: user ? 'profile' : 'login', label: user ? 'Profile' : 'Login', icon: user ? <UserCircle className="w-5 h-5" /> : <LogIn className="w-5 h-5" />, show: true },
+   370→  ]
+   371→
+   372→  const handleNav = (page: Page) => {
+   373→    if (user && page === 'login') {
+   374→      logout()
+   375→      return
+   376→    }
+   377→    setPage(page)
+   378→  }
+   379→
+   380→  return (
+   381→    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-orange-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+   382→      {/* Safe area for iOS */}
+   383→      <div className="pb-[env(safe-area-inset-bottom)]">
+   384→        <div className="max-w-lg mx-auto flex items-center justify-around px-1 py-1.5">
+   385→          {navItems.map((item) => {
+   386→            const isActive = currentPage === item.page
+   387→            return (
+   388→              <button
+   389→                key={item.label}
+   390→                onClick={() => handleNav(item.page)}
+   391→                className={`relative flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl min-w-[56px] transition-all duration-200 ${
+   392→                  isActive
+   393→                    ? 'text-orange-500'
+   394→                    : 'text-gray-400 hover:text-gray-600 active:scale-95'
+   395→                }`}
+   396→              >
+   397→                {isActive && (
+   398→                  <motion.div
+   399→                    layoutId="bottomNavIndicator"
+   400→                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-1 bg-orange-500 rounded-full"
+   401→                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+   402→                  />
+   403→                )}
+   404→                <div className="relative">
+   405→                  {item.icon}
+   406→                  {item.page === 'cart' && mounted && cartCount > 0 && (
+   407→                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+   408→                      {cartCount}
+   409→                    </span>
+   410→                  )}
+   411→                </div>
+   412→                <span className={`text-[10px] leading-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
+   413→                  {item.label}
+   414→                </span>
+   415→              </button>
+   416→            )
+   417→          })}
+   418→        </div>
+   419→      </div>
+   420→    </nav>
+   421→  )
+   422→}
+   423→
+   424→/* ─────────────────────── HOME PAGE ─────────────────────── */
+   425→interface HomeProduct {
+   426→  id: string
+   427→  name: string
+   428→  description: string
+   429→  price: number
+   430→  originalPrice?: number | null
+   431→  image: string
+   432→  category: string
+   433→  tag?: string | null
+   434→  available: boolean
+   435→}
+   436→
+   437→function HomePage() {
+   438→  const { setPage, addToCart, addToast, user, setUser } = useAppStore()
+   439→  const [products, setProducts] = useState<HomeProduct[]>([])
+   440→  const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
+   441→  const [activeTab, setActiveTab] = useState<'terbaru' | 'terlaris' | 'promo'>('terbaru')
+   442→  const [loading, setLoading] = useState(true)
+   443→  const [showcaseFlipped, setShowcaseFlipped] = useState(false)
+   444→  const showcaseBarcodeRef = useRef<SVGSVGElement>(null)
+   445→
+   446→  // Generate showcase barcode when back is visible
+   447→  useEffect(() => {
+   448→    if (showcaseFlipped && showcaseBarcodeRef.current) {
+   449→      try {
+   450→        JsBarcode(showcaseBarcodeRef.current, 'AGSI-RENCONG2025', {
+   451→          format: 'CODE128', width: 1.5, height: 42, displayValue: true, font: 'monospace', fontSize: 10, textMargin: 3, margin: 0, background: 'transparent', lineColor: '#ea580c',
+   452→        })
+   453→      } catch {}
+   454→    }
+   455→  }, [showcaseFlipped])
+   456→
+   457→  // Fetch latest user points/voucher on mount
+   458→  useEffect(() => {
+   459→    if (user && user.id) {
+   460→      fetch(`/api/auth/profile?userId=${user.id}`)
+   461→        .then((r) => r.json())
+   462→        .then((data) => {
+   463→          if (data.id) {
+   464→            setUser({ ...user, points: data.points, voucher: data.voucher })
+   465→          }
+   466→        })
+   467→        .catch(() => {})
+   468→    }
+   469→  }, [user?.id])
+   470→
+   471→  useEffect(() => {
+   472→    Promise.all([
+   473→      fetch('/api/products').then((r) => r.json()),
+   474→      fetch('/api/products?tag=promo').then((r) => r.json()),
+   475→    ])
+   476→      .then(([all, promo]) => {
+   477→        setProducts(Array.isArray(all) ? all : [])
+   478→        setPromoProducts(Array.isArray(promo) ? promo : [])
+   479→        setLoading(false)
+   480→      })
+   481→      .catch(() => {
+   482→        setLoading(false)
+   483→        addToast('Gagal memuat produk', 'error')
+   484→      })
+   485→  }, [addToast])
+   486→
+   487→  const handleAdd = (p: HomeProduct) => {
+   488→    if (!user) {
+   489→      addToast('Silakan login terlebih dahulu untuk menambahkan produk', 'error')
+   490→      setPage('login')
+   491→      return
+   492→    }
+   493→    addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
+   494→    addToast(`${p.name} ditambahkan ke keranjang`)
+   495→  }
+   496→
+   497→  const getDiscount = (p: HomeProduct) => {
+   498→    if (!p.originalPrice || p.originalPrice <= p.price) return 0
+   499→    return Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+   500→  }
+   501→
+   502→  const filteredProducts = products.filter((p) => p.tag === activeTab)
+   503→
+   504→  const tabItems = [
+   505→    { id: 'terbaru' as const, label: 'Terbaru', icon: <Sparkles className="w-4 h-4" /> },
+   506→    { id: 'terlaris' as const, label: 'Terlaris', icon: <Flame className="w-4 h-4" /> },
+   507→    { id: 'promo' as const, label: 'Promo', icon: <Percent className="w-4 h-4" /> },
+   508→  ]
+   509→
+   510→  return (
+   511→    <div>
+   512→      {/* Hero Section */}
+   513→      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
+   514→        <div className="absolute inset-0 aceh-pattern" />
+   515→        <div className="relative max-w-3xl mx-auto px-4 py-12 sm:py-20 text-center">
+   516→          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+   517→            <div className="flex items-center justify-center gap-3 mb-4">
+   518→              <ChefHat className="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
+   519→            </div>
+   520→            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-md">
+   521→              AYAM GEPREK<br />SAMBAL IJO
+   522→            </h2>
+   523→            <p className="text-orange-50 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+   524→              Nikmati kelezatan ayam geprek dengan sambal ijo khas Aceh yang autentik. Dibuat dari bahan pilihan dengan resep turun-temurun yang menjaga cita rasa asli.
+   525→            </p>
+   526→            {/* Login prompt for non-logged-in users */}
+   527→            {!user && (
+   528→              <motion.div
+   529→                initial={{ opacity: 0, y: 15 }}
+   530→                animate={{ opacity: 1, y: 0 }}
+   531→                transition={{ duration: 0.5, delay: 0.6 }}
+   532→                className="mt-5"
+   533→              >
+   534→                <button onClick={() => setPage('login')} className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 border border-white/20 rounded-xl px-4 py-2.5 transition-all group">
+   535→                  <User className="w-4 h-4 text-white/80 group-hover:text-white" />
+   536→                  <span className="text-white/80 group-hover:text-white text-sm font-medium">Masuk untuk mendapatkan poin & voucher</span>
+   537→                  <ChevronRight className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
+   538→                </button>
+   539→              </motion.div>
+   540→            )}
+   541→
+   542→            {/* ═══════════════════════════════════════════════════════════════
+   543→                 SHOWCASE MEMBER CARD — Aceh Rencong Premium Edition
+   544→                 ═══════════════════════════════════════════════════════════════ */}
+   545→            <motion.div
+   546→              initial={{ opacity: 0, scale: 0.75, y: 40, rotateX: 18 }}
+   547→              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+   548→              transition={{ duration: 1.3, delay: 0.35, type: 'spring', stiffness: 90, damping: 13 }}
+   549→              className="mt-8 mx-auto w-full relative"
+   550→              style={{ maxWidth: 390, perspective: 1200 }}
+   551→            >
+   552→              {/* Rising golden particles */}
+   553→              <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 30 }}>
+   554→                {[{ left: '5%', delay: 0, dur: 4.2, size: 3.5 }, { left: '18%', delay: 1.3, dur: 3.6, size: 2.5 }, { left: '33%', delay: 0.6, dur: 4.8, size: 2 }, { left: '48%', delay: 2.1, dur: 3.9, size: 3 }, { left: '62%', delay: 0.8, dur: 4.4, size: 2.5 }, { left: '76%', delay: 1.7, dur: 3.3, size: 2 }, { left: '90%', delay: 0.4, dur: 5.0, size: 2.5 }].map((p, i) => (
+   555→                  <div key={i} className="absolute bottom-0 rounded-full" style={{ left: p.left, width: p.size, height: p.size, background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,215,170,0.5) 40%, transparent 100%)', animation: `rencong-particle-rise ${p.dur}s ease-in-out ${p.delay}s infinite`, boxShadow: '0 0 10px 3px rgba(255,255,255,0.5)' }} />
+   556→                ))}
+   557→              </div>
+   558→
+   559→              {/* Float wrapper — uses CSS translate (not transform) to preserve child preserve-3d */}
+   560→              <div className="relative w-full" style={{ animation: 'rencong-float 7s ease-in-out infinite' }}>
+   561→                {/* 3D flip context parent */}
+   562→                <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowcaseFlipped(f => !f)}>
+   563→                  {/* Rotating conic glow border */}
+   564→                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden" style={{ zIndex: 0 }}>
+   565→                    <div className="absolute inset-[-150%]" style={{ animation: 'rencong-border-spin 14s linear infinite', background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.85) 4%, transparent 8%, rgba(254,215,170,0.6) 12%, transparent 16%, rgba(255,255,255,0.7) 20%, transparent 24%, rgba(249,115,22,0.4) 28%, transparent 32%)', filter: 'blur(2px)' }} />
+   566→                  </div>
+   567→                  {/* Pulsing radial glow */}
+   568→                  <div className="absolute -inset-12 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.35) 0%, rgba(234,88,12,0.15) 40%, transparent 65%)', animation: 'rencong-pulse-glow 5s ease-in-out infinite', top: '50%', left: '50%' }} />
+   569→
+   570→                  {/* ── 3D Flip Container ── */}
+   571→                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showcaseFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 240 }}>
+   572→
+   573→                    {/* ═══════════ FRONT FACE ═══════════ */}
+   574→                    <div className="relative rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(145deg, #7C2D12 0%, #9A3412 10%, #C2410C 25%, #EA580C 42%, #F97316 55%, #FB923C 68%, #FDBA74 78%, #FB923C 88%, #C2410C 96%, #7C2D12 100%)' }}>
+   575→                      {/* Animated gradient overlay */}
+   576→                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #FDBA74, #F97316, #C2410C, #7C2D12)', opacity: 0.45, backgroundSize: '400% 400%', animation: 'rencong-float 18s ease-in-out infinite' }} />
+   577→                      {/* Shimmer sweep */}
+   578→                      <div className="rencong-shine-sweep" />
+   579→
+   580→                      {/* ── RENCONG DAGGER SVG Watermark (center) ── */}
+   581→                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 200, height: 200, transform: 'translate(-50%,-50%)', animation: 'rencong-dagger-gleam 6s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+   582→                        {/* Main Rencong blade */}
+   583→                        <path d="M100 15 L112 60 L108 130 L100 170 L92 130 L88 60 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.6" />
+   584→                        {/* Blade edge highlight */}
+   585→                        <path d="M100 15 L108 60 L106 100 L100 170 L94 100 L92 60 Z" fill="rgba(255,255,255,0.02)" />
+   586→                        {/* Hilt (pommeau) */}
+   587→                        <path d="M72 55 Q100 42 128 55 L120 65 Q100 56 80 65 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+   588→                        {/* Hilt grip pattern */}
+   589→                        <path d="M80 65 L85 120 L100 125 L115 120 L120 65" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.4" />
+   590→                        <line x1="82" y1="75" x2="118" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   591→                        <line x1="83" y1="85" x2="117" y2="85" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   592→                        <line x1="84" y1="95" x2="116" y2="95" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   593→                        <line x1="86" y1="105" x2="114" y2="105" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   594→                        <line x1="88" y1="115" x2="112" y2="115" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   595→                        {/* Decorative Aceh floral scroll left */}
+   596→                        <path d="M60 50 Q40 35 30 50 Q20 65 35 70 Q45 72 50 60" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   597→                        <path d="M30 50 Q25 40 15 45" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+   598→                        <circle cx="15" cy="45" r="3" fill="rgba(255,255,255,0.03)" />
+   599→                        {/* Decorative Aceh floral scroll right */}
+   600→                        <path d="M140 50 Q160 35 170 50 Q180 65 165 70 Q155 72 150 60" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   601→                        <path d="M170 50 Q175 40 185 45" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+   602→                        <circle cx="185" cy="45" r="3" fill="rgba(255,255,255,0.03)" />
+   603→                      </svg>
+   604→
+   605→                      {/* ── Small Rencong corner ornaments ── */}
+   606→                      {[
+   607→                        { pos: 'top-2 left-3', rot: -30, s: 50 },
+   608→                        { pos: 'top-2 right-3', rot: 30, s: 50 },
+   609→                        { pos: 'bottom-3 left-3', rot: -30, s: 40 },
+   610→                        { pos: 'bottom-3 right-3', rot: 30, s: 40 },
+   611→                      ].map((c, i) => (
+   612→                        <svg key={i} className={`absolute ${c.pos}`} style={{ width: c.s, height: c.s, animation: `rencong-dagger-gleam 5s ease-in-out ${i * 1.2}s infinite` }} viewBox="0 0 200 200" fill="none">
+   613→                          <path d="M100 15 L112 60 L108 130 L100 170 L92 130 L88 60 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   614→                          <path d="M72 55 Q100 42 128 55 L120 65 Q100 56 80 65 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.07)" strokeWidth="0.4" />
+   615→                        </svg>
+   616→                      ))}
+   617→
+   618→                      {/* ── Triple ornate border frame ── */}
+   619→                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 390 240" fill="none" preserveAspectRatio="none">
+   620→                        <rect x="5" y="5" width="380" height="230" rx="16" stroke="white" strokeWidth="0.7" strokeOpacity="0.22" />
+   621→                        <rect x="10" y="10" width="370" height="220" rx="13" stroke="white" strokeWidth="0.3" strokeOpacity="0.14" strokeDasharray="5 3" style={{ animation: 'rencong-border-dash 10s linear infinite' }} />
+   622→                        <rect x="15" y="15" width="360" height="210" rx="10" stroke="white" strokeWidth="0.15" strokeOpacity="0.09" />
+   623→                      </svg>
+   624→
+   625→                      {/* ═══ FRONT CONTENT ═══ */}
+   626→                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3.5" style={{ minHeight: 240 }}>
+   627→                        {/* Header row */}
+   628→                        <div className="flex items-center justify-between">
+   629→                          <div className="flex items-center gap-2.5">
+   630→                            <motion.div animate={{ rotate: [0, 5, -5, 3, -3, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/25 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.2), 0 0 22px rgba(249,115,22,0.15)' }}>
+   631→                              <Crown className="w-5 h-5 text-white" />
+   632→                            </motion.div>
+   633→                            <div>
+   634→                              <p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.3em] leading-none">Member Card</p>
+   635→                              <motion.p initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9, duration: 0.6 }} className="text-white font-extrabold text-sm sm:text-[15px] truncate max-w-[130px] leading-tight mt-1 rencong-text-glow">
+   636→                                Ahmad Rizky
+   637→                              </motion.p>
+   638→                            </div>
+   639→                          </div>
+   640→                          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} className="rencong-badge-pulse bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/30">
+   641→                            <span className="text-[9px] text-white font-extrabold uppercase tracking-wider">Premium</span>
+   642→                          </motion.div>
+   643→                        </div>
+   644→
+   645→                        {/* Diamond divider */}
+   646→                        <div className="flex items-center gap-2 my-2">
+   647→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+   648→                          <svg className="w-3 h-3 text-white/40" viewBox="0 0 16 16" fill="none">
+   649→                            <path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.2" />
+   650→                            <circle cx="8" cy="8" r="2" fill="currentColor" fillOpacity="0.35" />
+   651→                          </svg>
+   652→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+   653→                        </div>
+   654→
+   655→                        {/* Member Number */}
+   656→                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.5 }} className="text-center mb-2">
+   657→                          <p className="text-[8px] text-white/40 font-medium uppercase tracking-[0.2em] mb-0.5">No. Member</p>
+   658→                          <p className="text-white/90 font-mono text-[11px] sm:text-xs font-bold tracking-[0.25em]">AGSI-RENCONG2025</p>
+   659→                        </motion.div>
+   660→
+   661→                        {/* Points & Voucher */}
+   662→                        <div className="flex-1 flex items-end gap-3">
+   663→                          <motion.div initial={{ opacity: 0, scale: 0.8, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.3, duration: 0.6, type: 'spring', stiffness: 180 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+   664→                            <div className="flex items-center justify-center gap-1 mb-0.5">
+   665→                              <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}>
+   666→                                <Star className="w-3.5 h-3.5 text-amber-300" />
+   667→                              </motion.div>
+   668→                              <span className="text-[7px] text-white/60 font-bold uppercase tracking-wider">Poin</span>
+   669→                            </div>
+   670→                            <p className="text-white font-extrabold text-xl leading-none">1.250</p>
+   671→                          </motion.div>
+   672→                          <motion.div initial={{ opacity: 0, scale: 0.8, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.5, duration: 0.6, type: 'spring', stiffness: 180 }} className="flex-1 bg-white/[0.12] backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/20">
+   673→                            <div className="flex items-center justify-center gap-1 mb-0.5">
+   674→                              <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}>
+   675→                                <Gift className="w-3.5 h-3.5 text-amber-300" />
+   676→                              </motion.div>
+   677→                              <span className="text-[7px] text-white/60 font-bold uppercase tracking-wider">Voucher</span>
+   678→                            </div>
+   679→                            <p className="text-white font-extrabold text-xl leading-none">3</p>
+   680→                          </motion.div>
+   681→                        </div>
+   682→
+   683→                        <motion.p animate={{ opacity: [0.1, 0.5, 0.1] }} transition={{ duration: 3, repeat: Infinity, delay: 2 }} className="text-center text-[7px] text-white/25 font-medium mt-1.5 tracking-wide">
+   684→                          ✦ Ketuk untuk melihat barcode ✦
+   685→                        </motion.p>
+   686→                      </div>
+   687→                    </div>
+   688→
+   689→                    {/* ═══════════ BACK FACE (Barcode) ═══════════ */}
+   690→                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(145deg, #7C2D12 0%, #9A3412 10%, #C2410C 25%, #EA580C 42%, #F97316 55%, #FB923C 68%, #FDBA74 78%, #FB923C 88%, #C2410C 96%, #7C2D12 100%)' }}>
+   691→                      {/* Gradient overlay */}
+   692→                      <div className="absolute inset-0" style={{ background: 'linear-gradient(45deg, #7C2D12, #C2410C, #EA580C, #F97316, #FB923C, #FDBA74, #F97316, #C2410C, #7C2D12)', opacity: 0.45, backgroundSize: '400% 400%', animation: 'rencong-float 18s ease-in-out infinite' }} />
+   693→                      <div className="rencong-shine-sweep" />
+   694→
+   695→                      {/* Rencong watermark (back, subtler) */}
+   696→                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 140, height: 140, transform: 'translate(-50%,-50%)', animation: 'rencong-dagger-gleam 7s ease-in-out infinite' }} viewBox="0 0 200 200" fill="none">
+   697→                        <path d="M100 15 L112 60 L108 130 L100 170 L92 130 L88 60 Z" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
+   698→                        <path d="M72 55 Q100 42 128 55 L120 65 Q100 56 80 65 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+   699→                      </svg>
+   700→
+   701→                      {/* Corner ornaments (back) */}
+   702→                      {['top-1.5 left-1.5', 'top-1.5 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos, i) => (
+   703→                        <svg key={i} className={`absolute ${pos} w-12 h-12 text-white/[0.07]`} style={{ animation: `rencong-dagger-gleam 5s ease-in-out ${i * 1.3}s infinite` }} viewBox="0 0 200 200" fill="none">
+   704→                          <path d="M100 15 L112 60 L108 130 L100 170 L92 130 L88 60 Z" fill="currentColor" fillOpacity="0.02" stroke="currentColor" strokeWidth="0.3" />
+   705→                        </svg>
+   706→                      ))}
+   707→
+   708→                      {/* Border frame (back) */}
+   709→                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 390 240" fill="none" preserveAspectRatio="none">
+   710→                        <rect x="5" y="5" width="380" height="230" rx="16" stroke="white" strokeWidth="0.6" strokeOpacity="0.18" />
+   711→                        <rect x="10" y="10" width="370" height="220" rx="13" stroke="white" strokeWidth="0.25" strokeOpacity="0.12" strokeDasharray="5 3" style={{ animation: 'rencong-border-dash 10s linear infinite' }} />
+   712→                        <rect x="15" y="15" width="360" height="210" rx="10" stroke="white" strokeWidth="0.12" strokeOpacity="0.07" />
+   713→                      </svg>
+   714→
+   715→                      {/* ═══ BACK CONTENT ═══ */}
+   716→                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3" style={{ minHeight: 240 }}>
+   717→                        <div className="flex items-center gap-2.5 mb-2">
+   718→                          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
+   719→                            <Crown className="w-4 h-4 text-white" />
+   720→                          </motion.div>
+   721→                          <div className="text-left">
+   722→                            <p className="text-[7px] text-white/50 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p>
+   723→                            <p className="text-white font-bold text-[11px] leading-tight mt-0.5">Ahmad Rizky</p>
+   724→                          </div>
+   725→                        </div>
+   726→                        <div className="flex items-center gap-2 mb-2.5">
+   727→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+   728→                          <svg className="w-2.5 h-2.5 text-white/30" viewBox="0 0 16 16" fill="none"><path d="M8 1 L15 8 L8 15 L1 8 Z" stroke="currentColor" strokeWidth="0.8" fill="currentColor" fillOpacity="0.15" /></svg>
+   729→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+   730→                        </div>
+   731→                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, type: 'spring', stiffness: 200 }} className="flex-1 bg-white/[0.1] backdrop-blur-sm rounded-xl p-3 border border-white/20 flex flex-col items-center justify-center">
+   732→                          <svg ref={showcaseBarcodeRef} className="w-full" style={{ minHeight: 44 }} />
+   733→                        </motion.div>
+   734→                        <div className="flex items-center justify-between mt-2">
+   735→                          <p className="text-[8px] text-white/45 font-mono tracking-[0.2em] font-semibold">AGSI-RENCONG2025</p>
+   736→                          <motion.p animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 2.5, repeat: Infinity }} className="text-[7px] text-white/25 font-medium">✦ Ketuk untuk kembali ✦</motion.p>
+   737→                        </div>
+   738→                      </div>
+   739→                    </div>
+   740→
+   741→                  </div>
+   742→                </div>
+   743→              </div>
+   744→            </motion.div>
+   745→
+   746→          </motion.div>
+   747→        </div>
+   748→        <div className="absolute bottom-0 left-0 right-0">
+   749→          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+   750→            <path d="M0 60L48 54C96 48 192 36 288 30C384 24 480 24 576 28C672 32 768 40 864 42C960 44 1056 40 1152 36C1248 32 1344 28 1392 26L1440 24V60H0Z" fill="#F97316" />
+   751→          </svg>
+   752→        </div>
+   753→      </section>
+   754→
+   755→      {/* ═══ PROMO BANNER ═══ */}
+   756→      <section className="bg-orange-500 py-6 sm:py-8 relative">
+   757→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   758→        <div className="relative max-w-5xl mx-auto px-4">
+   759→          <div className="flex items-center gap-2 mb-4">
+   760→            <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shadow-md">
+   761→              <Percent className="w-4 h-4" />
+   762→            </div>
+   763→            <div>
+   764→              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">Promo Spesial</h2>
+   765→              <p className="text-orange-100 text-[10px] sm:text-xs">Penawaran terbatas, jangan sampai ketinggalan!</p>
+   766→            </div>
+   767→          </div>
+   768→
+   769→          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+   770→            {loading ? (
+   771→              <div className="flex gap-3">
+   772→                {[...Array(3)].map((_, i) => (
+   773→                  <Skeleton key={i} className="w-72 h-40 sm:h-44 rounded-2xl flex-shrink-0" />
+   774→                ))}
+   775→              </div>
+   776→            ) : promoProducts.length === 0 ? (
+   777→              <p className="text-orange-100 text-sm">Belum ada promo saat ini</p>
+   778→            ) : (
+   779→              promoProducts.map((p, i) => {
+   780→                const disc = getDiscount(p)
+   781→                return (
+   782→                  <motion.div
+   783→                    key={p.id}
+   784→                    initial={{ opacity: 0, x: 30 }}
+   785→                    animate={{ opacity: 1, x: 0 }}
+   786→                    transition={{ delay: i * 0.08 }}
+   787→                    className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl shadow-xl overflow-hidden relative group cursor-pointer"
+   788→                    onClick={() => handleAdd(p)}
+   789→                  >
+   790→                    {/* Discount Badge */}
+   791→                    {disc > 0 && (
+   792→                      <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
+   793→                        <Flame className="w-3 h-3" /> HEMAT {disc}%
+   794→                      </div>
+   795→                    )}
+   796→                    <div className="flex h-40 sm:h-44">
+   797→                      <div className="w-28 sm:w-32 flex-shrink-0 bg-orange-50 flex items-center justify-center p-2 relative overflow-hidden">
+   798→                        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 to-amber-100/50" />
+   799→                        <img src={p.image} alt={p.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-300" />
+   800→                      </div>
+   801→                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
+   802→                        <div>
+   803→                          <p className="text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-wide">{p.category}</p>
+   804→                          <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight mt-0.5 line-clamp-2">{p.name}</h3>
+   805→                        </div>
+   806→                        <div>
+   807→                          <div className="flex items-baseline gap-1.5 mb-2">
+   808→                            <span className="text-base sm:text-lg font-extrabold text-orange-600">{fmt(p.price)}</span>
+   809→                            {p.originalPrice && p.originalPrice > p.price && (
+   810→                              <span className="text-[10px] sm:text-xs text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+   811→                            )}
+   812→                          </div>
+   813→                          <div className="flex items-center gap-1.5 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 w-fit text-[10px] sm:text-xs font-bold group-hover:bg-orange-600 transition-colors shadow-sm">
+   814→                            <Plus className="w-3 h-3" />
+   815→                            Tambah
+   816→                          </div>
+   817→                        </div>
+   818→                      </div>
+   819→                    </div>
+   820→                  </motion.div>
+   821→                )
+   822→              })
+   823→            )}
+   824→          </div>
+   825→        </div>
+   826→      </section>
+   827→
+   828→      {/* ═══ FEATURES ═══ */}
+   829→      <section className="bg-orange-500 py-8 sm:py-10 relative">
+   830→        <div className="absolute inset-0 aceh-pattern opacity-50" />
+   831→        <div className="relative max-w-5xl mx-auto px-4">
+   832→          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+   833→            {[
+   834→              { icon: <Star className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Rasa Autentik' },
+   835→              { icon: <Truck className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Pengiriman Cepat' },
+   836→              { icon: <CreditCard className="w-5 h-5 sm:w-7 sm:h-7" />, title: 'Bayar Mudah' },
+   837→            ].map((f, i) => (
+   838→              <motion.div
+   839→                key={i}
+   840→                initial={{ opacity: 0, y: 15 }}
+   841→                animate={{ opacity: 1, y: 0 }}
+   842→                transition={{ delay: 0.08 * i }}
+   843→                className="bg-white/95 rounded-xl p-3 sm:p-4 text-center shadow-lg"
+   844→              >
+   845→                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 text-orange-500 mb-1.5 sm:mb-2">
+   846→                  {f.icon}
+   847→                </div>
+   848→                <p className="text-[11px] sm:text-sm font-bold text-gray-800">{f.title}</p>
+   849→              </motion.div>
+   850→            ))}
+   851→          </div>
+   852→        </div>
+   853→      </section>
+   854→
+   855→      {/* ═══ PRODUCT GRID BY TAB ═══ */}
+   856→      <section className="bg-orange-500 py-6 sm:py-8 relative">
+   857→        <div className="relative max-w-5xl mx-auto px-4">
+   858→          {/* Tab Header */}
+   859→          <div className="flex items-center justify-between mb-4">
+   860→            <div className="flex items-center gap-2">
+   861→              <Crown className="w-5 h-5 text-yellow-300" />
+   862→              <h2 className="text-lg sm:text-xl font-bold text-white">Rekomendasi</h2>
+   863→            </div>
+   864→            <button onClick={() => setPage('menu')} className="text-orange-100 hover:text-white text-xs sm:text-sm font-medium flex items-center gap-0.5 transition-colors">
+   865→              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+   866→            </button>
+   867→          </div>
+   868→
+   869→          {/* Tabs */}
+   870→          <div className="flex gap-1.5 mb-5 bg-orange-400/40 p-1 rounded-xl">
+   871→            {tabItems.map((tab) => (
+   872→              <button
+   873→                key={tab.id}
+   874→                onClick={() => setActiveTab(tab.id)}
+   875→                className={`flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+   876→                  activeTab === tab.id
+   877→                    ? 'bg-white text-orange-600 shadow-md'
+   878→                    : 'text-white/70 hover:text-white hover:bg-white/10'
+   879→                }`}
+   880→              >
+   881→                {tab.icon}
+   882→                {tab.label}
+   883→              </button>
+   884→            ))}
+   885→          </div>
+   886→
+   887→          {/* Product Grid */}
+   888→          {loading ? (
+   889→            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+   890→              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-52 sm:h-56 rounded-xl" />)}
+   891→            </div>
+   892→          ) : filteredProducts.length === 0 ? (
+   893→            <div className="bg-white rounded-xl p-8 text-center shadow-md">
+   894→              <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+   895→              <p className="text-gray-400 text-sm">Belum ada produk</p>
+   896→            </div>
+   897→          ) : (
+   898→            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+   899→              {filteredProducts.map((p, i) => {
+   900→                const disc = getDiscount(p)
+   901→                return (
+   902→                  <motion.div
+   903→                    key={p.id}
+   904→                    initial={{ opacity: 0, y: 15 }}
+   905→                    animate={{ opacity: 1, y: 0 }}
+   906→                    transition={{ delay: i * 0.05 }}
+   907→                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow group"
+   908→                  >
+   909→                    {/* Image */}
+   910→                    <div className="relative h-28 sm:h-36 bg-orange-50 flex items-center justify-center p-3">
+   911→                      {disc > 0 && (
+   912→                        <div className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10">
+   913→                          -{disc}%
+   914→                        </div>
+   915→                      )}
+   916→                      {p.tag === 'terlaris' && (
+   917→                        <div className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10 flex items-center gap-0.5">
+   918→                          <Flame className="w-2.5 h-2.5" /> Laris
+   919→                        </div>
+   920→                      )}
+   921→                      <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+   922→                    </div>
+   923→                    {/* Info */}
+   924→                    <div className="p-3">
+   925→                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">{p.category}</p>
+   926→                      <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight line-clamp-2 mb-2 min-h-[2rem] sm:min-h-[2.5rem]">{p.name}</h3>
+   927→                      <div className="flex items-baseline gap-1 mb-2">
+   928→                        <span className="text-sm sm:text-base font-extrabold text-orange-600">{fmt(p.price)}</span>
+   929→                        {p.originalPrice && p.originalPrice > p.price && (
+   930→                          <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice)}</span>
+   931→                        )}
+   932→                      </div>
+   933→                      <Button
+   934→                        size="sm"
+   935→                        className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-xs h-8"
+   936→                        onClick={() => handleAdd(p)}
+   937→                      >
+   938→                        <Plus className="w-3 h-3 mr-1" /> Tambah
+   939→                      </Button>
+   940→                    </div>
+   941→                  </motion.div>
+   942→                )
+   943→              })}
+   944→            </div>
+   945→          )}
+   946→        </div>
+   947→      </section>
+   948→
+   949→      {/* ═══ CTA ═══ */}
+   950→      <section className="bg-orange-500 py-8 sm:py-10 relative">
+   951→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+   952→        <div className="relative max-w-3xl mx-auto px-4 text-center">
+   953→          <h2 className="text-lg sm:text-2xl font-bold text-white mb-3">Siap Memesan?</h2>
+   954→          <p className="text-orange-100 text-sm text-justify max-w-lg mx-auto mb-5 leading-relaxed">
+   955→            Jangan tunggu lagi! Pesan ayam geprek sambal ijo favorit Anda sekarang juga. Pilih menu, tambahkan ke keranjang, dan selesaikan pesanan dalam beberapa langkah mudah.
+   956→          </p>
+   957→          <Button
+   958→            onClick={() => setPage('menu')}
+   959→            size="lg"
+   960→            className="bg-white text-orange-600 hover:bg-orange-50 font-bold shadow-lg px-10"
+   961→          >
+   962→            <UtensilsCrossed className="w-4 h-4 mr-2" />
+   963→            Pesan Sekarang
+   964→          </Button>
+   965→        </div>
+   966→      </section>
+   967→    </div>
+   968→  )
+   969→}
+   970→
+   971→/* ─────────────────────── MENU PAGE ─────────────────────── */
+   972→interface Product {
+   973→  id: string
+   974→  name: string
+   975→  description: string
+   976→  price: number
+   977→  originalPrice?: number | null
+   978→  image: string
+   979→  category: string
+   980→  tag?: string | null
+   981→  available: boolean
+   982→}
+   983→
+   984→function MenuPage() {
+   985→  const [products, setProducts] = useState<Product[]>([])
+   986→  const [loading, setLoading] = useState(true)
+   987→  const [activeCategory, setActiveCategory] = useState('Semua')
+   988→  const addToCart = useAppStore((s) => s.addToCart)
+   989→  const addToast = useAppStore((s) => s.addToast)
+   990→
+   991→  useEffect(() => {
+   992→    fetch('/api/products')
+   993→      .then((r) => r.json())
+   994→      .then((data) => {
+   995→        setProducts(Array.isArray(data) ? data : [])
+   996→        setLoading(false)
+   997→      })
+   998→      .catch(() => {
+   999→        setLoading(false)
+  1000→        addToast('Gagal memuat menu', 'error')
+  1001→      })
+  1002→  }, [addToast])
+  1003→
+  1004→  const categories = ['Semua', ...Array.from(new Set(products.map((p) => p.category)))]
+  1005→  const filtered = activeCategory === 'Semua' ? products : products.filter((p) => p.category === activeCategory)
+  1006→
+  1007→  const handleAdd = (p: Product) => {
+  1008→    addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
+  1009→    addToast(`${p.name} ditambahkan ke keranjang`)
+  1010→  }
+  1011→
+  1012→  return (
+  1013→    <div className="min-h-screen">
+  1014→      {/* Hero mini */}
+  1015→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-5 relative">
+  1016→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+  1017→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+  1018→          <h2 className="text-xl font-extrabold text-white mb-1">
+  1019→            <UtensilsCrossed className="w-6 h-6 inline-block mr-1.5 -mt-1" />
+  1020→            Menu Kami
+  1021→          </h2>
+  1022→          <p className="text-orange-50 text-xs max-w-md mx-auto leading-relaxed">
+  1023→            Pilih berbagai varian ayam geprek sambal ijo dan minuman segar dengan kualitas terbaik.
+  1024→          </p>
+  1025→        </div>
+  1026→      </div>
+  1027→
+  1028→      <div className="max-w-5xl mx-auto px-4 py-4">
+  1029→        {/* Category filter — horizontal scroll */}
+  1030→        <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+  1031→          {categories.map((cat) => (
+  1032→            <button
+  1033→              key={cat}
+  1034→              onClick={() => setActiveCategory(cat)}
+  1035→              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+  1036→                activeCategory === cat
+  1037→                  ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+  1038→                  : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
+  1039→              }`}
+  1040→            >
+  1041→              {cat}
+  1042→            </button>
+  1043→          ))}
+  1044→        </div>
+  1045→
+  1046→        {/* Product count */}
+  1047→        {!loading && (
+  1048→          <p className="text-xs text-gray-400 mb-3">{filtered.length} menu tersedia</p>
+  1049→        )}
+  1050→
+  1051→        {/* Product grid — 2 col mobile, 3 col tablet+ */}
+  1052→        {loading ? (
+  1053→          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+  1054→            {[...Array(6)].map((_, i) => (
+  1055→              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm">
+  1056→                <Skeleton className="w-full aspect-square" />
+  1057→                <div className="p-3 space-y-2">
+  1058→                  <Skeleton className="h-4 w-3/4" />
+  1059→                  <Skeleton className="h-3 w-full" />
+  1060→                  <Skeleton className="h-4 w-1/2" />
+  1061→                </div>
+  1062→              </div>
+  1063→            ))}
+  1064→          </div>
+  1065→        ) : filtered.length === 0 ? (
+  1066→          <div className="text-center py-16">
+  1067→            <UtensilsCrossed className="w-12 h-12 text-white/30 mx-auto mb-3" />
+  1068→            <p className="text-white/60 text-sm">Tidak ada menu di kategori ini</p>
+  1069→          </div>
+  1070→        ) : (
+  1071→          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+  1072→            {filtered.map((p) => (
+  1073→              <motion.div
+  1074→                key={p.id}
+  1075→                initial={{ opacity: 0, scale: 0.96 }}
+  1076→                animate={{ opacity: 1, scale: 1 }}
+  1077→                whileTap={{ scale: 0.97 }}
+  1078→                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col group"
+  1079→              >
+  1080→                {/* Image */}
+  1081→                <div className="relative aspect-square overflow-hidden">
+  1082→                  <img
+  1083→                    src={p.image}
+  1084→                    alt={p.name}
+  1085→                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+  1086→                  />
+  1087→                  {p.originalPrice && p.originalPrice > p.price && (
+  1088→                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+  1089→                      -{Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}%
+  1090→                    </span>
+  1091→                  )}
+  1092→                  {p.tag === 'terlaris' && !p.originalPrice && (
+  1093→                    <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+  1094→                      <Flame className="w-2.5 h-2.5" /> Laris
+  1095→                    </span>
+  1096→                  )}
+  1097→                  {/* Quick add button overlay */}
+  1098→                  <button
+  1099→                    onClick={() => handleAdd(p)}
+  1100→                    className="absolute bottom-2 right-2 w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
+  1101→                  >
+  1102→                    <Plus className="w-4 h-4" />
+  1103→                  </button>
+  1104→                </div>
+  1105→
+  1106→                {/* Info */}
+  1107→                <div className="p-3 flex-1 flex flex-col">
+  1108→                  <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2">{p.name}</h3>
+  1109→                  <p className="text-[11px] text-gray-400 mt-1 leading-relaxed flex-1 line-clamp-2">{p.description}</p>
+  1110→                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+  1111→                    <div className="flex items-baseline gap-1">
+  1112→                      <span className="font-extrabold text-orange-600 text-sm">{fmt(p.price)}</span>
+  1113→                      {p.originalPrice && p.originalPrice > p.price && (
+  1114→                        <span className="text-[10px] text-gray-300 line-through">{fmt(p.originalPrice)}</span>
+  1115→                      )}
+  1116→                    </div>
+  1117→                    <button
+  1118→                      onClick={() => handleAdd(p)}
+  1119→                      className="sm:hidden bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-sm active:scale-95 transition-all"
+  1120→                    >
+  1121→                      + Tambah
+  1122→                    </button>
+  1123→                    <button
+  1124→                      onClick={() => handleAdd(p)}
+  1125→                      className="hidden sm:flex bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors items-center gap-1"
+  1126→                    >
+  1127→                      <Plus className="w-3.5 h-3.5" />
+  1128→                      Tambah
+  1129→                    </button>
+  1130→                  </div>
+  1131→                </div>
+  1132→              </motion.div>
+  1133→            ))}
+  1134→          </div>
+  1135→        )}
+  1136→      </div>
+  1137→    </div>
+  1138→  )
+  1139→}
+  1140→
+  1141→/* ─────────────────────── CART PAGE ─────────────────────── */
+  1142→function CartPage() {
+  1143→  const { cart, updateQuantity, removeFromCart, getCartTotal, setPage, addToast } = useAppStore()
+  1144→  const total = useAppStore(getCartTotal)
+  1145→  const [checkingOut, setCheckingOut] = useState(false)
+  1146→
+  1147→  const handleCheckout = () => {
+  1148→    if (cart.length === 0) {
+  1149→      addToast('Keranjang masih kosong', 'error')
+  1150→      return
+  1151→    }
+  1152→    setCheckingOut(true)
+  1153→  }
+  1154→
+  1155→  if (checkingOut) {
+  1156→    return <CheckoutForm onCancel={() => setCheckingOut(false)} />
+  1157→  }
+  1158→
+  1159→  return (
+  1160→    <div className="min-h-screen">
+  1161→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+  1162→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+  1163→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+  1164→          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+  1165→            <ShoppingCart className="w-8 h-8 inline-block mr-2 -mt-1" />
+  1166→            Keranjang
+  1167→          </h1>
+  1168→          <p className="text-orange-50 text-sm">Kelola pesanan Anda sebelum melakukan pemesanan.</p>
+  1169→        </div>
+  1170→      </div>
+  1171→
+  1172→      <div className="max-w-3xl mx-auto px-4 py-6">
+  1173→        {cart.length === 0 ? (
+  1174→          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+  1175→            <ShoppingCart className="w-16 h-16 text-white/40 mx-auto mb-4" />
+  1176→            <p className="text-white/70 font-medium mb-2">Keranjang Anda masih kosong</p>
+  1177→            <p className="text-white/50 text-sm text-justify max-w-sm mx-auto leading-relaxed">
+  1178→              Silakan pilih menu dari halaman Menu dan tambahkan item yang Anda inginkan ke keranjang untuk melanjutkan pemesanan.
+  1179→            </p>
+  1180→            <Button className="mt-6 bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-md" onClick={() => setPage('menu')}>
+  1181→              <UtensilsCrossed className="w-4 h-4 mr-2" />
+  1182→              Lihat Menu
+  1183→            </Button>
+  1184→          </motion.div>
+  1185→        ) : (
+  1186→          <>
+  1187→            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+  1188→              {cart.map((item) => (
+  1189→                <motion.div
+  1190→                  key={item.productId}
+  1191→                  layout
+  1192→                  initial={{ opacity: 0, x: -20 }}
+  1193→                  animate={{ opacity: 1, x: 0 }}
+  1194→                  exit={{ opacity: 0, x: 20 }}
+  1195→                  className="bg-white rounded-xl p-4 shadow-md flex items-center gap-4"
+  1196→                >
+  1197→                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
+  1198→                    <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
+  1199→                  </div>
+  1200→                  <div className="flex-1 min-w-0">
+  1201→                    <h3 className="font-bold text-gray-800 text-sm truncate">{item.productName}</h3>
+  1202→                    <p className="text-orange-600 font-semibold text-sm mt-0.5">{fmt(item.price)}</p>
+  1203→                    <div className="flex items-center gap-3 mt-2">
+  1204→                      <div className="flex items-center bg-orange-50 rounded-lg">
+  1205→                        <button
+  1206→                          className="p-1.5 hover:bg-orange-100 rounded-l-lg transition-colors"
+  1207→                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+  1208→                        >
+  1209→                          <Minus className="w-3.5 h-3.5 text-orange-600" />
+  1210→                        </button>
+  1211→                        <span className="w-8 text-center text-sm font-bold text-gray-700">{item.quantity}</span>
+  1212→                        <button
+  1213→                          className="p-1.5 hover:bg-orange-100 rounded-r-lg transition-colors"
+  1214→                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+  1215→                        >
+  1216→                          <Plus className="w-3.5 h-3.5 text-orange-600" />
+  1217→                        </button>
+  1218→                      </div>
+  1219→                      <span className="text-sm font-bold text-gray-700">{fmt(item.price * item.quantity)}</span>
+  1220→                    </div>
+  1221→                  </div>
+  1222→                  <button
+  1223→                    onClick={() => removeFromCart(item.productId)}
+  1224→                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all flex-shrink-0"
+  1225→                  >
+  1226→                    <Trash2 className="w-4 h-4" />
+  1227→                  </button>
+  1228→                </motion.div>
+  1229→              ))}
+  1230→            </div>
+  1231→
+  1232→            {/* Total & Checkout */}
+  1233→            <div className="bg-white rounded-xl p-5 shadow-lg mt-4">
+  1234→              <div className="flex justify-between items-center mb-4">
+  1235→                <span className="text-gray-600 font-medium">Total Pembayaran</span>
+  1236→                <span className="text-xl font-extrabold text-orange-600">{fmt(total)}</span>
+  1237→              </div>
+  1238→              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg py-6 text-base" onClick={handleCheckout}>
+  1239→                <CreditCard className="w-4 h-4 mr-2" />
+  1240→                Lanjut ke Pemesanan
+  1241→              </Button>
+  1242→            </div>
+  1243→          </>
+  1244→        )}
+  1245→      </div>
+  1246→    </div>
+  1247→  )
+  1248→}
+  1249→
+  1250→/* ─────────────────────── CHECKOUT FORM ─────────────────────── */
+  1251→function CheckoutForm({ onCancel }: { onCancel: () => void }) {
+  1252→  const { cart, getCartTotal, clearCart, setPage, addToast, user, setReceipt } = useAppStore()
+  1253→  const total = useAppStore(getCartTotal)
+  1254→  const [submitting, setSubmitting] = useState(false)
+  1255→  const [form, setForm] = useState({
+  1256→    customerName: user?.name || '',
+  1257→    customerPhone: user?.phone || '',
+  1258→    customerAddress: '',
+  1259→    notes: '',
+  1260→    paymentMethod: 'COD',
+  1261→  })
+  1262→
+  1263→  const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
+  1264→
+  1265→  const handleSubmit = async (e: React.FormEvent) => {
+  1266→    e.preventDefault()
+  1267→    if (!form.customerName || !form.customerPhone || !form.customerAddress) {
+  1268→      addToast('Mohon lengkapi semua data yang diperlukan', 'error')
+  1269→      return
+  1270→    }
+  1271→    setSubmitting(true)
+  1272→
+  1273→    try {
+  1274→      const items = cart.map((c) => ({
+  1275→        productId: c.productId,
+  1276→        productName: c.productName,
+  1277→        quantity: c.quantity,
+  1278→        price: c.price,
+  1279→        subtotal: c.price * c.quantity,
+  1280→      }))
+  1281→
+  1282→      const res = await fetch('/api/orders', {
+  1283→        method: 'POST',
+  1284→        headers: { 'Content-Type': 'application/json' },
+  1285→        body: JSON.stringify({
+  1286→          userId: user?.id || null,
+  1287→          items,
+  1288→          customerName: form.customerName,
+  1289→          customerPhone: form.customerPhone,
+  1290→          customerAddress: form.customerAddress,
+  1291→          notes: form.notes,
+  1292→          paymentMethod: form.paymentMethod,
+  1293→        }),
+  1294→      })
+  1295→
+  1296→      const data = await res.json()
+  1297→      if (!res.ok) throw new Error(data.error || 'Gagal membuat pesanan')
+  1298→
+  1299→      setReceipt(data)
+  1300→      clearCart()
+  1301→      addToast('Pesanan berhasil dibuat!', 'success')
+  1302→      setPage('receipt')
+  1303→    } catch {
+  1304→      addToast('Gagal membuat pesanan. Silakan coba lagi.', 'error')
+  1305→    } finally {
+  1306→      setSubmitting(false)
+  1307→    }
+  1308→  }
+  1309→
+  1310→  return (
+  1311→    <div className="min-h-screen">
+  1312→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
+  1313→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+  1314→        <div className="relative max-w-5xl mx-auto px-4">
+  1315→          <button onClick={onCancel} className="text-white hover:text-orange-100 flex items-center gap-1 text-sm font-medium mb-3 transition-colors">
+  1316→            <ArrowLeft className="w-4 h-4" />
+  1317→            Kembali ke Keranjang
+  1318→          </button>
+  1319→          <h1 className="text-2xl font-extrabold text-white text-center">Formulir Pemesanan</h1>
+  1320→        </div>
+  1321→      </div>
+  1322→
+  1323→      <div className="max-w-2xl mx-auto px-4 py-6">
+  1324→        <form onSubmit={handleSubmit} className="space-y-4">
+  1325→          <div className="bg-white rounded-xl p-5 shadow-lg space-y-4">
+  1326→            <h2 className="font-bold text-gray-800 flex items-center gap-2">
+  1327→              <User className="w-4 h-4 text-orange-500" />
+  1328→              Data Pemesan
+  1329→            </h2>
+  1330→            <div>
+  1331→              <Label htmlFor="name" className="text-sm text-gray-600">Nama Lengkap *</Label>
+  1332→              <Input id="name" value={form.customerName} onChange={(e) => updateField('customerName', e.target.value)} placeholder="Masukkan nama lengkap Anda" className="mt-1" required />
+  1333→            </div>
+  1334→            <div>
+  1335→              <Label htmlFor="phone" className="text-sm text-gray-600">Nomor Telepon *</Label>
+  1336→              <Input id="phone" value={form.customerPhone} onChange={(e) => updateField('customerPhone', e.target.value)} placeholder="Contoh: 081234567890" className="mt-1" required />
+  1337→            </div>
+  1338→            <div>
+  1339→              <Label htmlFor="address" className="text-sm text-gray-600">Alamat Pengiriman *</Label>
+  1340→              <Textarea id="address" value={form.customerAddress} onChange={(e) => updateField('customerAddress', e.target.value)} placeholder="Masukkan alamat lengkap pengiriman Anda" className="mt-1" rows={3} required />
+  1341→            </div>
+  1342→            <div>
+  1343→              <Label htmlFor="notes" className="text-sm text-gray-600">Catatan (Opsional)</Label>
+  1344→              <Textarea id="notes" value={form.notes} onChange={(e) => updateField('notes', e.target.value)} placeholder="Contoh: Jangan terlalu pedas, tambah sambal, dll" className="mt-1" rows={2} />
+  1345→            </div>
+  1346→          </div>
+  1347→
+  1348→          {/* Payment Method */}
+  1349→          <div className="bg-white rounded-xl p-5 shadow-lg">
+  1350→            <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
+  1351→              <CreditCard className="w-4 h-4 text-orange-500" />
+  1352→              Metode Pembayaran
+  1353→            </h2>
+  1354→            <p className="text-sm text-gray-500 text-justify leading-relaxed mb-3">
+  1355→              Pilih metode pembayaran yang paling nyaman untuk Anda. Kami menyediakan opsi COD (bayar di tempat) dan transfer bank untuk kemudahan transaksi.
+  1356→            </p>
+  1357→            <div className="flex gap-3">
+  1358→              <button
+  1359→                type="button"
+  1360→                onClick={() => updateField('paymentMethod', 'COD')}
+  1361→                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+  1362→                  form.paymentMethod === 'COD'
+  1363→                    ? 'border-orange-500 bg-orange-50 text-orange-600'
+  1364→                    : 'border-gray-200 text-gray-500 hover:border-orange-200'
+  1365→                }`}
+  1366→              >
+  1367→                <Banknote className="w-5 h-5" />
+  1368→                COD
+  1369→              </button>
+  1370→              <button
+  1371→                type="button"
+  1372→                onClick={() => updateField('paymentMethod', 'Transfer')}
+  1373→                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+  1374→                  form.paymentMethod === 'Transfer'
+  1375→                    ? 'border-orange-500 bg-orange-50 text-orange-600'
+  1376→                    : 'border-gray-200 text-gray-500 hover:border-orange-200'
+  1377→                }`}
+  1378→              >
+  1379→                <CreditCard className="w-5 h-5" />
+  1380→                Transfer
+  1381→              </button>
+  1382→            </div>
+  1383→          </div>
+  1384→
+  1385→          {/* Order Summary */}
+  1386→          <div className="bg-white rounded-xl p-5 shadow-lg">
+  1387→            <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
+  1388→              <ReceiptText className="w-4 h-4 text-orange-500" />
+  1389→              Ringkasan Pesanan
+  1390→            </h2>
+  1391→            <div className="space-y-2 max-h-40 overflow-y-auto card-scrollbar">
+  1392→              {cart.map((item) => (
+  1393→                <div key={item.productId} className="flex justify-between text-sm">
+  1394→                  <span className="text-gray-600">{item.productName} x{item.quantity}</span>
+  1395→                  <span className="font-medium text-gray-800">{fmt(item.price * item.quantity)}</span>
+  1396→                </div>
+  1397→              ))}
+  1398→            </div>
+  1399→            <Separator className="my-3" />
+  1400→            <div className="flex justify-between items-center">
+  1401→              <span className="font-bold text-gray-700">Total</span>
+  1402→              <span className="text-lg font-extrabold text-orange-600">{fmt(total)}</span>
+  1403→            </div>
+  1404→          </div>
+  1405→
+  1406→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg py-6 text-base disabled:opacity-50">
+  1407→            {submitting ? (
+  1408→              <span className="flex items-center gap-2">
+  1409→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1410→                Memproses...
+  1411→              </span>
+  1412→            ) : (
+  1413→              <>
+  1414→                <CheckCircle2 className="w-4 h-4 mr-2" />
+  1415→                Konfirmasi Pesanan
+  1416→              </>
+  1417→            )}
+  1418→          </Button>
+  1419→        </form>
+  1420→      </div>
+  1421→    </div>
+  1422→  )
+  1423→}
+  1424→
+  1425→/* ─────────────────────── ORDERS PAGE ─────────────────────── */
+  1426→function OrdersPage() {
+  1427→  const { user, setPage, setReceipt, addToast } = useAppStore()
+  1428→  const [orders, setOrders] = useState<OrderData[]>([])
+  1429→  const [loading, setLoading] = useState(true)
+  1430→
+  1431→  const loadOrders = useCallback(async () => {
+  1432→    try {
+  1433→      const url = user?.id ? `/api/orders?userId=${user.id}` : '/api/orders'
+  1434→      const res = await fetch(url)
+  1435→      const data = await res.json()
+  1436→      setOrders(data)
+  1437→    } catch {
+  1438→      addToast('Gagal memuat pesanan', 'error')
+  1439→    } finally {
+  1440→      setLoading(false)
+  1441→    }
+  1442→  }, [user, addToast])
+  1443→
+  1444→  useEffect(() => { loadOrders() }, [loadOrders])
+  1445→
+  1446→  return (
+  1447→    <div className="min-h-screen">
+  1448→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-8 relative">
+  1449→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+  1450→        <div className="relative max-w-5xl mx-auto px-4 text-center">
+  1451→          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+  1452→            <Package className="w-8 h-8 inline-block mr-2 -mt-1" />
+  1453→            Pesanan Saya
+  1454→          </h1>
+  1455→          <p className="text-orange-50 text-sm max-w-lg mx-auto text-justify leading-relaxed">
+  1456→            Lihat riwayat dan status pesanan Anda di sini. Setiap pesanan akan menampilkan detail lengkap termasuk produk yang dipesan, total pembayaran, dan status pengiriman terkini.
+  1457→          </p>
+  1458→        </div>
+  1459→      </div>
+  1460→
+  1461→      <div className="max-w-3xl mx-auto px-4 py-6">
+  1462→        {loading ? (
+  1463→          <div className="space-y-3">
+  1464→            {[...Array(3)].map((_, i) => (
+  1465→              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+  1466→            ))}
+  1467→          </div>
+  1468→        ) : orders.length === 0 ? (
+  1469→          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+  1470→            <Package className="w-16 h-16 text-white/40 mx-auto mb-4" />
+  1471→            <p className="text-white/70 font-medium mb-2">Belum ada pesanan</p>
+  1472→            <p className="text-white/50 text-sm text-justify max-w-sm mx-auto leading-relaxed">
+  1473→              Anda belum memiliki riwayat pesanan. Silakan lakukan pemesanan terlebih dahulu dari halaman Menu untuk melihat status pesanan Anda di sini.
+  1474→            </p>
+  1475→            <Button className="mt-6 bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-md" onClick={() => setPage('menu')}>
+  1476→              <UtensilsCrossed className="w-4 h-4 mr-2" />
+  1477→              Pesan Sekarang
+  1478→            </Button>
+  1479→          </motion.div>
+  1480→        ) : (
+  1481→          <div className="space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
+  1482→            {orders.map((order) => (
+  1483→              <motion.div
+  1484→                key={order.id}
+  1485→                initial={{ opacity: 0, y: 10 }}
+  1486→                animate={{ opacity: 1, y: 0 }}
+  1487→                className="bg-white rounded-xl p-4 shadow-md"
+  1488→              >
+  1489→                <div className="flex items-start justify-between mb-3">
+  1490→                  <div>
+  1491→                    <p className="text-xs text-gray-400 flex items-center gap-1">
+  1492→                      <Clock className="w-3 h-3" />
+  1493→                      {fmtDate(order.createdAt)}
+  1494→                    </p>
+  1495→                    <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
+  1496→                  </div>
+  1497→                  <Badge className={statusColor[order.status] || 'bg-gray-100 text-gray-600'}>
+  1498→                    {statusLabel[order.status] || order.status}
+  1499→                  </Badge>
+  1500→                </div>
+  1501→                <div className="space-y-1 mb-3">
+  1502→                  {order.items.map((item) => (
+  1503→                    <div key={item.id} className="flex justify-between text-xs text-gray-500">
+  1504→                      <span>{item.productName} x{item.quantity}</span>
+  1505→                      <span>{fmt(item.subtotal)}</span>
+  1506→                    </div>
+  1507→                  ))}
+  1508→                </div>
+  1509→                <Separator className="mb-3" />
+  1510→                <div className="flex items-center justify-between">
+  1511→                  <span className="text-sm text-gray-500">Total: <span className="font-bold text-orange-600">{fmt(order.total)}</span></span>
+  1512→                  <Button
+  1513→                    size="sm"
+  1514→                    variant="outline"
+  1515→                    className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+  1516→                    onClick={() => { setReceipt(order); setPage('receipt') }}
+  1517→                  >
+  1518→                    <Eye className="w-3 h-3 mr-1" />
+  1519→                    Detail
+  1520→                  </Button>
+  1521→                </div>
+  1522→              </motion.div>
+  1523→            ))}
+  1524→          </div>
+  1525→        )}
+  1526→      </div>
+  1527→    </div>
+  1528→  )
+  1529→}
+  1530→
+  1531→/* ─────────────────────── RECEIPT / STRUK PAGE ─────────────────────── */
+  1532→function ReceiptPage() {
+  1533→  const { currentReceipt, setPage, addToast } = useAppStore()
+  1534→  const receipt = currentReceipt
+  1535→
+  1536→  if (!receipt) {
+  1537→    return (
+  1538→      <div className="min-h-screen flex items-center justify-center px-4">
+  1539→        <div className="text-center">
+  1540→          <AlertCircle className="w-12 h-12 text-white/40 mx-auto mb-3" />
+  1541→          <p className="text-white/70 font-medium mb-4">Tidak ada struk untuk ditampilkan</p>
+  1542→          <Button className="bg-white text-orange-600 hover:bg-orange-50 font-semibold" onClick={() => setPage('home')}>
+  1543→            <Home className="w-4 h-4 mr-2" />
+  1544→            Kembali ke Beranda
+  1545→          </Button>
+  1546→        </div>
+  1547→      </div>
+  1548→    )
+  1549→  }
+  1550→
+  1551→  const handleCopy = () => {
+  1552→    const text = `AYAM GEPREK SAMBAL IJO\nNo: #${receipt.id.slice(-6)}\n${fmtDate(receipt.createdAt)}\n\n${receipt.items.map((i) => `${i.productName} x${i.quantity}\t${fmt(i.subtotal)}`).join('\n')}\n\nTotal: ${fmt(receipt.total)}\nPembayaran: ${receipt.paymentMethod}`
+  1553→    navigator.clipboard.writeText(text)
+  1554→    addToast('Struk disalin ke clipboard', 'info')
+  1555→  }
+  1556→
+  1557→  return (
+  1558→    <div className="min-h-screen">
+  1559→      <div className="bg-gradient-to-r from-orange-500 to-amber-400 py-6 relative">
+  1560→        <div className="absolute inset-0 aceh-pattern opacity-30" />
+  1561→        <div className="relative max-w-5xl mx-auto px-4">
+  1562→          <button onClick={() => setPage('orders')} className="text-white hover:text-orange-100 flex items-center gap-1 text-sm font-medium mb-3 transition-colors">
+  1563→            <ArrowLeft className="w-4 h-4" />
+  1564→            Kembali
+  1565→          </button>
+  1566→          <h1 className="text-2xl font-extrabold text-white text-center">Struk Pembelian</h1>
+  1567→        </div>
+  1568→      </div>
+  1569→
+  1570→      <div className="max-w-md mx-auto px-4 py-6">
+  1571→        <motion.div
+  1572→          initial={{ opacity: 0, scale: 0.95 }}
+  1573→          animate={{ opacity: 1, scale: 1 }}
+  1574→          className="bg-white rounded-xl shadow-xl overflow-hidden"
+  1575→        >
+  1576→          {/* Header struk */}
+  1577→          <div className="bg-orange-500 p-5 text-center">
+  1578→            <ChefHat className="w-10 h-10 text-white mx-auto mb-2" />
+  1579→            <h2 className="text-lg font-extrabold text-white uppercase">Ayam Geprek Sambal Ijo</h2>
+  1580→            <p className="text-orange-100 text-xs mt-1">Jl. Teuku Nyak Arief, Banda Aceh</p>
+  1581→          </div>
+  1582→
+  1583→          <div className="p-5 space-y-4">
+  1584→            {/* Order info */}
+  1585→            <div className="text-justify text-xs text-gray-500 space-y-1 leading-relaxed">
+  1586→              <p><span className="font-medium text-gray-700">No. Pesanan:</span> #{receipt.id.slice(-6)}</p>
+  1587→              <p><span className="font-medium text-gray-700">Tanggal:</span> {fmtDate(receipt.createdAt)}</p>
+  1588→              <p><span className="font-medium text-gray-700">Pemesan:</span> {receipt.customerName}</p>
+  1589→              <p><span className="font-medium text-gray-700">Telepon:</span> {receipt.customerPhone}</p>
+  1590→              <p><span className="font-medium text-gray-700">Alamat:</span> {receipt.customerAddress}</p>
+  1591→              {receipt.notes && <p><span className="font-medium text-gray-700">Catatan:</span> {receipt.notes}</p>}
+  1592→            </div>
+  1593→
+  1594→            <Separator />
+  1595→
+  1596→            {/* Items */}
+  1597→            <div>
+  1598→              <h3 className="font-bold text-gray-700 text-sm mb-2 text-center">Detail Pesanan</h3>
+  1599→              <div className="space-y-2">
+  1600→                {receipt.items.map((item) => (
+  1601→                  <div key={item.id} className="flex justify-between text-sm text-justify">
+  1602→                    <div className="flex-1">
+  1603→                      <p className="text-gray-700">{item.productName}</p>
+  1604→                      <p className="text-xs text-gray-400">{item.quantity} x {fmt(item.price)}</p>
+  1605→                    </div>
+  1606→                    <span className="font-medium text-gray-800 ml-4">{fmt(item.subtotal)}</span>
+  1607→                  </div>
+  1608→                ))}
+  1609→              </div>
+  1610→            </div>
+  1611→
+  1612→            <Separator />
+  1613→
+  1614→            {/* Total */}
+  1615→            <div className="text-justify text-sm space-y-1 leading-relaxed">
+  1616→              <div className="flex justify-between">
+  1617→                <span className="text-gray-600">Subtotal</span>
+  1618→                <span className="font-medium text-gray-700">{fmt(receipt.total)}</span>
+  1619→              </div>
+  1620→              <div className="flex justify-between">
+  1621→                <span className="text-gray-600">Ongkos Kirim</span>
+  1622→                <span className="font-medium text-green-600">GRATIS</span>
+  1623→              </div>
+  1624→              <Separator />
+  1625→              <div className="flex justify-between text-base">
+  1626→                <span className="font-bold text-gray-800">Total</span>
+  1627→                <span className="font-extrabold text-orange-600">{fmt(receipt.total)}</span>
+  1628→              </div>
+  1629→              <div className="flex justify-between">
+  1630→                <span className="text-gray-600">Pembayaran</span>
+  1631→                <span className="font-medium text-gray-700">{receipt.paymentMethod}</span>
+  1632→              </div>
+  1633→            </div>
+  1634→
+  1635→            <Separator />
+  1636→
+  1637→            {/* Status */}
+  1638→            <div className="text-center">
+  1639→              <Badge className={`${statusColor[receipt.status]} text-sm px-4 py-1`}>
+  1640→                {statusLabel[receipt.status]}
+  1641→              </Badge>
+  1642→            </div>
+  1643→
+  1644→            <p className="text-xs text-gray-400 text-center text-justify leading-relaxed">
+  1645→              Terima kasih telah memesan di Ayam Geprek Sambal Ijo. Pesanan Anda sedang diproses dan akan segera diantarkan. Selamat menikmati!
+  1646→            </p>
+  1647→          </div>
+  1648→
+  1649→          {/* Actions */}
+  1650→          <div className="border-t border-orange-100 p-4 flex gap-2">
+  1651→            <Button variant="outline" className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm" onClick={handleCopy}>
+  1652→              <Copy className="w-3.5 h-3.5 mr-1.5" />
+  1653→              Salin Struk
+  1654→            </Button>
+  1655→            <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('home')}>
+  1656→              <Home className="w-3.5 h-3.5 mr-1.5" />
+  1657→              Kembali
+  1658→            </Button>
+  1659→          </div>
+  1660→        </motion.div>
+  1661→      </div>
+  1662→    </div>
+  1663→  )
+  1664→}
+  1665→
+  1666→/* ─────────────────────── LOGIN PAGE ─────────────────────── */
+  1667→function LoginPage() {
+  1668→  const { setPage, setUser, addToast } = useAppStore()
+  1669→  const [form, setForm] = useState({ email: '', password: '' })
+  1670→  const [submitting, setSubmitting] = useState(false)
+  1671→
+  1672→  const handleLogin = async (e: React.FormEvent) => {
+  1673→    e.preventDefault()
+  1674→    if (!form.email || !form.password) {
+  1675→      addToast('Email dan password harus diisi', 'error')
+  1676→      return
+  1677→    }
+  1678→    setSubmitting(true)
+  1679→    try {
+  1680→      const res = await fetch('/api/auth/login', {
+  1681→        method: 'POST',
+  1682→        headers: { 'Content-Type': 'application/json' },
+  1683→        body: JSON.stringify({ email: form.email, password: form.password }),
+  1684→      })
+  1685→      const data = await res.json()
+  1686→      if (!res.ok) throw new Error(data.error)
+  1687→      setUser(data)
+  1688→      addToast(`Selamat datang, ${data.name}!`)
+  1689→      setPage('home')
+  1690→    } catch (err: unknown) {
+  1691→      addToast(err instanceof Error ? err.message : 'Login gagal', 'error')
+  1692→    } finally {
+  1693→      setSubmitting(false)
+  1694→    }
+  1695→  }
+  1696→
+  1697→  return (
+  1698→    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+  1699→      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  1700→      <motion.div
+  1701→        initial={{ opacity: 0, y: 20 }}
+  1702→        animate={{ opacity: 1, y: 0 }}
+  1703→        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm"
+  1704→      >
+  1705→        <div className="text-center mb-6">
+  1706→          <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+  1707→          <h1 className="text-xl font-extrabold text-gray-800 uppercase">Ayam Geprek Sambal Ijo</h1>
+  1708→          <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
+  1709→            Masuk ke akun Anda untuk melihat riwayat pesanan dan menikmati kemudahan pemesanan yang lebih cepat dan terpersonalisasi.
+  1710→          </p>
+  1711→        </div>
+  1712→
+  1713→        <form onSubmit={handleLogin} className="space-y-4">
+  1714→          <div>
+  1715→            <Label htmlFor="email" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1716→              <Mail className="w-3.5 h-3.5" /> Username / Email
+  1717→            </Label>
+  1718→            <Input
+  1719→              id="email"
+  1720→              type="email"
+  1721→              value={form.email}
+  1722→              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+  1723→              placeholder="Masukkan email Anda"
+  1724→              className="mt-1.5"
+  1725→            />
+  1726→          </div>
+  1727→          <div>
+  1728→            <Label htmlFor="password" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1729→              <Lock className="w-3.5 h-3.5" /> Password
+  1730→            </Label>
+  1731→            <Input
+  1732→              id="password"
+  1733→              type="password"
+  1734→              value={form.password}
+  1735→              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+  1736→              placeholder="Masukkan password Anda"
+  1737→              className="mt-1.5"
+  1738→            />
+  1739→          </div>
+  1740→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50">
+  1741→            {submitting ? (
+  1742→              <span className="flex items-center gap-2">
+  1743→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1744→                Memproses...
+  1745→              </span>
+  1746→            ) : (
+  1747→              'LOGIN'
+  1748→            )}
+  1749→          </Button>
+  1750→        </form>
+  1751→
+  1752→        <div className="mt-5 space-y-2 text-center">
+  1753→          <button onClick={() => addToast('Fitur lupa password akan segera hadir', 'info')} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 mx-auto transition-colors">
+  1754→            <KeyRound className="w-3 h-3" /> Lupa Password
+  1755→          </button>
+  1756→          <p className="text-xs text-gray-400">
+  1757→            Belum punya akun?{' '}
+  1758→            <button onClick={() => setPage('register')} className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+  1759→              Daftar Akun
+  1760→            </button>
+  1761→          </p>
+  1762→        </div>
+  1763→      </motion.div>
+  1764→    </div>
+  1765→  )
+  1766→}
+  1767→
+  1768→/* ─────────────────────── REGISTER PAGE ─────────────────────── */
+  1769→function RegisterPage() {
+  1770→  const { setPage, addToast } = useAppStore()
+  1771→  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
+  1772→  const [submitting, setSubmitting] = useState(false)
+  1773→
+  1774→  const handleRegister = async (e: React.FormEvent) => {
+  1775→    e.preventDefault()
+  1776→    if (!form.name || !form.email || !form.password) {
+  1777→      addToast('Nama, email, dan password harus diisi', 'error')
+  1778→      return
+  1779→    }
+  1780→    setSubmitting(true)
+  1781→    try {
+  1782→      const res = await fetch('/api/auth/register', {
+  1783→        method: 'POST',
+  1784→        headers: { 'Content-Type': 'application/json' },
+  1785→        body: JSON.stringify(form),
+  1786→      })
+  1787→      const data = await res.json()
+  1788→      if (!res.ok) throw new Error(data.error)
+  1789→      addToast('Registrasi berhasil! Silakan login.', 'success')
+  1790→      setPage('login')
+  1791→    } catch (err: unknown) {
+  1792→      addToast(err instanceof Error ? err.message : 'Registrasi gagal', 'error')
+  1793→    } finally {
+  1794→      setSubmitting(false)
+  1795→    }
+  1796→  }
+  1797→
+  1798→  return (
+  1799→    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+  1800→      <div className="absolute inset-0 aceh-pattern opacity-20" />
+  1801→      <motion.div
+  1802→        initial={{ opacity: 0, y: 20 }}
+  1803→        animate={{ opacity: 1, y: 0 }}
+  1804→        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm"
+  1805→      >
+  1806→        <div className="text-center mb-6">
+  1807→          <ChefHat className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+  1808→          <h1 className="text-xl font-extrabold text-gray-800 uppercase">Daftar Akun Baru</h1>
+  1809→          <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
+  1810→            Buat akun baru untuk memudahkan proses pemesanan Anda. Dengan akun, Anda dapat melihat riwayat pesanan dan mendapatkan penawaran spesial.
+  1811→          </p>
+  1812→        </div>
+  1813→
+  1814→        <form onSubmit={handleRegister} className="space-y-3">
+  1815→          <div>
+  1816→            <Label htmlFor="reg-name" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1817→              <User className="w-3.5 h-3.5" /> Nama Lengkap
+  1818→            </Label>
+  1819→            <Input id="reg-name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nama lengkap" className="mt-1" />
+  1820→          </div>
+  1821→          <div>
+  1822→            <Label htmlFor="reg-email" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1823→              <Mail className="w-3.5 h-3.5" /> Email
+  1824→            </Label>
+  1825→            <Input id="reg-email" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="email@contoh.com" className="mt-1" />
+  1826→          </div>
+  1827→          <div>
+  1828→            <Label htmlFor="reg-phone" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1829→              <Phone className="w-3.5 h-3.5" /> Nomor Telepon
+  1830→            </Label>
+  1831→            <Input id="reg-phone" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="081234567890" className="mt-1" />
+  1832→          </div>
+  1833→          <div>
+  1834→            <Label htmlFor="reg-password" className="text-sm text-gray-600 flex items-center gap-1.5">
+  1835→              <Lock className="w-3.5 h-3.5" /> Password
+  1836→            </Label>
+  1837→            <Input id="reg-password" type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="Minimal 6 karakter" className="mt-1" />
+  1838→          </div>
+  1839→          <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50 mt-2">
+  1840→            {submitting ? (
+  1841→              <span className="flex items-center gap-2">
+  1842→                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1843→                Memproses...
+  1844→              </span>
+  1845→            ) : (
+  1846→              <><UserPlus className="w-4 h-4 mr-2" /> DAFTAR</>
+  1847→            )}
+  1848→          </Button>
+  1849→        </form>
+  1850→
+  1851→        <p className="text-xs text-gray-400 text-center mt-5">
+  1852→          Sudah punya akun?{' '}
+  1853→          <button onClick={() => setPage('login')} className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+  1854→            Login di sini
+  1855→          </button>
+  1856→        </p>
+  1857→      </motion.div>
+  1858→    </div>
+  1859→  )
+  1860→}
+  1861→
+  1862→/* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
+  1863→function ProfilePage() {
+  1864→  const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
+  1865→  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products' | 'chat'>('overview')
+  1866→  const [editing, setEditing] = useState(false)
+  1867→  const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
+  1868→  const [saving, setSaving] = useState(false)
+  1869→  const [orders, setOrders] = useState<OrderData[]>([])
+  1870→  const [allOrders, setAllOrders] = useState<OrderData[]>([])
+  1871→  const [loading, setLoading] = useState(true)
+  1872→  const isAdmin = user?.role === 'admin'
+  1873→
+  1874→  // Load orders on mount
+  1875→  const loadOrders = useCallback(async () => {
+  1876→    try {
+  1877→      if (isAdmin) {
+  1878→        const res = await fetch('/api/orders')
+  1879→        const data = await res.json()
+  1880→        setAllOrders(data)
+  1881→        setOrders(data)
+  1882→      } else if (user?.id) {
+  1883→        const res = await fetch(`/api/orders?userId=${user.id}`)
+  1884→        const data = await res.json()
+  1885→        setOrders(data)
+  1886→      }
+  1887→    } catch {
+  1888→      addToast('Gagal memuat data', 'error')
+  1889→    } finally {
+  1890→      setLoading(false)
+  1891→    }
+  1892→  }, [user, isAdmin, addToast])
+  1893→
+  1894→  useEffect(() => { loadOrders() }, [loadOrders])
+  1895→
+  1896→  // Computed stats
+  1897→  const customerStats = {
+  1898→    totalOrders: orders.length,
+  1899→    completed: orders.filter((o) => o.status === 'delivered').length,
+  1900→    pending: orders.filter((o) => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
+  1901→    totalSpent: orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+  1902→    firstOrder: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
+  1903→    lastOrder: orders.length > 0 ? orders[0].createdAt : null,
+  1904→  }
+  1905→
+  1906→  const adminStats = {
+  1907→    total: allOrders.length,
+  1908→    pending: allOrders.filter((o) => o.status === 'pending').length,
+  1909→    confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
+  1910→    preparing: allOrders.filter((o) => o.status === 'preparing').length,
+  1911→    delivered: allOrders.filter((o) => o.status === 'delivered').length,
+  1912→    cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
+  1913→    revenue: allOrders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
+  1914→    avgOrder: allOrders.length > 0 ? Math.round(allOrders.reduce((s, o) => s + o.total, 0) / allOrders.length) : 0,
+  1915→  }
+  1916→
+  1917→  const startEdit = () => {
+  1918→    setEditForm({ name: user?.name || '', phone: user?.phone || '', password: '', confirmPassword: '' })
+  1919→    setEditing(true)
+  1920→  }
+  1921→
+  1922→  const saveProfile = async () => {
+  1923→    if (!editForm.name.trim()) {
+  1924→      addToast('Nama tidak boleh kosong', 'error')
+  1925→      return
+  1926→    }
+  1927→    if (editForm.password && editForm.password !== editForm.confirmPassword) {
+  1928→      addToast('Konfirmasi password tidak cocok', 'error')
+  1929→      return
+  1930→    }
+  1931→    if (editForm.password && editForm.password.length < 6) {
+  1932→      addToast('Password minimal 6 karakter', 'error')
+  1933→      return
+  1934→    }
+  1935→
+  1936→    setSaving(true)
+  1937→    try {
+  1938→      const body: Record<string, string> = { id: user!.id, name: editForm.name.trim() }
+  1939→      if (editForm.phone) body.phone = editForm.phone.trim()
+  1940→      if (editForm.password) body.password = editForm.password
+  1941→
+  1942→      const res = await fetch('/api/auth/profile', {
+  1943→        method: 'PUT',
+  1944→        headers: { 'Content-Type': 'application/json' },
+  1945→        body: JSON.stringify(body),
+  1946→      })
+  1947→      const data = await res.json()
+  1948→      if (!res.ok) throw new Error(data.error)
+  1949→
+  1950→      setUser({ ...user!, name: data.name, phone: data.phone })
+  1951→      setEditing(false)
+  1952→      addToast('Profil berhasil diperbarui', 'success')
+  1953→    } catch (err: unknown) {
+  1954→      addToast(err instanceof Error ? err.message : 'Gagal menyimpan', 'error')
+  1955→    } finally {
+  1956→      setSaving(false)
+  1957→    }
+  1958→  }
+  1959→
+  1960→  const updateStatus = async (id: string, status: string) => {
+  1961→    try {
+  1962→      const res = await fetch('/api/orders', {
+  1963→        method: 'PATCH',
+  1964→        headers: { 'Content-Type': 'application/json' },
+  1965→        body: JSON.stringify({ id, status }),
+  1966→      })
+  1967→      if (!res.ok) throw new Error()
+  1968→      addToast('Status pesanan berhasil diupdate', 'success')
+  1969→      loadOrders()
+  1970→    } catch {
+  1971→      addToast('Gagal mengupdate status', 'error')
+  1972→    }
+  1973→  }
+  1974→
+  1975→  const handleLogout = () => {
+  1976→    logout()
+  1977→    addToast('Anda telah keluar dari akun', 'info')
+  1978→  }
+  1979→
+  1980→  const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
+  1981→
+  1982→  // ─── Tab definitions ───
+  1983→  // ─── Product Management State ───
+  1984→  const [allProducts, setAllProducts] = useState<any[]>([])
+  1985→  const [showProductForm, setShowProductForm] = useState(false)
+  1986→  const [editingProduct, setEditingProduct] = useState<any>(null)
+  1987→  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', originalPrice: '', category: 'Makanan', tag: '', available: true })
+  1988→  const [productImage, setProductImage] = useState('')
+  1989→  const [uploading, setUploading] = useState(false)
+  1990→  const [savingProduct, setSavingProduct] = useState(false)
+  1991→  const [deletingProduct, setDeletingProduct] = useState<string | null>(null)
+  1992→  const fileInputRef = useRef<HTMLInputElement>(null)
+  1993→
+  1994→  const loadProducts = useCallback(async () => {
+  1995→    try {
+  1996→      const res = await fetch('/api/products?all=true')
+  1997→      const data = await res.json()
+  1998→      if (Array.isArray(data)) setAllProducts(data)
+  1999→    } catch { /* silent */ }
+  2000→  }, [])
+
+[showing lines 1-2000 of 3589; use offset=2001 with limit to continue reading]

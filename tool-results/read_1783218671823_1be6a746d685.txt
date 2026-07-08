@@ -1,0 +1,338 @@
+   544→            {/* ═══════════════════════════════════════════════════════════════
+   545→                 SHOWCASE MEMBER CARD — Pintu Aceh × Rencong V6
+   546→                 ═══════════════════════════════════════════════════════════════ */}
+   547→            <motion.div
+   548→              initial={{ opacity: 0, scale: 0.7, y: 50, rotateX: 20 }}
+   549→              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+   550→              transition={{ duration: 1.4, delay: 0.4, type: 'spring', stiffness: 80, damping: 12 }}
+   551→              className="mt-8 mx-auto w-full relative"
+   552→              style={{ maxWidth: 400, perspective: 1200 }}
+   553→            >
+   554→              {/* Ascending luminous particles */}
+   555→              <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 30 }}>
+   556→                {[{ left: '4%', delay: 0, dur: 4.5, size: 3.5, color: '#fff' }, { left: '16%', delay: 1.5, dur: 3.8, size: 2.5, color: '#fed7aa' }, { left: '30%', delay: 0.7, dur: 5.2, size: 2, color: '#fff' }, { left: '44%', delay: 2.3, dur: 4.0, size: 3, color: '#fdba74' }, { left: '58%', delay: 0.9, dur: 4.7, size: 2.5, color: '#fff' }, { left: '72%', delay: 1.9, dur: 3.4, size: 2, color: '#fed7aa' }, { left: '88%', delay: 0.3, dur: 5.5, size: 3, color: '#fff' }, { left: '95%', delay: 2.8, dur: 3.6, size: 2, color: '#fdba74' }].map((p, i) => (
+   557→                  <div key={i} className="absolute bottom-0 rounded-full" style={{ left: p.left, width: p.size, height: p.size, background: `radial-gradient(circle, ${p.color} 0%, ${p.color}66 40%, transparent 100%)`, animation: `v5-particle-ascend ${p.dur}s ease-in-out ${p.delay}s infinite`, boxShadow: `0 0 12px 4px ${p.color}88` }} />
+   558→                ))}
+   559→              </div>
+   560→
+   561→              {/* Starburst accents */}
+   562→              <div className="absolute -top-6 -right-4 pointer-events-none" style={{ zIndex: 25 }}>
+   563→                <svg width="40" height="40" viewBox="0 0 40 40" style={{ animation: 'v5-starburst 4s ease-in-out 1s infinite' }}><path d="M20 0 L23 15 L38 12 L26 20 L38 28 L23 25 L20 40 L17 25 L2 28 L14 20 L2 12 L17 15 Z" fill="rgba(255,255,255,0.15)" /></svg>
+   564→              </div>
+   565→              <div className="absolute -bottom-4 -left-3 pointer-events-none" style={{ zIndex: 25 }}>
+   566→                <svg width="28" height="28" viewBox="0 0 40 40" style={{ animation: 'v5-starburst 5s ease-in-out 2.5s infinite' }}><path d="M20 0 L23 15 L38 12 L26 20 L38 28 L23 25 L20 40 L17 25 L2 28 L14 20 L2 12 L17 15 Z" fill="rgba(254,215,170,0.12)" /></svg>
+   567→              </div>
+   568→
+   569→              {/* Float wrapper — CSS translate (not transform) to preserve 3D */}
+   570→              <div className="relative w-full" style={{ animation: 'v5-float 8s ease-in-out infinite' }}>
+   571→                {/* 3D flip context */}
+   572→                <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowcaseFlipped(f => !f)}>
+   573→                  {/* Orbiting conic glow border */}
+   574→                  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden" style={{ zIndex: 0 }}>
+   575→                    <div className="absolute inset-[-180%]" style={{ animation: 'v5-border-orbit 16s linear infinite', background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.9) 3%, transparent 6%, rgba(254,215,170,0.7) 10%, transparent 14%, rgba(255,255,255,0.6) 18%, transparent 22%, rgba(249,115,22,0.5) 26%, transparent 30%)', filter: 'blur(2.5px)' }} />
+   576→                  </div>
+   577→                  {/* Outer pulsing aura */}
+   578→                  <div className="absolute -inset-14 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(249,115,22,0.3) 0%, rgba(234,88,12,0.12) 40%, transparent 60%)', animation: 'v5-pulse-outer 6s ease-in-out infinite', top: '50%', left: '50%' }} />
+   579→
+   580→                  {/* ── 3D Flip Container ── */}
+   581→                  <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showcaseFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 1.1s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 260 }}>
+   582→
+   583→                    {/* ═══════════ FRONT FACE ═══════════ */}
+   584→                    <div className="relative rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(145deg, rgba(234,88,12,0.18) 0%, rgba(249,115,22,0.12) 25%, rgba(251,146,60,0.15) 45%, rgba(251,191,36,0.10) 55%, rgba(251,146,60,0.15) 65%, rgba(249,115,22,0.12) 80%, rgba(234,88,12,0.18) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+   585→                      {/* Hero-matched aceh-pattern overlay */}
+   586→                      <div className="absolute inset-0 aceh-pattern opacity-20" />
+   587→                      {/* Aurora color wave */}
+   588→                      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #EA580C, #F97316, #FBBF24, #FDBA74, #F97316, #FB923C, #EA580C)', opacity: 0.15, backgroundSize: '500% 500%', animation: 'v5-aurora 12s ease-in-out infinite' }} />
+   589→                      {/* Holographic shimmer */}
+   590→                      <div className="v5-shine-sweep" />
+   591→
+   592→                      {/* ── PINTU ADAT ACEH — PROMINENT CENTER ORNAMENT ── */}
+   593→                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: '70%', height: '85%', transform: 'translate(-50%,-50%)', animation: 'v5-arch-glow 7s ease-in-out infinite' }} viewBox="0 0 300 320" fill="none">
+   594→                        <defs>
+   595→                          <linearGradient id="archGrad" x1="0" y1="0" x2="0" y2="1">
+   596→                            <stop offset="0%" stopColor="white" stopOpacity="0.22" />
+   597→                            <stop offset="50%" stopColor="white" stopOpacity="0.08" />
+   598→                            <stop offset="100%" stopColor="white" stopOpacity="0.03" />
+   599→                          </linearGradient>
+   600→                        </defs>
+   601→                        {/* Outer frame of Pintu Aceh */}
+   602→                        <rect x="45" y="10" width="210" height="300" rx="105" fill="none" stroke="url(#archGrad)" strokeWidth="2.5" />
+   603→                        {/* Inner arch door */}
+   604→                        <path d="M70 310 L70 140 Q70 50 150 50 Q230 50 230 140 L230 310" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.8" />
+   605→                        {/* Second inner arch */}
+   606→                        <path d="M90 310 L90 148 Q90 72 150 72 Q210 72 210 148 L210 310" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+   607→                        {/* Third inner arch */}
+   608→                        <path d="M105 310 L105 155 Q105 90 150 90 Q195 90 195 155 L195 310" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.6" />
+   609→                        {/* Keystone top */}
+   610→                        <path d="M120 50 Q150 28 180 50" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+   611→                        <circle cx="150" cy="38" r="5" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+   612→                        {/* Decorative step tiers left */}
+   613→                        <path d="M45 130 L45 180 L70 180 L70 130" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+   614→                        <path d="M70 150 L70 200 L90 200 L90 150" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+   615→                        {/* Decorative step tiers right */}
+   616→                        <path d="M255 130 L255 180 L230 180 L230 130" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+   617→                        <path d="M230 150 L230 200 L210 200 L210 150" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+   618→                        {/* Sulur (floral scroll) left — ornate */}
+   619→                        <path d="M45 200 Q18 175 14 148 Q10 125 28 118 Q42 114 50 132" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" strokeLinecap="round" />
+   620→                        <path d="M14 148 Q-2 140 0 158 Q2 172 18 168" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.6" />
+   621→                        <circle cx="0" cy="158" r="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   622→                        <path d="M50 132 Q42 122 38 135 Q36 145 48 140" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
+   623→                        {/* Sulur (floral scroll) right — ornate */}
+   624→                        <path d="M255 200 Q282 175 286 148 Q290 125 272 118 Q258 114 250 132" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" strokeLinecap="round" />
+   625→                        <path d="M286 148 Q302 140 300 158 Q298 172 282 168" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.6" />
+   626→                        <circle cx="300" cy="158" r="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   627→                        <path d="M250 132 Q258 122 262 135 Q264 145 252 140" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
+   628→                        {/* Door handle circles */}
+   629→                        <circle cx="110" cy="230" r="5" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+   630→                        <circle cx="110" cy="230" r="1.5" fill="rgba(255,255,255,0.08)" />
+   631→                        <circle cx="190" cy="230" r="5" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+   632→                        <circle cx="190" cy="230" r="1.5" fill="rgba(255,255,255,0.08)" />
+   633→                        {/* Light trace along outer arch */}
+   634→                        <path d="M70 310 L70 140 Q70 50 150 50 Q230 50 230 140 L230 310" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeDasharray="40 1200" strokeLinecap="round" style={{ animation: 'v5-light-trace 8s linear 2s infinite' }} />
+   635→                        {/* Bottom base decoration */}
+   636→                        <line x1="45" y1="310" x2="255" y2="310" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+   637→                        <path d="M90 310 L150 295 L210 310" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+   638→                      </svg>
+   639→
+   640→                      {/* ── RENCONG DAGGER — PROMINENT LEFT ORNAMENT ── */}
+   641→                      <svg className="absolute top-1/2 left-2 sm:left-4 pointer-events-none" style={{ width: 80, height: 200, transform: 'translateY(-50%)' }} viewBox="0 0 100 260" fill="none">
+   642→                        <defs>
+   643→                          <linearGradient id="rencongGrad" x1="0" y1="0" x2="1" y2="1">
+   644→                            <stop offset="0%" stopColor="white" stopOpacity="0.20" />
+   645→                            <stop offset="100%" stopColor="white" stopOpacity="0.04" />
+   646→                          </linearGradient>
+   647→                        </defs>
+   648→                        {/* Main blade */}
+   649→                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="url(#rencongGrad)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" strokeDasharray="300" style={{ animation: 'v5-dagger-draw 4s ease-in-out 1.5s infinite' }} />
+   650→                        {/* Blade edge highlight */}
+   651→                        <path d="M50 5 L63 55 L59 180 L50 240" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="0.4" strokeDasharray="300" style={{ animation: 'v5-dagger-draw 4s ease-in-out 1.7s infinite' }} />
+   652→                        {/* Hilt / sarung (sheath) */}
+   653→                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" strokeDasharray="300" style={{ animation: 'v5-dagger-draw 4s ease-in-out 1.8s infinite' }} />
+   654→                        {/* Hilt guard detail */}
+   655→                        <path d="M20 62 L80 62" stroke="rgba(255,255,255,0.08)" strokeWidth="0.4" />
+   656→                        {/* Sheath body */}
+   657→                        <path d="M32 62 L37 150 L50 158 L63 150 L68 62" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+   658→                        {/* Sheath decorative line */}
+   659→                        <path d="M40 80 L60 80" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+   660→                        <path d="M42 95 L58 95" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+   661→                        {/* Tip accent */}
+   662→                        <circle cx="50" cy="240" r="2" fill="rgba(255,255,255,0.06)" />
+   663→                      </svg>
+   664→
+   665→                      {/* ── RENCONG DAGGER — RIGHT SIDE (mirrored, subtle) ── */}
+   666→                      <svg className="absolute top-1/2 right-2 sm:right-4 pointer-events-none" style={{ width: 60, height: 150, transform: 'translateY(-50%) scaleX(-1)' }} viewBox="0 0 100 260" fill="none">
+   667→                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" strokeDasharray="300" style={{ animation: 'v5-dagger-draw 5s ease-in-out 2.5s infinite' }} />
+   668→                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" strokeDasharray="300" style={{ animation: 'v5-dagger-draw 5s ease-in-out 2.8s infinite' }} />
+   669→                      </svg>
+   670→
+   671→                      {/* ── ORNATE BORDER FRAME ── */}
+   672→                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 260" fill="none" preserveAspectRatio="none">
+   673→                        <rect x="4" y="4" width="392" height="252" rx="16" stroke="white" strokeWidth="0.8" strokeOpacity="0.18" />
+   674→                        <rect x="9" y="9" width="382" height="242" rx="13" stroke="white" strokeWidth="0.25" strokeOpacity="0.12" strokeDasharray="4 3" style={{ animation: 'v5-border-march 12s linear infinite' }} />
+   675→                        <rect x="14" y="14" width="372" height="232" rx="10" stroke="white" strokeWidth="0.12" strokeOpacity="0.06" />
+   676→                        {/* Corner accents */}
+   677→                        <path d="M20 8 L8 8 L8 20" fill="none" stroke="white" strokeWidth="0.8" strokeOpacity="0.25" />
+   678→                        <path d="M380 8 L392 8 L392 20" fill="none" stroke="white" strokeWidth="0.8" strokeOpacity="0.25" />
+   679→                        <path d="M8 240 L8 252 L20 252" fill="none" stroke="white" strokeWidth="0.8" strokeOpacity="0.25" />
+   680→                        <path d="M392 240 L392 252 L380 252" fill="none" stroke="white" strokeWidth="0.8" strokeOpacity="0.25" />
+   681→                      </svg>
+   682→
+   683→                      {/* ═══ FRONT CONTENT ═══ */}
+   684→                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3.5" style={{ minHeight: 260 }}>
+   685→                        {/* Header */}
+   686→                        <div className="flex items-center justify-between">
+   687→                          <div className="flex items-center gap-2.5">
+   688→                            <motion.div animate={{ rotate: [0, 6, -6, 3, -3, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} className="w-11 h-11 rounded-xl bg-white/[0.15] backdrop-blur-md flex items-center justify-center border border-white/25" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1), 0 0 20px rgba(251,191,36,0.2)' }}>
+   689→                              <Crown className="w-5 h-5 text-amber-200" />
+   690→                            </motion.div>
+   691→                            <div>
+   692→                              <p className="text-[7px] text-white/45 font-bold uppercase tracking-[0.35em] leading-none">Member Card</p>
+   693→                              <motion.p initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1, duration: 0.7 }} className="text-white font-extrabold text-sm sm:text-base truncate max-w-[140px] leading-tight mt-1 v5-name-glow">
+   694→                                Ahmad Rizky
+   695→                              </motion.p>
+   696→                            </div>
+   697→                          </div>
+   698→                          <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="v5-badge-breathe bg-gradient-to-br from-white/25 to-white/[0.08] backdrop-blur-md rounded-lg px-3 py-1.5 border border-white/30">
+   699→                            <span className="text-[9px] text-amber-100 font-extrabold uppercase tracking-[0.15em]">Premium</span>
+   700→                          </motion.div>
+   701→                        </div>
+   702→
+   703→                        {/* Ornate divider */}
+   704→                        <div className="flex items-center gap-2 my-2.5">
+   705→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+   706→                          <svg className="w-4 h-3 text-white/30" viewBox="0 0 24 12" fill="none">
+   707→                            <path d="M12 0 L14 5 L24 6 L14 7 L12 12 L10 7 L0 6 L10 5 Z" fill="currentColor" fillOpacity="0.3" />
+   708→                          </svg>
+   709→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+   710→                        </div>
+   711→
+   712→                        {/* Member Number — RANDOM */}
+   713→                        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.5 }} className="text-center mb-2">
+   714→                          <p className="text-[7px] text-white/40 font-semibold uppercase tracking-[0.25em] mb-0.5">No. Member</p>
+   715→                          <p className="text-white/90 font-mono text-[10px] sm:text-xs font-bold tracking-[0.25em]">{showcaseMemberNo}</p>
+   716→                        </motion.div>
+   717→
+   718→                        {/* Points & Voucher — Glassmorphic panels */}
+   719→                        <div className="flex-1 flex items-end gap-3">
+   720→                          <motion.div initial={{ opacity: 0, scale: 0.7, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.4, duration: 0.7, type: 'spring', stiffness: 160 }} whileHover={{ scale: 1.05, y: -3 }} className="flex-1 bg-white/[0.12] backdrop-blur-md rounded-2xl p-3 text-center border border-white/20" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.25)' }}>
+   721→                            <div className="flex items-center justify-center gap-1.5 mb-1">
+   722→                              <motion.div animate={{ rotate: [0, 18, -18, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}>
+   723→                                <Star className="w-4 h-4 text-amber-300" />
+   724→                              </motion.div>
+   725→                              <span className="text-[7px] text-white/55 font-bold uppercase tracking-[0.2em]">Poin</span>
+   726→                            </div>
+   727→                            <motion.p initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.8, duration: 0.5, type: 'spring', stiffness: 250 }} className="text-white font-black text-2xl leading-none">1.250</motion.p>
+   728→                          </motion.div>
+   729→                          <motion.div initial={{ opacity: 0, scale: 0.7, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 1.6, duration: 0.7, type: 'spring', stiffness: 160 }} whileHover={{ scale: 1.05, y: -3 }} className="flex-1 bg-white/[0.12] backdrop-blur-md rounded-2xl p-3 text-center border border-white/20" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.25)' }}>
+   730→                            <div className="flex items-center justify-center gap-1.5 mb-1">
+   731→                              <motion.div animate={{ y: [0, -3, 0], rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}>
+   732→                                <Gift className="w-4 h-4 text-amber-300" />
+   733→                              </motion.div>
+   734→                              <span className="text-[7px] text-white/55 font-bold uppercase tracking-[0.2em]">Voucher</span>
+   735→                            </div>
+   736→                            <motion.p initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2, duration: 0.5, type: 'spring', stiffness: 250 }} className="text-white font-black text-2xl leading-none">3</motion.p>
+   737→                          </motion.div>
+   738→                        </div>
+   739→
+   740→                        <motion.p animate={{ opacity: [0.08, 0.45, 0.08] }} transition={{ duration: 3.5, repeat: Infinity, delay: 2.5 }} className="text-center text-[7px] text-white/25 font-medium mt-2 tracking-wider">
+   741→                          ✦ Ketuk untuk melihat barcode ✦
+   742→                        </motion.p>
+   743→                      </div>
+   744→                    </div>
+   745→
+   746→                    {/* ═══════════ BACK FACE (Barcode) ═══════════ */}
+   747→                    <div className="absolute inset-0 rounded-2xl shadow-2xl border border-white/20 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(145deg, rgba(234,88,12,0.18) 0%, rgba(249,115,22,0.12) 25%, rgba(251,146,60,0.15) 45%, rgba(251,191,36,0.10) 55%, rgba(251,146,60,0.15) 65%, rgba(249,115,22,0.12) 80%, rgba(234,88,12,0.18) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+   748→                      <div className="absolute inset-0 aceh-pattern opacity-15" />
+   749→                      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #EA580C, #F97316, #FBBF24, #FDBA74, #F97316, #FB923C, #EA580C)', opacity: 0.12, backgroundSize: '500% 500%', animation: 'v5-aurora 12s ease-in-out infinite' }} />
+   750→                      <div className="v5-shine-sweep" />
+   751→
+   752→                      {/* Pintu Aceh watermark (back, subtle) */}
+   753→                      <svg className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: 180, height: 180, transform: 'translate(-50%,-50%)', animation: 'v5-arch-glow 8s ease-in-out infinite' }} viewBox="0 0 300 300" fill="none">
+   754→                        <path d="M70 290 L70 140 Q70 55 150 55 Q230 55 230 140 L230 290" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.2" />
+   755→                        <path d="M90 290 L90 148 Q90 72 150 72 Q210 72 210 148 L210 290" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.6" />
+   756→                        {/* Sulur left */}
+   757→                        <path d="M70 190 Q50 170 46 150 Q42 130 58 126 Q68 124 72 138" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" strokeLinecap="round" />
+   758→                        {/* Sulur right */}
+   759→                        <path d="M230 190 Q250 170 254 150 Q258 130 242 126 Q232 124 228 138" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" strokeLinecap="round" />
+   760→                      </svg>
+   761→
+   762→                      {/* Rencong watermark back */}
+   763→                      <svg className="absolute top-1/2 left-3 pointer-events-none" style={{ width: 50, height: 130, transform: 'translateY(-50%)' }} viewBox="0 0 100 260" fill="none">
+   764→                        <path d="M50 5 L63 55 L59 180 L50 240 L41 180 L37 55 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+   765→                        <path d="M24 48 Q50 32 76 48 L68 62 Q50 50 32 62 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" strokeWidth="0.4" />
+   766→                      </svg>
+   767→
+   768→                      {/* Border frame (back) */}
+   769→                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 260" fill="none" preserveAspectRatio="none">
+   770→                        <rect x="4" y="4" width="392" height="252" rx="16" stroke="white" strokeWidth="0.6" strokeOpacity="0.15" />
+   771→                        <rect x="9" y="9" width="382" height="242" rx="13" stroke="white" strokeWidth="0.2" strokeOpacity="0.1" strokeDasharray="4 3" style={{ animation: 'v5-border-march 12s linear infinite' }} />
+   772→                        <rect x="14" y="14" width="372" height="232" rx="10" stroke="white" strokeWidth="0.1" strokeOpacity="0.06" />
+   773→                        <path d="M20 8 L8 8 L8 20" fill="none" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+   774→                        <path d="M380 8 L392 8 L392 20" fill="none" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+   775→                        <path d="M8 240 L8 252 L20 252" fill="none" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+   776→                        <path d="M392 240 L392 252 L380 252" fill="none" stroke="white" strokeWidth="0.7" strokeOpacity="0.2" />
+   777→                      </svg>
+   778→
+   779→                      {/* ═══ BACK CONTENT ═══ */}
+   780→                      <div className="relative z-10 flex flex-col h-full px-5 pt-4 pb-3" style={{ minHeight: 260 }}>
+   781→                        {/* Header row */}
+   782→                        <div className="flex items-center justify-between mb-1.5">
+   783→                          <div className="flex items-center gap-2.5">
+   784→                            <motion.div animate={{ rotate: [0, -5, 5, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} className="w-9 h-9 rounded-lg bg-white/[0.15] backdrop-blur-md flex items-center justify-center border border-white/20">
+   785→                              <Crown className="w-4 h-4 text-amber-200" />
+   786→                            </motion.div>
+   787→                            <div className="text-left">
+   788→                              <p className="text-[7px] text-white/45 font-bold uppercase tracking-[0.25em] leading-none">Member Card</p>
+   789→                              <p className="text-white font-bold text-[11px] leading-tight mt-0.5">Ahmad Rizky</p>
+   790→                            </div>
+   791→                          </div>
+   792→                          {/* Animated ping dot — "scanning" indicator */}
+   793→                          <div className="relative flex items-center gap-1.5">
+   794→                            <span className="relative flex h-2 w-2">
+   795→                              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" style={{ animation: 'v6-dot-ping 1.5s cubic-bezier(0,0,0.2,1) infinite' }} />
+   796→                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+   797→                            </span>
+   798→                            <span className="text-[8px] text-emerald-300/80 font-semibold tracking-wider">SCAN</span>
+   799→                          </div>
+   800→                        </div>
+   801→
+   802→                        <div className="flex items-center gap-2 mb-2">
+   803→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+   804→                          <svg className="w-3 h-2.5 text-white/25" viewBox="0 0 24 12" fill="none"><path d="M12 0 L14 5 L24 6 L14 7 L12 12 L10 7 L0 6 L10 5 Z" fill="currentColor" fillOpacity="0.3" /></svg>
+   805→                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+   806→                        </div>
+   807→
+   808→                        {/* ── COMPACT WHITE BARCODE CONTAINER ── */}
+   809→                        <div className="flex-1 flex items-center justify-center">
+   810→                          <motion.div
+   811→                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+   812→                            animate={{ opacity: 1, scale: 1, y: 0 }}
+   813→                            transition={{ duration: 0.7, type: 'spring', stiffness: 200, damping: 15 }}
+   814→                            className="relative w-full max-w-[260px]"
+   815→                          >
+   816→                            {/* Outer glow pulse ring */}
+   817→                            <div className="absolute -inset-3 rounded-2xl pointer-events-none" style={{ animation: 'v6-pulse-ring 3s ease-in-out infinite', border: '1px solid rgba(255,255,255,0.08)' }} />
+   818→
+   819→                            {/* Main white barcode card */}
+   820→                            <div
+   821→                              className="relative bg-white rounded-xl overflow-hidden py-4 px-5"
+   822→                              style={{ animation: 'v6-glow-pulse 4s ease-in-out infinite' }}
+   823→                            >
+   824→                              {/* Animated corner brackets */}
+   825→                              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 260 100" fill="none">
+   826→                                {/* Top-left corner */}
+   827→                                <path d="M18 1 L1 1 L1 18" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="34" style={{ animation: 'v6-corner-draw-tl 0.6s ease-out 0.3s forwards', strokeDashoffset: 34 }} />
+   828→                                {/* Top-right corner */}
+   829→                                <path d="M242 1 L259 1 L259 18" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="34" style={{ animation: 'v6-corner-draw-tr 0.6s ease-out 0.45s forwards', strokeDashoffset: 34 }} />
+   830→                                {/* Bottom-left corner */}
+   831→                                <path d="M1 82 L1 99 L18 99" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="34" style={{ animation: 'v6-corner-draw-bl 0.6s ease-out 0.6s forwards', strokeDashoffset: 34 }} />
+   832→                                {/* Bottom-right corner */}
+   833→                                <path d="M259 82 L259 99 L242 99" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="34" style={{ animation: 'v6-corner-draw-br 0.6s ease-out 0.75s forwards', strokeDashoffset: 34 }} />
+   834→                              </svg>
+   835→
+   836→                              {/* Barcode with reveal animation */}
+   837→                              <div className="relative" style={{ animation: 'v6-float-soft 6s ease-in-out infinite' }}>
+   838→                                {/* Scan line overlay */}
+   839→                                <div className="absolute inset-x-0 h-[2px] pointer-events-none z-10" style={{ background: 'linear-gradient(90deg, transparent, #F97316, #FDBA74, #F97316, transparent)', animation: 'v6-scan-line 2.5s ease-in-out 1s infinite', filter: 'blur(0.5px)' }} />
+   840→
+   841→                                {/* Shimmer sweep on barcode */}
+   842→                                <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 rounded">
+   843→                                  <div className="absolute inset-0" style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(249,115,22,0.12) 45%, rgba(251,191,36,0.18) 50%, rgba(249,115,22,0.12) 55%, transparent 70%)', animation: 'v6-shimmer-barcode 3s ease-in-out 1.5s infinite' }} />
+   844→                                </div>
+   845→
+   846→                                {/* The barcode SVG */}
+   847→                                <div className="relative" style={{ animation: 'v6-barcode-in 0.8s ease-out 0.4s both' }}>
+   848→                                  <svg ref={showcaseBarcodeRef} className="w-full" style={{ height: 38, display: 'block' }} />
+   849→                                </div>
+   850→                              </div>
+   851→
+   852→                              {/* Member number with typewriter reveal */}
+   853→                              <p className="text-center text-[9px] text-orange-600/70 font-mono font-bold mt-2 tracking-[0.3em]" style={{ animation: 'v6-text-typewriter 1s ease-out 0.8s both' }}>
+   854→                                {showcaseMemberNo}
+   855→                              </p>
+   856→
+   857→                              {/* Tiny decorative line under number */}
+   858→                              <div className="flex items-center justify-center gap-1.5 mt-1.5">
+   859→                                <div className="h-px w-6 bg-gradient-to-r from-transparent to-orange-300/40" />
+   860→                                <div className="w-1 h-1 rounded-full bg-orange-400/50" />
+   861→                                <div className="h-px w-10 bg-orange-300/40" />
+   862→                                <div className="w-1 h-1 rounded-full bg-orange-400/50" />
+   863→                                <div className="h-px w-6 bg-gradient-to-l from-transparent to-orange-300/40" />
+   864→                              </div>
+   865→                            </div>
+   866→                          </motion.div>
+   867→                        </div>
+   868→
+   869→                        <div className="flex items-center justify-between mt-1.5">
+   870→                          <p className="text-[7px] text-white/30 font-mono tracking-[0.15em]">AGSI MEMBER</p>
+   871→                          <motion.p animate={{ opacity: [0.12, 0.45, 0.12] }} transition={{ duration: 3, repeat: Infinity }} className="text-[7px] text-white/25 font-medium">✦ Ketuk untuk kembali ✦</motion.p>
+   872→                        </div>
+   873→                      </div>
+   874→                    </div>
+   875→
+   876→                  </div>
+   877→                </div>
+   878→              </div>
+   879→            </motion.div>
+
+[showing lines 544-879 of 3724; use offset=880 with limit to continue reading]
