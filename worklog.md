@@ -838,3 +838,20 @@ Stage Summary:
 - Root cause: Missing `/api/upload/route.ts` file
 - Created complete upload API route with proper validation and error handling
 - File stored in `public/uploads/products/` directory
+
+---
+Task ID: 15b
+Agent: Main Agent
+Task: Fix upload "Server error: respons bukan JSON" — route file was missing
+
+Work Log:
+- Tested upload via curl verbose: got `404 Server action not found` with `content-type: text/plain`
+- Discovered `/src/app/api/upload/route.ts` file was missing from disk (likely accidentally deleted during earlier subagent file operations)
+- Recreated the file with full validation (multipart check, file type, size limit, unique filename)
+- Verified upload returns 200 with JSON after clean restart
+- Confirmed file persists on disk through `rm -rf .next` + restart cycle
+
+Stage Summary:
+- Root cause: The upload route file was deleted from disk, causing Next.js to return 404 "Server action not found" (text/plain) instead of JSON
+- Fix: Recreated `/src/app/api/upload/route.ts`
+- Verified working with curl (200 + JSON response) through multiple restarts
