@@ -816,3 +816,25 @@ Stage Summary:
 - Total removed: 96 lines from ProfilePage
 - Member card now visible on home page for all users (customer + admin)
 - Profile page is cleaner without the duplicate card
+
+---
+Task ID: 15
+Agent: Main Agent
+Task: Fix product image upload error
+
+Work Log:
+- Investigated upload error: frontend calls `POST /api/upload` but the route file did not exist (`/src/app/api/upload/route.ts` was missing)
+- Created `/src/app/api/upload/route.ts` with full upload functionality:
+  - Validates Content-Type is multipart/form-data (returns 400 if not)
+  - Validates file is present (returns 400 if missing)
+  - Validates file type: JPG, PNG, GIF, WebP only (returns 400 if invalid)
+  - Validates file size max 2MB (returns 400 if too large)
+  - Saves to `public/uploads/products/` with unique filename (`{timestamp}-{random}.{ext}`)
+  - Returns JSON `{ url, filename }` — url is the public path like `/uploads/products/...`
+- Tested via curl: valid PNG upload returns 200 with URL, invalid type returns 400, no multipart returns 400
+- Verified uploaded file is served correctly (HTTP 200 from public path)
+
+Stage Summary:
+- Root cause: Missing `/api/upload/route.ts` file
+- Created complete upload API route with proper validation and error handling
+- File stored in `public/uploads/products/` directory
