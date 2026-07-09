@@ -797,3 +797,22 @@ Stage Summary:
 - Root cause: Frontend PATCH hitting wrong route (no PATCH handler at /api/orders)
 - Files changed: `src/app/api/orders/[id]/route.ts`, `src/app/page.tsx` (line ~1972)
 - Status update now works correctly through the admin dashboard UI
+
+---
+Task ID: 14
+Agent: Main Agent
+Task: Pindahkan kartu member dari halaman admin profile ke halaman beranda
+
+Work Log:
+- Identified that home page had V7 clean member card gated by `user.role !== 'admin'` (line 541)
+- Identified that admin profile page had old complex Batik Parang card (lines 2148-2224, 77 lines)
+- Changed home page condition from `user && user.role !== 'admin'` to `user &&` — card now shows for ALL logged-in users
+- Removed old Batik Parang admin card block (77 lines) from ProfilePage
+- Removed unused barcode state/useEffect from ProfilePage (showBarcode, barcodeRef, memberCode, JsBarcode useEffect — 19 lines)
+- Verified via VLM: Admin user sees clean V7 member card on home page with "Member Card", name, "Premium" badge, Poin/Voucher
+- Verified via VLM: Admin profile page is clean with no member card, just profile info and tabs
+
+Stage Summary:
+- Total removed: 96 lines from ProfilePage
+- Member card now visible on home page for all users (customer + admin)
+- Profile page is cleaner without the duplicate card
