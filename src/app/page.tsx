@@ -3653,6 +3653,16 @@ function OrderNotificationPopup() {
     }
   }, [currentPopup, popupQueue])
 
+  // Repeat sound every 5 seconds while popup is visible (until admin responds)
+  useEffect(() => {
+    if (!currentPopup) return
+    playNotifSound()
+    const repeatSound = setInterval(() => {
+      playNotifSound()
+    }, 5000)
+    return () => clearInterval(repeatSound)
+  }, [currentPopup])
+
   const handleAction = async (orderId: string, status: string) => {
     setActionLoading(true)
     try {
@@ -3690,21 +3700,20 @@ function OrderNotificationPopup() {
         exit={{ opacity: 0, scale: 0.85, y: 30 }}
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
       >
-        {/* Pulsing header */}
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 text-white relative overflow-hidden">
-          <div className="absolute inset-0 aceh-pattern opacity-20" />
-          <div className="relative flex items-center gap-3">
+        {/* Header — white background */}
+        <div className="bg-white border-b border-gray-100 p-4 relative overflow-hidden">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
-                <BellRing className="w-6 h-6" />
+              <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center animate-pulse">
+                <BellRing className="w-6 h-6 text-orange-500" />
               </div>
               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-base">Pesanan Baru!</h3>
-              <p className="text-xs text-orange-100">Menunggu tindakan Anda</p>
+              <h3 className="font-bold text-base text-gray-800">Pesanan Baru!</h3>
+              <p className="text-xs text-gray-400">Menunggu tindakan Anda</p>
             </div>
-            <div className="flex items-center gap-1 text-xs bg-white/20 rounded-full px-2.5 py-1">
+            <div className="flex items-center gap-1 text-xs bg-orange-100 text-orange-600 rounded-full px-2.5 py-1 font-medium">
               <Volume2 className="w-3 h-3" />
               {popupQueue.length > 0 ? `+${popupQueue.length} lagi` : 'Baru saja'}
             </div>
