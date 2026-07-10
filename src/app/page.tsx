@@ -1662,6 +1662,12 @@ function ReceiptPage() {
               <Badge className={`${statusColor[receipt.status]} text-sm px-4 py-1`}>
                 {statusLabel[receipt.status]}
               </Badge>
+              {receipt.status === 'delivered' && receipt.pointsEarned > 0 && (
+                <p className="text-xs text-orange-600 font-semibold mt-2 flex items-center justify-center gap-1">
+                  <Star className="w-3.5 h-3.5" />
+                  +{receipt.pointsEarned} poin didapatkan
+                </p>
+              )}
             </div>
 
             <p className="text-xs text-gray-400 text-center text-justify leading-relaxed">
@@ -1998,7 +2004,12 @@ function ProfilePage() {
         body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()
-      addToast('Status pesanan berhasil diupdate', 'success')
+      const data = await res.json()
+      if (data.pointsInfo?.awarded) {
+        addToast(`Pesanan selesai! +${data.pointsInfo.points} poin untuk pelanggan`, 'success')
+      } else {
+        addToast('Status pesanan berhasil diupdate', 'success')
+      }
       loadOrders()
     } catch {
       addToast('Gagal mengupdate status', 'error')
@@ -3672,6 +3683,10 @@ function OrderNotificationPopup() {
         body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()
+      const data = await res.json()
+      if (data.pointsInfo?.awarded) {
+        useAppStore.getState().addToast(`Pesanan selesai! +${data.pointsInfo.points} poin untuk pelanggan`, 'success')
+      }
       setCurrentPopup(null)
     } catch {
       // keep popup open on error

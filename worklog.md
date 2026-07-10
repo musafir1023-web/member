@@ -951,3 +951,30 @@ Stage Summary:
 - All popups use shadcn/ui AlertDialog or custom Framer Motion modal
 - Tested end-to-end: logout dialog, delete dialog, order popup with real API order
 
+
+---
+Task ID: auto-points
+Agent: Main Agent
+Task: Otomatis masukkan poin ke customer saat pesanan selesai (delivered)
+
+Work Log:
+- Added pointsAwarded (Boolean) and pointsEarned (Int) fields to Order model in Prisma schema
+- Ran db:push to sync database
+- Rewrote PATCH /api/orders/[id] route:
+  - Rate: 1 poin per Rp 1.000 total belanja
+  - When status = delivered AND pointsAwarded = false AND userId exists → increment user.points
+  - Marks order.pointsAwarded = true to prevent double-awarding (idempotent)
+  - Returns pointsInfo object: { awarded, points, newTotal }
+  - Guest orders (no userId) skip point logic gracefully
+- Updated OrderData interface in store.ts with pointsAwarded & pointsEarned fields
+- Updated ProfilePage updateStatus: shows toast "+X poin untuk pelanggan" when points awarded
+- Updated OrderNotificationPopup handleAction: same toast behavior
+- Added points display on ReceiptPage: shows "⭐ +X poin didapatkan" below status badge for delivered orders
+
+Stage Summary:
+- E2E verified: Rina (0 pts) → order Rp 25.000 → delivered → 25 pts ✓
+- Idempotent: second PATCH returns awarded:false (already given) ✓
+- Guest orders: delivered without error, no points ✓
+- Receipt displays points earned info ✓
+- Admin toast shows point notification on delivery ✓
+

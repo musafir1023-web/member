@@ -31,6 +31,8 @@ export interface OrderData {
   customerPhone: string
   customerAddress: string
   notes?: string
+  pointsAwarded?: boolean
+  pointsEarned?: number
   createdAt: string
   items: {
     id: string
