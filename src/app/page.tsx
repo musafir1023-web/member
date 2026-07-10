@@ -4,6 +4,16 @@ import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from '
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore, type CartItem, type OrderData, type Page } from '@/lib/store'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -65,6 +75,9 @@ import {
   MessageCircle,
   Send,
   Smile,
+  BellRing,
+  Volume2,
+  ShoppingBag,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -89,6 +102,26 @@ const statusLabel: Record<string, string> = {
   preparing: 'Diproses',
   delivered: 'Selesai',
   cancelled: 'Dibatalkan',
+}
+
+/* ─────────────────────── NOTIFICATION SOUND ─────────────────────── */
+function playNotifSound() {
+  try {
+    const ctx = new AudioContext()
+    const notes = [880, 1100, 880, 1320]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.15)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.14)
+      osc.start(ctx.currentTime + i * 0.15)
+      osc.stop(ctx.currentTime + i * 0.15 + 0.15)
+    })
+  } catch { /* silent */ }
 }
 
 /* ─────────────────────── TOAST COMPONENT ─────────────────────── */
@@ -1859,6 +1892,8 @@ function ProfilePage() {
   const [orders, setOrders] = useState<OrderData[]>([])
   const [allOrders, setAllOrders] = useState<OrderData[]>([])
   const [loading, setLoading] = useState(true)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const isAdmin = user?.role === 'admin'
 
@@ -1883,6 +1918,13 @@ function ProfilePage() {
   }, [user, isAdmin, addToast])
 
   useEffect(() => { loadOrders() }, [loadOrders])
+
+  // Listen for "go to admin orders" event from notification popup
+  useEffect(() => {
+    const handler = () => { setActiveTab('admin'); loadOrders() }
+    window.addEventListener('admin-goto-orders', handler)
+    return () => window.removeEventListener('admin-goto-orders', handler)
+  }, [loadOrders])
 
   // Computed stats
   const customerStats = {
@@ -1966,6 +2008,11 @@ function ProfilePage() {
   const handleLogout = () => {
     logout()
     addToast('Anda telah keluar dari akun', 'info')
+  }
+
+  const confirmLogout = () => {
+    setShowLogoutDialog(false)
+    handleLogout()
   }
 
   const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
@@ -2064,7 +2111,6 @@ function ProfilePage() {
   }
 
   const deleteProduct = async (id: string) => {
-    if (!confirm('Hapus produk ini?')) return
     setDeletingProduct(id)
     try {
       const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
@@ -2075,7 +2121,12 @@ function ProfilePage() {
       addToast('Gagal menghapus produk', 'error')
     } finally {
       setDeletingProduct(null)
+      setDeleteTarget(null)
     }
+  }
+
+  const confirmDeleteProduct = () => {
+    if (deleteTarget) deleteProduct(deleteTarget.id)
   }
 
   const tabs = isAdmin
@@ -2264,7 +2315,7 @@ function ProfilePage() {
 
             {/* Logout */}
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutDialog(true)}
               className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
             >
               <LogOut className="w-4 h-4" />
@@ -2629,7 +2680,7 @@ function ProfilePage() {
                             <Button size="sm" variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 text-[11px] h-8 px-2" onClick={() => openEditProduct(p)}>
                               <Edit3 className="w-3 h-3" />
                             </Button>
-                            <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-[11px] h-8 px-2" onClick={() => deleteProduct(p.id)} disabled={deletingProduct === p.id}>
+                            <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-[11px] h-8 px-2" onClick={() => setDeleteTarget({ id: p.id, name: p.name })} disabled={deletingProduct === p.id}>
                               {deletingProduct === p.id ? <span className="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3 h-3" />}
                             </Button>
                           </div>
@@ -2759,7 +2810,7 @@ function ProfilePage() {
 
             {/* Logout */}
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutDialog(true)}
               className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
             >
               <LogOut className="w-4 h-4" />
@@ -2768,6 +2819,54 @@ function ProfilePage() {
           </>
         )}
       </div>
+
+      {/* ═══ LOGOUT CONFIRMATION DIALOG ═══ */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <div className="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-2">
+              <LogOut className="w-7 h-7 text-red-500" />
+            </div>
+            <AlertDialogTitle className="text-center text-lg">Keluar dari Akun?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-justify leading-relaxed">
+              Anda akan keluar dari sesi saat ini. Pastikan semua pesanan telah diproses sebelum meninggalkan halaman admin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel className="m-0 rounded-xl">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmLogout}
+              className="m-0 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold"
+            >
+              <LogOut className="w-4 h-4 mr-1.5 inline" /> Ya, Keluar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ═══ DELETE PRODUCT CONFIRMATION DIALOG ═══ */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <div className="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-2">
+              <Trash2 className="w-7 h-7 text-red-500" />
+            </div>
+            <AlertDialogTitle className="text-center text-lg">Hapus Produk?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-justify leading-relaxed">
+              Produk <strong>&quot;{deleteTarget?.name}&quot;</strong> akan dihapus secara permanen dari menu. Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel className="m-0 rounded-xl">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteProduct}
+              className="m-0 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold"
+            >
+              <Trash2 className="w-4 h-4 mr-1.5 inline" /> Ya, Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -3503,6 +3602,222 @@ function AdminChatPanel() {
   )
 }
 
+/* ─────────────────────── ORDER NOTIFICATION POPUP (Admin) ─────────────────────── */
+function OrderNotificationPopup() {
+  const user = useAppStore((s) => s.user)
+  const isAdmin = user?.role === 'admin'
+  const [popupQueue, setPopupQueue] = useState<OrderData[]>([])
+  const [currentPopup, setCurrentPopup] = useState<OrderData | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const knownOrderIds = useRef<Set<string>>(new Set())
+  const hasInitialLoaded = useRef(false)
+
+  // Poll orders every 8 seconds
+  useEffect(() => {
+    if (!isAdmin) return
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/orders')
+        const data: OrderData[] = await res.json()
+        if (!Array.isArray(data)) return
+
+        if (!hasInitialLoaded.current) {
+          // First load: mark all existing pending orders as "known"
+          data.forEach((o) => knownOrderIds.current.add(o.id))
+          hasInitialLoaded.current = true
+          return
+        }
+
+        // Detect new orders
+        const newOrders = data.filter(
+          (o) => !knownOrderIds.current.has(o.id) && o.status === 'pending'
+        )
+        if (newOrders.length > 0) {
+          newOrders.forEach((o) => knownOrderIds.current.add(o.id))
+          playNotifSound()
+          setPopupQueue((prev) => [...prev, ...newOrders])
+        }
+      } catch { /* silent */ }
+    }
+
+    poll()
+    const interval = setInterval(poll, 8000)
+    return () => clearInterval(interval)
+  }, [isAdmin])
+
+  // Process queue
+  useEffect(() => {
+    if (!currentPopup && popupQueue.length > 0) {
+      setCurrentPopup(popupQueue[0])
+      setPopupQueue((prev) => prev.slice(1))
+    }
+  }, [currentPopup, popupQueue])
+
+  const handleAction = async (orderId: string, status: string) => {
+    setActionLoading(true)
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error()
+      setCurrentPopup(null)
+    } catch {
+      // keep popup open on error
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleGoToOrders = () => {
+    setCurrentPopup(null)
+    useAppStore.getState().setPage('profile')
+    // Navigate to admin tab — we need to trigger a custom event
+    window.dispatchEvent(new CustomEvent('admin-goto-orders'))
+  }
+
+  if (!currentPopup) return null
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      {/* Backdrop — not dismissible */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.85, y: 30 }}
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+      >
+        {/* Pulsing header */}
+        <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 text-white relative overflow-hidden">
+          <div className="absolute inset-0 aceh-pattern opacity-20" />
+          <div className="relative flex items-center gap-3">
+            <div className="relative">
+              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
+                <BellRing className="w-6 h-6" />
+              </div>
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-base">Pesanan Baru!</h3>
+              <p className="text-xs text-orange-100">Menunggu tindakan Anda</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs bg-white/20 rounded-full px-2.5 py-1">
+              <Volume2 className="w-3 h-3" />
+              {popupQueue.length > 0 ? `+${popupQueue.length} lagi` : 'Baru saja'}
+            </div>
+          </div>
+        </div>
+
+        {/* Order details */}
+        <div className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono text-gray-400">#{currentPopup.id.slice(-6)}</span>
+            <Badge className="bg-yellow-100 text-yellow-800 text-xs">{statusLabel[currentPopup.status]}</Badge>
+          </div>
+
+          <div className="flex items-center gap-3 bg-orange-50 rounded-xl p-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+              <ShoppingBag className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-800 truncate">{currentPopup.customerName}</p>
+              <p className="text-xs text-gray-500">
+                <Phone className="w-3 h-3 inline mr-0.5" />{currentPopup.customerPhone}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-gray-600">Item Pesanan:</p>
+            <div className="max-h-32 overflow-y-auto card-scrollbar space-y-1">
+              {currentPopup.items.map((item) => (
+                <div key={item.id} className="flex justify-between text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                  <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+                  <span className="flex-shrink-0 font-medium">{fmt(item.subtotal)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+            <div className="text-xs text-gray-400">
+              <MapPin className="w-3 h-3 inline mr-0.5" />
+              <span className="truncate max-w-[200px] inline-block align-bottom">{currentPopup.customerAddress}</span>
+            </div>
+          </div>
+
+          {currentPopup.notes && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <p className="text-xs text-amber-700">
+                <Bell className="w-3 h-3 inline mr-1" />
+                <strong>Catatan:</strong> {currentPopup.notes}
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+            <span className="text-sm text-gray-500">Total Pembayaran</span>
+            <span className="text-lg font-extrabold text-orange-600">{fmt(currentPopup.total)}</span>
+          </div>
+        </div>
+
+        {/* Action buttons — NOT dismissible without action */}
+        <div className="p-4 pt-0 flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold"
+              onClick={() => handleAction(currentPopup.id, 'confirmed')}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <><CheckCircle2 className="w-4 h-4 mr-1" /> Konfirmasi</>
+              )}
+            </Button>
+            <Button
+              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold"
+              onClick={() => handleAction(currentPopup.id, 'preparing')}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <><Clock className="w-4 h-4 mr-1" /> Proses Langsung</>
+              )}
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              className="border-orange-200 text-orange-600 hover:bg-orange-50 text-sm"
+              onClick={handleGoToOrders}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-1" /> Lihat Semua
+            </Button>
+            <Button
+              variant="outline"
+              className="border-red-200 text-red-500 hover:bg-red-50 text-sm"
+              onClick={() => handleAction(currentPopup.id, 'cancelled')}
+              disabled={actionLoading}
+            >
+              <XCircle className="w-4 h-4 mr-1" /> Tolak
+            </Button>
+          </div>
+          {popupQueue.length > 0 && (
+            <p className="text-center text-xs text-gray-400">
+              {popupQueue.length} pesanan lain menunggu di antrian
+            </p>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
@@ -3576,6 +3891,7 @@ export default function AppPage() {
         <BottomNav />
       </div>
       <ToastContainer />
+      <OrderNotificationPopup />
     </div>
   )
 }

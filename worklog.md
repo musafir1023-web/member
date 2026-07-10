@@ -919,3 +919,35 @@ Stage Summary:
 - Fix: Recreated the route file, cleared Turbopack cache, restarted server
 - Upload now works end-to-end: curl, Caddy proxy, and browser all return 200 with JSON
 
+
+---
+Task ID: popups
+Agent: Main Agent
+Task: Buat popup notifikasi untuk logout, hapus produk, dan pesanan baru di admin
+
+Work Log:
+- Analyzed existing code: logout (direct call), delete product (native confirm), order polling (none)
+- Added AlertDialog imports from shadcn/ui
+- Added BellRing, Volume2, ShoppingBag icons from lucide-react
+- Created playNotifSound() using Web Audio API (4-note chime, no external files)
+- Created OrderNotificationPopup component:
+  - Polls /api/orders every 8 seconds for admin users
+  - First load marks all existing orders as "known" (no false positives)
+  - Detects new pending orders by comparing IDs
+  - Queues multiple new orders and shows them one at a time
+  - Sticky popup: cannot be dismissed without action
+  - Shows full order details: customer, phone, items, address, notes, total
+  - 4 action buttons: Konfirmasi, Proses Langsung, Lihat Semua, Tolak
+  - Plays notification sound on new order
+- Added logout confirmation dialog (AlertDialog with icon, message, Batal/Ya Keluar)
+- Added delete product confirmation dialog (shows product name, Batal/Ya Hapus)
+- Replaced native confirm() with AlertDialog for both actions
+- Added admin-goto-orders custom event for "Lihat Semua" navigation
+- All verified via Agent Browser + VLM screenshot analysis
+
+Stage Summary:
+- 3 popup types implemented: logout confirm, delete product confirm, new order notification
+- Order notification is sticky (stays until admin acts) with sound alert
+- All popups use shadcn/ui AlertDialog or custom Framer Motion modal
+- Tested end-to-end: logout dialog, delete dialog, order popup with real API order
+
