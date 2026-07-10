@@ -855,3 +855,21 @@ Stage Summary:
 - Root cause: The upload route file was deleted from disk, causing Next.js to return 404 "Server action not found" (text/plain) instead of JSON
 - Fix: Recreated `/src/app/api/upload/route.ts`
 - Verified working with curl (200 + JSON response) through multiple restarts
+
+---
+Task ID: 15c
+Agent: Main Agent
+Task: Perbaiki gagal upload gambar (persisten)
+
+Work Log:
+- Found route file `/src/app/api/upload/route.ts` was MISSING from disk again
+- Recreated the file and did full clean restart (rm -rf .next)
+- Verified curl upload returns 200
+- Tested browser upload via Agent Browser: dispatched file change event on hidden input
+- Dev log confirmed: `POST /api/upload 200 in 27ms`
+- VLM confirmed: green "Gambar berhasil diupload" message + image preview visible in form
+- Root cause: file kept getting deleted from disk (likely by subagent file operations using head/tail)
+
+Stage Summary:
+- Upload now works end-to-end from browser: file select → POST /api/upload → 200 JSON → preview shown
+- File `/src/app/api/upload/route.ts` recreated and verified present
