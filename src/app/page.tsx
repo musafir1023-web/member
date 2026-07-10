@@ -2833,18 +2833,18 @@ function ProfilePage() {
 
       {/* ═══ LOGOUT CONFIRMATION DIALOG ═══ */}
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-2xl bg-white border border-gray-200">
           <AlertDialogHeader>
             <div className="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-2">
               <LogOut className="w-7 h-7 text-red-500" />
             </div>
-            <AlertDialogTitle className="text-center text-lg">Keluar dari Akun?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-justify leading-relaxed">
+            <AlertDialogTitle className="text-center text-lg text-gray-900">Keluar dari Akun?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-justify leading-relaxed text-gray-600">
               Anda akan keluar dari sesi saat ini. Pastikan semua pesanan telah diproses sebelum meninggalkan halaman admin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-            <AlertDialogCancel className="m-0 rounded-xl">Batal</AlertDialogCancel>
+            <AlertDialogCancel className="m-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 border-0">Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmLogout}
               className="m-0 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold"

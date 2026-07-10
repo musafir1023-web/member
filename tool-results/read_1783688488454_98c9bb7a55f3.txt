@@ -894,3 +894,88 @@
    894→- Fix: `git restore` + `git commit` untuk mencegah penghapusan di masa depan
    895→- Upload sekarang berfungsi: 200 JSON response dengan URL gambar
    896→
+   897→---
+   898→Task ID: upload-fix-3
+   899→Agent: Main Agent
+   900→Task: Fix product image upload (3rd attempt - "respon bukan JSON")
+   901→
+   902→Work Log:
+   903→- Investigated: confirmed `/api/upload/route.ts` was MISSING from disk again (3rd time)
+   904→- Dev log showed: `POST /api/upload 404` with "Failed to find Server Action" error
+   905→- Caddyfile checked: no body size limits (not the issue)
+   906→- next.config.ts checked: no API body parser config needed
+   907→- Recreated `/api/upload/route.ts` with proper multipart/form-data handling
+   908→- Created `public/uploads/products/` directory
+   909→- Cleared `.next` cache (`rm -rf .next`) and restarted dev server
+   910→- Tested via curl direct (port 3000): HTTP 200, JSON response
+   911→- Tested via curl through Caddy proxy (port 81): HTTP 200, JSON response
+   912→- Tested via Agent Browser: simulated file input change event
+   913→- Dev log confirmed: `POST /api/upload 200 in 24ms`
+   914→- Browser UI confirmed: upload button changed to "Preview" (image uploaded successfully)
+   915→- File verified on disk in `public/uploads/products/`
+   916→
+   917→Stage Summary:
+   918→- Root cause: `/api/upload/route.ts` file kept being deleted from disk
+   919→- Fix: Recreated the route file, cleared Turbopack cache, restarted server
+   920→- Upload now works end-to-end: curl, Caddy proxy, and browser all return 200 with JSON
+   921→
+   922→
+   923→---
+   924→Task ID: popups
+   925→Agent: Main Agent
+   926→Task: Buat popup notifikasi untuk logout, hapus produk, dan pesanan baru di admin
+   927→
+   928→Work Log:
+   929→- Analyzed existing code: logout (direct call), delete product (native confirm), order polling (none)
+   930→- Added AlertDialog imports from shadcn/ui
+   931→- Added BellRing, Volume2, ShoppingBag icons from lucide-react
+   932→- Created playNotifSound() using Web Audio API (4-note chime, no external files)
+   933→- Created OrderNotificationPopup component:
+   934→  - Polls /api/orders every 8 seconds for admin users
+   935→  - First load marks all existing orders as "known" (no false positives)
+   936→  - Detects new pending orders by comparing IDs
+   937→  - Queues multiple new orders and shows them one at a time
+   938→  - Sticky popup: cannot be dismissed without action
+   939→  - Shows full order details: customer, phone, items, address, notes, total
+   940→  - 4 action buttons: Konfirmasi, Proses Langsung, Lihat Semua, Tolak
+   941→  - Plays notification sound on new order
+   942→- Added logout confirmation dialog (AlertDialog with icon, message, Batal/Ya Keluar)
+   943→- Added delete product confirmation dialog (shows product name, Batal/Ya Hapus)
+   944→- Replaced native confirm() with AlertDialog for both actions
+   945→- Added admin-goto-orders custom event for "Lihat Semua" navigation
+   946→- All verified via Agent Browser + VLM screenshot analysis
+   947→
+   948→Stage Summary:
+   949→- 3 popup types implemented: logout confirm, delete product confirm, new order notification
+   950→- Order notification is sticky (stays until admin acts) with sound alert
+   951→- All popups use shadcn/ui AlertDialog or custom Framer Motion modal
+   952→- Tested end-to-end: logout dialog, delete dialog, order popup with real API order
+   953→
+   954→
+   955→---
+   956→Task ID: auto-points
+   957→Agent: Main Agent
+   958→Task: Otomatis masukkan poin ke customer saat pesanan selesai (delivered)
+   959→
+   960→Work Log:
+   961→- Added pointsAwarded (Boolean) and pointsEarned (Int) fields to Order model in Prisma schema
+   962→- Ran db:push to sync database
+   963→- Rewrote PATCH /api/orders/[id] route:
+   964→  - Rate: 1 poin per Rp 1.000 total belanja
+   965→  - When status = delivered AND pointsAwarded = false AND userId exists → increment user.points
+   966→  - Marks order.pointsAwarded = true to prevent double-awarding (idempotent)
+   967→  - Returns pointsInfo object: { awarded, points, newTotal }
+   968→  - Guest orders (no userId) skip point logic gracefully
+   969→- Updated OrderData interface in store.ts with pointsAwarded & pointsEarned fields
+   970→- Updated ProfilePage updateStatus: shows toast "+X poin untuk pelanggan" when points awarded
+   971→- Updated OrderNotificationPopup handleAction: same toast behavior
+   972→- Added points display on ReceiptPage: shows "⭐ +X poin didapatkan" below status badge for delivered orders
+   973→
+   974→Stage Summary:
+   975→- E2E verified: Rina (0 pts) → order Rp 25.000 → delivered → 25 pts ✓
+   976→- Idempotent: second PATCH returns awarded:false (already given) ✓
+   977→- Guest orders: delivered without error, no points ✓
+   978→- Receipt displays points earned info ✓
+   979→- Admin toast shows point notification on delivery ✓
+   980→
+   981→

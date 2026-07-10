@@ -978,3 +978,19 @@ Stage Summary:
 - Receipt displays points earned info ✓
 - Admin toast shows point notification on delivery ✓
 
+---
+Task ID: logout-dialog-white-bg
+Agent: Main Agent
+Task: Ubah background notifikasi Keluar dari Akun (AlertDialog logout) ke warna putih
+
+Work Log:
+- Read logout AlertDialog code at line ~2835 in page.tsx
+- Added `bg-white border border-gray-200` to AlertDialogContent
+- Added `text-gray-900` to AlertDialogTitle for dark text on white bg
+- Added `text-gray-600` to AlertDialogDescription for readable gray text
+- Styled "Batal" button with `bg-gray-100 hover:bg-gray-200 text-gray-700 border-0`
+- Verified via Agent Browser + VLM screenshot analysis: dialog confirmed white background
+
+Stage Summary:
+- Logout dialog now has clean white background with proper text contrast
+- VLM verification passed: white bg, dark title, gray description, gray cancel button, red confirm button
