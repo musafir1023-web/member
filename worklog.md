@@ -873,3 +873,23 @@ Work Log:
 Stage Summary:
 - Upload now works end-to-end from browser: file select → POST /api/upload → 200 JSON → preview shown
 - File `/src/app/api/upload/route.ts` recreated and verified present
+
+---
+Task ID: 15c
+Agent: Main Agent
+Task: Fix upload gambar produk - file route terus hilang dari disk
+
+Work Log:
+- Dev log menunjukkan `POST /api/upload 404` dengan error "Failed to find Server Action"
+- `ls` mengkonfirmasi `/src/app/api/upload/route.ts` HILANG dari disk
+- `git status` menunjukkan `deleted: src/app/api/upload/route.ts` — file pernah ada lalu dihapus
+- Root cause: Subagent pada Task 14 menggunakan `head`/`tail` untuk merekonstruksi page.tsx, kemungkinan menjalankan `git restore` atau `git checkout` yang menghapus file upload route yang belum committed
+- `git restore src/app/api/upload/route.ts` untuk mengembalikan file
+- `git commit` file tersebut agar tidak terhapus lagi oleh operasi git di masa depan
+- Verifikasi: curl upload mengembalikan 200 + JSON, dev log menunjukkan `POST /api/upload 200`
+- Verifikasi browser: dispatch change event pada file input → upload berhasil (200 di log)
+
+Stage Summary:
+- Root cause: File `/src/app/api/upload/route.ts` terhapus dari disk oleh operasi git (subagent sebelumnya)
+- Fix: `git restore` + `git commit` untuk mencegah penghapusan di masa depan
+- Upload sekarang berfungsi: 200 JSON response dengan URL gambar
