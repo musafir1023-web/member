@@ -3,7 +3,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+const MAX_SIZE = 2 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
   try {
