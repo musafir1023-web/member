@@ -470,9 +470,9 @@ interface HomeProduct {
 
 function HomePage() {
   const { setPage, addToCart, addToast, user, setUser } = useAppStore()
-  const [products, setProducts] = useState<HomeProduct[]>([])
   const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
-  const [activeTab, setActiveTab] = useState<'terbaru' | 'terlaris' | 'promo'>('terbaru')
+  const [terlarisProducts, setTerlarisProducts] = useState<HomeProduct[]>([])
+  const [populerProducts, setPopulerProducts] = useState<HomeProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [showBarcode, setShowBarcode] = useState(false)
   const barcodeRef = useRef<SVGSVGElement>(null)
@@ -512,12 +512,14 @@ function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/products').then((r) => r.json()),
       fetch('/api/products?tag=promo').then((r) => r.json()),
+      fetch('/api/products?tag=terlaris').then((r) => r.json()),
+      fetch('/api/products?tag=populer').then((r) => r.json()),
     ])
-      .then(([all, promo]) => {
-        setProducts(Array.isArray(all) ? all : [])
+      .then(([promo, terlaris, populer]) => {
         setPromoProducts(Array.isArray(promo) ? promo : [])
+        setTerlarisProducts(Array.isArray(terlaris) ? terlaris : [])
+        setPopulerProducts(Array.isArray(populer) ? populer : [])
         setLoading(false)
       })
       .catch(() => {
@@ -541,13 +543,71 @@ function HomePage() {
     return Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
   }
 
-  const filteredProducts = products.filter((p) => p.tag === activeTab)
-
-  const tabItems = [
-    { id: 'terbaru' as const, label: 'Terbaru', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'terlaris' as const, label: 'Terlaris', icon: <Flame className="w-4 h-4" /> },
-    { id: 'promo' as const, label: 'Promo', icon: <Percent className="w-4 h-4" /> },
-  ]
+  const renderProductScroll = (
+    items: HomeProduct[],
+    sectionLabel: string,
+    sectionDesc: string,
+    iconBg: string,
+    iconColor: string,
+    badgeTag: string | null,
+    emptyText: string
+  ) => (
+    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+      {loading ? (
+        <div className="flex gap-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="w-44 sm:w-48 flex-shrink-0 rounded-2xl" style={{ height: '220px' }} />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-white/60 text-sm py-4">{emptyText}</p>
+      ) : (
+        items.map((p, i) => {
+          const disc = getDiscount(p)
+          return (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="flex-shrink-0 w-44 sm:w-48 bg-white rounded-2xl shadow-lg overflow-hidden relative group cursor-pointer hover:shadow-xl transition-shadow"
+              onClick={() => handleAdd(p)}
+            >
+              {/* Image */}
+              <div className="relative h-32 sm:h-36 bg-orange-50 flex items-center justify-center p-3">
+                {disc > 0 && (
+                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow-md z-10">
+                    -{disc}%
+                  </div>
+                )}
+                {badgeTag && p.tag === badgeTag && !disc && (
+                  <div className="absolute top-2 left-2 bg-amber-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow-md z-10 flex items-center gap-0.5">
+                    <Star className="w-2.5 h-2.5" /> {badgeTag === 'terlaris' ? 'Laris' : 'Populer'}
+                  </div>
+                )}
+                <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              {/* Info */}
+              <div className="p-3">
+                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{p.category}</p>
+                <h3 className="font-bold text-gray-800 text-xs leading-tight mt-0.5 line-clamp-2 min-h-[2rem]">{p.name}</h3>
+                <div className="flex items-baseline gap-1 mt-1.5 mb-2">
+                  <span className="text-sm font-extrabold text-orange-600">{fmt(p.price)}</span>
+                  {disc > 0 && (
+                    <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice!)}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 w-fit text-[10px] font-bold group-hover:bg-orange-600 transition-colors shadow-sm">
+                  <Plus className="w-3 h-3" />
+                  Tambah
+                </div>
+              </div>
+            </motion.div>
+          )
+        })
+      )}
+    </div>
+  )
 
   return (
     <div>
@@ -708,76 +768,66 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══ PROMO BANNER ═══ */}
-      <section className="bg-orange-500 py-6 sm:py-8 relative">
-        <div className="absolute inset-0 aceh-pattern opacity-30" />
+      {/* ═══ SEDANG PROMO ═══ */}
+      <section className="bg-orange-500 py-5 sm:py-7 relative">
         <div className="relative max-w-5xl mx-auto px-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shadow-md">
-              <Percent className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">Promo Spesial</h2>
-              <p className="text-orange-100 text-[10px] sm:text-xs">Penawaran terbatas, jangan sampai ketinggalan!</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-            {loading ? (
-              <div className="flex gap-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="w-72 h-40 sm:h-44 rounded-2xl flex-shrink-0" />
-                ))}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-lg">
+                <Percent className="w-4.5 h-4.5" />
               </div>
-            ) : promoProducts.length === 0 ? (
-              <p className="text-orange-100 text-sm">Belum ada promo saat ini</p>
-            ) : (
-              promoProducts.map((p, i) => {
-                const disc = getDiscount(p)
-                return (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl shadow-xl overflow-hidden relative group cursor-pointer"
-                    onClick={() => handleAdd(p)}
-                  >
-                    {/* Discount Badge */}
-                    {disc > 0 && (
-                      <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                        <Flame className="w-3 h-3" /> HEMAT {disc}%
-                      </div>
-                    )}
-                    <div className="flex h-40 sm:h-44">
-                      <div className="w-28 sm:w-32 flex-shrink-0 bg-orange-50 flex items-center justify-center p-2 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 to-amber-100/50" />
-                        <img src={p.image} alt={p.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-300" />
-                      </div>
-                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
-                        <div>
-                          <p className="text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-wide">{p.category}</p>
-                          <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight mt-0.5 line-clamp-2">{p.name}</h3>
-                        </div>
-                        <div>
-                          <div className="flex items-baseline gap-1.5 mb-2">
-                            <span className="text-base sm:text-lg font-extrabold text-orange-600">{fmt(p.price)}</span>
-                            {p.originalPrice && p.originalPrice > p.price && (
-                              <span className="text-[10px] sm:text-xs text-gray-400 line-through">{fmt(p.originalPrice)}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 w-fit text-[10px] sm:text-xs font-bold group-hover:bg-orange-600 transition-colors shadow-sm">
-                            <Plus className="w-3 h-3" />
-                            Tambah
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })
-            )}
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white leading-tight">Sedang Promo 🔥</h2>
+                <p className="text-orange-100 text-[10px] sm:text-xs">Penawaran terbatas, buruan sebelum habis!</p>
+              </div>
+            </div>
+            <button onClick={() => setPage('menu')} className="text-orange-100 hover:text-white text-xs font-medium flex items-center gap-0.5 transition-colors">
+              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
+          {renderProductScroll(promoProducts, 'Sedang Promo', 'Penawaran terbatas', 'bg-red-500', 'text-red-500', null, 'Belum ada promo saat ini')}
+        </div>
+      </section>
+
+      {/* ═══ TERLARIS ═══ */}
+      <section className="bg-white py-5 sm:py-7 relative">
+        <div className="relative max-w-5xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg">
+                <Flame className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Terlaris</h2>
+                <p className="text-gray-400 text-[10px] sm:text-xs">Menu paling banyak dipesan pelanggan</p>
+              </div>
+            </div>
+            <button onClick={() => setPage('menu')} className="text-gray-400 hover:text-gray-600 text-xs font-medium flex items-center gap-0.5 transition-colors">
+              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {renderProductScroll(terlarisProducts, 'Terlaris', 'Menu paling laris', 'bg-orange-500', 'text-orange-500', 'terlaris', 'Belum ada produk terlaris')}
+        </div>
+      </section>
+
+      {/* ═══ POPULER ═══ */}
+      <section className="bg-gray-50 py-5 sm:py-7 relative">
+        <div className="relative max-w-5xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg">
+                <TrendingUp className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Populer</h2>
+                <p className="text-gray-400 text-[10px] sm:text-xs">Menu favorit yang banyak disukai</p>
+              </div>
+            </div>
+            <button onClick={() => setPage('menu')} className="text-gray-400 hover:text-gray-600 text-xs font-medium flex items-center gap-0.5 transition-colors">
+              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {renderProductScroll(populerProducts, 'Populer', 'Menu favorit', 'bg-amber-500', 'text-amber-500', 'populer', 'Belum ada produk populer')}
         </div>
       </section>
 
@@ -805,100 +855,6 @@ function HomePage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ═══ PRODUCT GRID BY TAB ═══ */}
-      <section className="bg-orange-500 py-6 sm:py-8 relative">
-        <div className="relative max-w-5xl mx-auto px-4">
-          {/* Tab Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Crown className="w-5 h-5 text-yellow-300" />
-              <h2 className="text-lg sm:text-xl font-bold text-white">Rekomendasi</h2>
-            </div>
-            <button onClick={() => setPage('menu')} className="text-orange-100 hover:text-white text-xs sm:text-sm font-medium flex items-center gap-0.5 transition-colors">
-              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1.5 mb-5 bg-orange-400/40 p-1 rounded-xl">
-            {tabItems.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-white text-orange-600 shadow-md'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Product Grid */}
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-52 sm:h-56 rounded-xl" />)}
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center shadow-md">
-              <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-400 text-sm">Belum ada produk</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {filteredProducts.map((p, i) => {
-                const disc = getDiscount(p)
-                return (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow group"
-                  >
-                    {/* Image */}
-                    <div className="relative h-28 sm:h-36 bg-orange-50 flex items-center justify-center p-3">
-                      {disc > 0 && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10">
-                          -{disc}%
-                        </div>
-                      )}
-                      {p.tag === 'terlaris' && (
-                        <div className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm z-10 flex items-center gap-0.5">
-                          <Flame className="w-2.5 h-2.5" /> Laris
-                        </div>
-                      )}
-                      <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    {/* Info */}
-                    <div className="p-3">
-                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">{p.category}</p>
-                      <h3 className="font-bold text-gray-800 text-xs sm:text-sm leading-tight line-clamp-2 mb-2 min-h-[2rem] sm:min-h-[2.5rem]">{p.name}</h3>
-                      <div className="flex items-baseline gap-1 mb-2">
-                        <span className="text-sm sm:text-base font-extrabold text-orange-600">{fmt(p.price)}</span>
-                        {p.originalPrice && p.originalPrice > p.price && (
-                          <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice)}</span>
-                        )}
-                      </div>
-                      <Button
-                        size="sm"
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-xs h-8"
-                        onClick={() => handleAdd(p)}
-                      >
-                        <Plus className="w-3 h-3 mr-1" /> Tambah
-                      </Button>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
         </div>
       </section>
 
@@ -1111,7 +1067,12 @@ function MenuPage() {
                       <Flame className="w-2.5 h-2.5" /> Laris
                     </span>
                   )}
-                  {p.tag === 'terbaru' && !(p.originalPrice && p.originalPrice > p.price) && p.tag !== 'terlaris' && (
+                  {p.tag === 'populer' && !(p.originalPrice && p.originalPrice > p.price) && (
+                    <span className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
+                      <TrendingUp className="w-2.5 h-2.5" /> Populer
+                    </span>
+                  )}
+                  {p.tag === 'terbaru' && !(p.originalPrice && p.originalPrice > p.price) && p.tag !== 'terlaris' && p.tag !== 'populer' && (
                     <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
                       <Sparkles className="w-2.5 h-2.5" /> Baru
                     </span>
@@ -2647,6 +2608,7 @@ function ProfilePage() {
                         <option value="">Tanpa Tag</option>
                         <option value="terbaru">Terbaru</option>
                         <option value="terlaris">Terlaris</option>
+                        <option value="populer">Populer</option>
                         <option value="promo">Promo</option>
                       </select>
                     </div>

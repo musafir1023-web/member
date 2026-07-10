@@ -994,3 +994,27 @@ Work Log:
 Stage Summary:
 - Logout dialog now has clean white background with proper text contrast
 - VLM verification passed: white bg, dark title, gray description, gray cancel button, red confirm button
+---
+Task ID: beranda-promo-terlaris-populer
+Agent: Main Agent
+Task: Tambahkan 3 section produk (Sedang Promo, Terlaris, Populer) di halaman Beranda
+
+Work Log:
+- Generated 7 AI food product images (geprek-original, geprek-pedas, geprek-mozarella, geprek-matah, geprek-telurasin, paket-double, es-teh, geprek-truffle)
+- Updated 2 existing products and created 7 new products with proper tags:
+  - Promo (2): Geprek Mozarella (28% off), Paket Hemat Double (29% off)
+  - Terlaris (3): Geprek Sambal Ijo Original, Geprek Level Pedas, Es Teh Manis
+  - Populer (3): Es Jeruk Segar, Geprek Sambal Matah, Geprek Telur Asin
+  - Terbaru (1): Geprek Truffle Premium
+- Replaced old Promo Banner + Rekomendasi tabs with 3 distinct horizontal scroll sections
+- Each section has unique styling: Promo (orange bg, red icon), Terlaris (white bg, orange icon), Populer (gray bg, amber icon)
+- Created reusable `renderProductScroll` component for consistent card design
+- Added "populer" option to admin product tag dropdown
+- Added "Populer" badge (blue) in MenuPage product cards
+- Verified via Agent Browser + VLM: all 3 sections visible, images loading, badges correct, horizontal scroll working, admin dropdown has Populer option
+
+Stage Summary:
+- 9 total products in DB with diverse tags and AI-generated images
+- Beranda now has 3 distinct product sections: Sedang Promo (2), Terlaris (3), Populer (3)
+- Each product card shows appropriate badges (discount %, Laris, Populer)
+- Admin can assign "Populer" tag via product form dropdown
