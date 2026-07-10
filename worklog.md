@@ -893,3 +893,29 @@ Stage Summary:
 - Root cause: File `/src/app/api/upload/route.ts` terhapus dari disk oleh operasi git (subagent sebelumnya)
 - Fix: `git restore` + `git commit` untuk mencegah penghapusan di masa depan
 - Upload sekarang berfungsi: 200 JSON response dengan URL gambar
+
+---
+Task ID: upload-fix-3
+Agent: Main Agent
+Task: Fix product image upload (3rd attempt - "respon bukan JSON")
+
+Work Log:
+- Investigated: confirmed `/api/upload/route.ts` was MISSING from disk again (3rd time)
+- Dev log showed: `POST /api/upload 404` with "Failed to find Server Action" error
+- Caddyfile checked: no body size limits (not the issue)
+- next.config.ts checked: no API body parser config needed
+- Recreated `/api/upload/route.ts` with proper multipart/form-data handling
+- Created `public/uploads/products/` directory
+- Cleared `.next` cache (`rm -rf .next`) and restarted dev server
+- Tested via curl direct (port 3000): HTTP 200, JSON response
+- Tested via curl through Caddy proxy (port 81): HTTP 200, JSON response
+- Tested via Agent Browser: simulated file input change event
+- Dev log confirmed: `POST /api/upload 200 in 24ms`
+- Browser UI confirmed: upload button changed to "Preview" (image uploaded successfully)
+- File verified on disk in `public/uploads/products/`
+
+Stage Summary:
+- Root cause: `/api/upload/route.ts` file kept being deleted from disk
+- Fix: Recreated the route file, cleared Turbopack cache, restarted server
+- Upload now works end-to-end: curl, Caddy proxy, and browser all return 200 with JSON
+
