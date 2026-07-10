@@ -1242,14 +1242,19 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
     customerAddress: '',
     notes: '',
     paymentMethod: 'COD',
+    deliveryMethod: 'pickup' as 'pickup' | 'delivery',
   })
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.customerName || !form.customerPhone || !form.customerAddress) {
+    if (!form.customerName || !form.customerPhone) {
       addToast('Mohon lengkapi semua data yang diperlukan', 'error')
+      return
+    }
+    if (form.deliveryMethod === 'delivery') {
+      addToast('Fitur pengiriman ke alamat segera hadir!', 'info')
       return
     }
     setSubmitting(true)
@@ -1271,7 +1276,7 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
           items,
           customerName: form.customerName,
           customerPhone: form.customerPhone,
-          customerAddress: form.customerAddress,
+          customerAddress: 'Ambil di Toko',
           notes: form.notes,
           paymentMethod: form.paymentMethod,
         }),
@@ -1316,13 +1321,71 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
               <Input id="name" value={form.customerName} onChange={(e) => updateField('customerName', e.target.value)} placeholder="Masukkan nama lengkap Anda" className="mt-1" required />
             </div>
             <div>
-              <Label htmlFor="phone" className="text-sm text-gray-600">Nomor Telepon *</Label>
+              <Label className="text-sm text-gray-600">Nomor Telepon *</Label>
               <Input id="phone" value={form.customerPhone} onChange={(e) => updateField('customerPhone', e.target.value)} placeholder="Contoh: 081234567890" className="mt-1" required />
             </div>
+
+            {/* Delivery Method */}
             <div>
-              <Label htmlFor="address" className="text-sm text-gray-600">Alamat Pengiriman *</Label>
-              <Textarea id="address" value={form.customerAddress} onChange={(e) => updateField('customerAddress', e.target.value)} placeholder="Masukkan alamat lengkap pengiriman Anda" className="mt-1" rows={3} required />
+              <Label className="text-sm text-gray-600">Cara Ambil Pesanan *</Label>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, deliveryMethod: 'pickup' }))}
+                  className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center ${
+                    form.deliveryMethod === 'pickup'
+                      ? 'border-orange-500 bg-orange-50 shadow-md'
+                      : 'border-gray-200 hover:border-orange-200 bg-white'
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center ${form.deliveryMethod === 'pickup' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <ShoppingBag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold leading-tight ${form.deliveryMethod === 'pickup' ? 'text-orange-700' : 'text-gray-700'}`}>Ambil di Toko</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Langsung datang ke toko</p>
+                  </div>
+                  {form.deliveryMethod === 'pickup' && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, deliveryMethod: 'delivery' }))}
+                  className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center ${
+                    form.deliveryMethod === 'delivery'
+                      ? 'border-gray-300 bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center ${form.deliveryMethod === 'delivery' ? 'bg-gray-300 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold leading-tight ${form.deliveryMethod === 'delivery' ? 'text-gray-500' : 'text-gray-700'}`}>
+                      Pengiriman
+                      <span className="ml-1 text-[9px] font-semibold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full align-middle">Segera Hadir</span>
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Antar ke alamat Anda</p>
+                  </div>
+                  {form.deliveryMethod === 'delivery' && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  )}
+                </button>
+              </div>
+              {form.deliveryMethod === 'delivery' && (
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-amber-700 leading-relaxed">Fitur pengiriman ke alamat sedang dalam pengembangan. Silakan pilih <strong>"Ambil di Toko"</strong> untuk saat ini.</p>
+                </div>
+              )}
             </div>
+
             <div>
               <Label htmlFor="notes" className="text-sm text-gray-600">Catatan (Opsional)</Label>
               <Textarea id="notes" value={form.notes} onChange={(e) => updateField('notes', e.target.value)} placeholder="Contoh: Jangan terlalu pedas, tambah sambal, dll" className="mt-1" rows={2} />

@@ -1018,3 +1018,23 @@ Stage Summary:
 - Beranda now has 3 distinct product sections: Sedang Promo (2), Terlaris (3), Populer (3)
 - Each product card shows appropriate badges (discount %, Laris, Populer)
 - Admin can assign "Populer" tag via product form dropdown
+---
+Task ID: delivery-options
+Agent: Main Agent
+Task: Tambahkan 2 pilihan pengiriman (Ambil di Toko & Pengiriman ke Alamat - Segera Hadir) di form Data Pemesan
+
+Work Log:
+- Added `deliveryMethod` field ('pickup' | 'delivery') to checkout form state, default 'pickup'
+- Removed old "Alamat Pengiriman" textarea field
+- Created 2 delivery option cards with icons (ShoppingBag for pickup, Truck for delivery)
+- "Ambil di Toko" card: orange border when selected, ShoppingBag icon, "Langsung datang ke toko" subtitle
+- "Pengiriman" card: gray styling, Truck icon, amber "Segera Hadir" badge, "Antar ke alamat Anda" subtitle
+- Added amber warning banner when "Pengiriman" is selected: explains feature is in development
+- Updated validation: address no longer required (removed from form)
+- Updated submit logic: sets address to "Ambil di Toko" automatically, blocks delivery with toast
+- Verified via Agent Browser + VLM: both options visible, pickup selected by default, warning appears on delivery click
+
+Stage Summary:
+- Form "Data Pemesan" now has "Cara Ambil Pesanan" with 2 visual cards
+- "Ambil di Toko" works normally, "Pengiriman" shows "Segera Hadir" warning and blocks submission
+- Clean UI with consistent orange theme for active selection
