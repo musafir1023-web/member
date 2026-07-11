@@ -1110,3 +1110,47 @@ Stage Summary:
 - Member card voucher count is now dynamic (calculated from actual voucher data)
 - All functionality verified via VLM + agent-browser testing
 - No new files created; all changes in existing src/app/page.tsx
+
+---
+Task ID: 3
+Agent: Sub Agent (general-purpose)
+Task: Fix voucher card rendering in HomePage
+
+Work Log:
+- Read voucher section (lines 763-863) and found inconsistent JSX indentation in the ternary nesting (empty-state branch had misaligned closing)
+- Replaced entire voucher section with clean, consistently-indented version
+- Removed unused `showUserVouchers` / `setShowUserVouchers` state declaration (was line 481)
+- Cleaned up resulting blank line
+- Verified no remaining references to `showUserVouchers` in file
+- Confirmed successful compilation via dev.log (200 responses, no errors)
+
+Stage Summary:
+- Voucher section rewritten with clean JSX: motion.div wrapper, header with active count, loading skeletons, empty state, ticket-style cards (orange left section with discount, white right section with code/copy/status/details)
+- Cards use `overflow-hidden` on individual card divs, `max-h-80 overflow-y-auto no-scrollbar` on scroll container
+- No AnimatePresence, no motion.div on individual cards
+- Removed dead `showUserVouchers` state (was unused after prior edit removed the toggle button)
+- Compiled successfully, verified via dev.log
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Display user's owned vouchers in the member card section on the home page
+
+Work Log:
+- Read existing code: Prisma Voucher model, /api/vouchers API, admin voucher UI, checkout integration already existed from prior session
+- Added state variables: `userVouchers`, `loadingVouchers` to HomePage component
+- Added useEffect to fetch user vouchers via `/api/vouchers?userId=xxx` on mount
+- Built "Voucher Saya" header with active count badge (filters out used + expired)
+- Built ticket-style voucher card UI: orange left (discount % OFF / fixed DISKON) + white right (code, copy button, status badge, min order, max discount, expiry)
+- Status badges: Aktif (green), Expired (red), Dipakai (gray)
+- Added copy-to-clipboard on voucher code click with toast notification
+- Created 3 test vouchers for Customer Test user (1 expired, 2 active)
+- Removed overflow-hidden from hero section to prevent clipping
+- Debugged React rendering issues with AnimatePresence and conditional rendering
+- Final working solution: vouchers always visible below member card, scrollable with max-h-80
+
+Stage Summary:
+- Voucher display in member card is fully functional
+- 3 test vouchers created and verified via VLM screenshot analysis
+- Ticket-style card design with clear visual hierarchy
+- Copy button, status badges, and detail info all working
