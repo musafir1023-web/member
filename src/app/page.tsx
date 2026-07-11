@@ -261,97 +261,224 @@ function TopBar() {
           </div>
         </div>
 
-        {/* ═══ Info Detail Panel (Dropdown) ═══ */}
+        {/* ═══ Info Detail Panel (Dropdown) — Animated ═══ */}
         <AnimatePresence>
           {showInfo && (
             <>
-              {/* Backdrop */}
+              {/* Backdrop with blur-in */}
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 z-[-1]"
+                initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+                animate={{ opacity: 1, backdropFilter: 'blur(4px)' }}
+                exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 bg-black/25 z-[-1]"
                 onClick={() => setShowInfo(false)}
               />
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                initial={{ opacity: 0, scaleY: 0.7, translateY: -8 }}
+                animate={{ opacity: 1, scaleY: 1, translateY: 0 }}
+                exit={{ opacity: 0, scaleY: 0.8, translateY: -8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+                style={{ transformOrigin: 'top center' }}
                 className="overflow-hidden"
               >
-                <div className="bg-white shadow-xl border-b border-orange-100">
-                  <div className="max-w-5xl mx-auto px-4 py-4">
-                    {/* Aceh ornament top divider */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
-                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
-                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
-                      </svg>
-                      <span className="text-[10px] text-orange-400 font-semibold uppercase tracking-widest">Informasi Toko</span>
-                      <svg className="w-3.5 h-3.5 text-orange-400/40" viewBox="0 0 14 14" fill="none">
-                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.15" />
-                      </svg>
-                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
-                    </div>
+                <div className="bg-white shadow-2xl shadow-orange-900/8 border-b border-orange-100 relative">
+                  {/* Shimmer sweep on open */}
+                  <motion.div
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '200%' }}
+                    transition={{ duration: 0.8, ease: 'easeInOut', delay: 0.1 }}
+                    className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none z-10"
+                  />
 
-                    <div className="space-y-3">
-                      {/* Status */}
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                          storeStatus.open ? 'bg-green-100' : 'bg-red-100'
+                  <div className="max-w-5xl mx-auto px-4 py-5 relative z-20">
+                    {/* Animated Aceh ornament top divider */}
+                    <motion.div
+                      initial={{ opacity: 0, scaleX: 0 }}
+                      animate={{ opacity: 1, scaleX: 1 }}
+                      transition={{ duration: 0.5, delay: 0.05 }}
+                      className="flex items-center gap-2 mb-5"
+                    >
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300/60 to-orange-300/60" />
+                      <motion.svg
+                        initial={{ rotate: 0, scale: 0 }}
+                        animate={{ rotate: 180, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
+                        className="w-4 h-4 text-orange-400/50"
+                        viewBox="0 0 14 14" fill="none"
+                      >
+                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.2" />
+                      </motion.svg>
+                      <motion.span
+                        initial={{ opacity: 0, letterSpacing: '0.3em' }}
+                        animate={{ opacity: 1, letterSpacing: '0.15em' }}
+                        transition={{ duration: 0.4, delay: 0.15 }}
+                        className="text-[10px] text-orange-500 font-bold uppercase tracking-widest"
+                      >
+                        Informasi Toko
+                      </motion.span>
+                      <motion.svg
+                        initial={{ rotate: 0, scale: 0 }}
+                        animate={{ rotate: -180, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
+                        className="w-4 h-4 text-orange-400/50"
+                        viewBox="0 0 14 14" fill="none"
+                      >
+                        <path d="M7 1 L13 7 L7 13 L1 7 Z" stroke="currentColor" strokeWidth="1" fill="currentColor" fillOpacity="0.2" />
+                      </motion.svg>
+                      <div className="flex-1 h-px bg-gradient-to-l from-transparent via-orange-300/60 to-orange-300/60" />
+                    </motion.div>
+
+                    <div className="space-y-2.5">
+                      {/* Status Card — featured */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.12 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        className="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50/60 to-orange-50 border border-orange-200/60 cursor-default"
+                      >
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative ${
+                          storeStatus.open
+                            ? 'bg-gradient-to-br from-green-100 to-emerald-100'
+                            : 'bg-gradient-to-br from-red-100 to-rose-100'
                         }`}>
                           <Clock className={`w-5 h-5 ${storeStatus.open ? 'text-green-600' : 'text-red-500'}`} />
+                          {/* Animated pulse ring */}
+                          {storeStatus.open && (
+                            <motion.span
+                              className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full"
+                              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.4, 1] }}
+                              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                            />
+                          )}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-800">{storeStatus.label}</p>
-                          <p className="text-xs text-gray-500">{STORE_INFO.hours} {STORE_INFO.timezone} · Setiap Hari</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-gray-800">{storeStatus.label}</p>
+                            {storeStatus.open && (
+                              <motion.span
+                                initial={{ width: 0 }}
+                                animate={{ width: 'auto' }}
+                                transition={{ duration: 0.3, delay: 0.5 }}
+                                className="text-[9px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full overflow-hidden whitespace-nowrap"
+                              >
+                                LIVE
+                              </motion.span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{STORE_INFO.hours} {STORE_INFO.timezone} · Setiap Hari</p>
                         </div>
-                      </div>
+                        <motion.div
+                          animate={{ rotate: storeStatus.open ? 0 : 0 }}
+                          className={`w-2 h-2 rounded-full ${storeStatus.open ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                          {storeStatus.open && (
+                            <motion.div
+                              className="w-2 h-2 rounded-full bg-green-500 absolute"
+                              animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
+                              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                              style={{ position: 'relative', top: 0, left: 0 }}
+                            />
+                          )}
+                        </motion.div>
+                      </motion.div>
 
                       {/* Address */}
-                      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                      <motion.div
+                        initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.18 }}
+                        whileHover={{ scale: 1.02, x: -4 }}
+                        className="flex items-start gap-3 p-3.5 rounded-2xl hover:bg-orange-50/60 transition-colors cursor-default"
+                      >
+                        <motion.div
+                          initial={{ rotate: -15, scale: 0 }}
+                          animate={{ rotate: 0, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.25 }}
+                          className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center flex-shrink-0"
+                        >
                           <MapPin className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div className="min-w-0">
+                        </motion.div>
+                        <div className="min-w-0 pt-0.5">
                           <p className="text-sm font-bold text-gray-800">Alamat</p>
-                          <p className="text-xs text-gray-500 leading-relaxed">{STORE_INFO.address}</p>
+                          <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{STORE_INFO.address}</p>
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Phone */}
-                      <a
+                      <motion.a
+                        initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.24 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                         href={`tel:${STORE_INFO.phone}`}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 p-3.5 rounded-2xl hover:bg-blue-50/60 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <motion.div
+                          initial={{ rotate: 15, scale: 0 }}
+                          animate={{ rotate: 0, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.3 }}
+                          className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center flex-shrink-0"
+                        >
                           <Phone className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
+                        </motion.div>
+                        <div className="pt-0.5">
                           <p className="text-sm font-bold text-gray-800">Telepon</p>
-                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{STORE_INFO.phone}</p>
                         </div>
-                      </a>
+                        <motion.div
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="ml-auto"
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-300" />
+                        </motion.div>
+                      </motion.a>
 
                       {/* WhatsApp */}
-                      <a
+                      <motion.a
+                        initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.30 }}
+                        whileHover={{ scale: 1.02, x: -4 }}
+                        whileTap={{ scale: 0.98 }}
                         href={`https://wa.me/${STORE_INFO.whatsapp}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 p-3.5 rounded-2xl hover:bg-green-50/60 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                          <Phone className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
+                        <motion.div
+                          initial={{ rotate: -15, scale: 0 }}
+                          animate={{ rotate: 0, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.36 }}
+                          className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center flex-shrink-0"
+                        >
+                          <MessageCircle className="w-5 h-5 text-green-600" />
+                        </motion.div>
+                        <div className="pt-0.5">
                           <p className="text-sm font-bold text-gray-800">WhatsApp</p>
-                          <p className="text-xs text-gray-500">{STORE_INFO.phone}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{STORE_INFO.phone}</p>
                         </div>
-                      </a>
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.55 }}
+                          className="ml-auto"
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-300" />
+                        </motion.div>
+                      </motion.a>
 
                       {/* Share */}
-                      <button
+                      <motion.button
+                        initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.36 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.96 }}
                         onClick={() => {
                           if (navigator.share) {
                             navigator.share({
@@ -362,25 +489,35 @@ function TopBar() {
                             navigator.clipboard.writeText(`${STORE_INFO.name}\n${STORE_INFO.address}\n${STORE_INFO.phone}`)
                           }
                         }}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors w-full"
+                        className="flex items-center gap-3 p-3.5 rounded-2xl hover:bg-amber-50/60 transition-colors w-full"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <motion.div
+                          initial={{ rotate: 15, scale: 0 }}
+                          animate={{ rotate: 0, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.42 }}
+                          className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center flex-shrink-0"
+                        >
                           <Share2 className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div className="text-left">
+                        </motion.div>
+                        <div className="text-left pt-0.5">
                           <p className="text-sm font-bold text-gray-800">Bagikan</p>
-                          <p className="text-xs text-gray-500">Salin info toko ke clipboard</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Salin info toko ke clipboard</p>
                         </div>
-                      </button>
+                      </motion.button>
                     </div>
 
-                    {/* Close button */}
-                    <button
+                    {/* Animated close button */}
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.3 }}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => setShowInfo(false)}
-                      className="mt-3 w-full py-2 text-center text-sm font-semibold text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-colors"
+                      className="mt-4 w-full py-2.5 text-center text-sm font-bold text-orange-600 hover:text-orange-700 bg-orange-50/70 hover:bg-orange-100/80 rounded-2xl transition-colors"
                     >
                       Tutup
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               </motion.div>

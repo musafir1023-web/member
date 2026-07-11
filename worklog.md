@@ -1154,3 +1154,36 @@ Stage Summary:
 - 3 test vouchers created and verified via VLM screenshot analysis
 - Ticket-style card design with clear visual hierarchy
 - Copy button, status badges, and detail info all working
+
+---
+Task ID: store-info-animation
+Agent: Main Agent
+Task: Create latest animation for store information (Informasi Toko) panel
+
+Work Log:
+- Read existing Informasi Toko dropdown panel (lines 264-389 in page.tsx)
+- Identified current animation: simple opacity + height transition
+- Replaced with comprehensive animated version including:
+  - Spring-physics panel entrance (scaleY + translateY with spring stiffness/damping)
+  - Backdrop blur-in animation
+  - Shimmer sweep effect on panel open
+  - Rotating/spinning Aceh diamond ornaments with spring animation
+  - Letter-spacing animation on "Informasi Toko" title
+  - Staggered card entrance: each card slides from alternating directions (left/right) with spring physics and 60ms delay increments
+  - Icon bounce-in with rotation animation on each card
+  - Pulsing green dot + LIVE badge for store status when open
+  - Hover micro-animations (scale + x-shift) on each card
+  - whileTap scale-down on interactive cards (Phone, WhatsApp, Share)
+  - Animated close button (fade-up with hover/tap effects)
+  - ChevronRight arrows slide-in on Phone and WhatsApp links
+  - Changed WhatsApp icon from Phone to MessageCircle for visual distinction
+  - Gradient backgrounds on icon containers
+  - Rounded-2xl on all cards for modern feel
+- Ran lint check: clean
+- Verified with agent-browser: panel opens, all 5 info cards render, no console errors
+
+Stage Summary:
+- Informasi Toko panel now has a polished, modern animation suite
+- 6 staggered animation phases: panel → header → status → address → phone/whatsapp → share/close
+- All animations use framer-motion spring physics for natural feel
+- No errors in compilation or browser runtime
