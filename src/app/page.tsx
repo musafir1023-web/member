@@ -48,7 +48,6 @@ import {
   Truck,
   AlertCircle,
   ChevronRight,
-  Copy,
   KeyRound,
   ReceiptText,
   UserCircle,
@@ -77,6 +76,7 @@ import {
   Smile,
   BellRing,
   Volume2,
+  Printer,
   ShoppingBag,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
@@ -1595,10 +1595,81 @@ function ReceiptPage() {
     )
   }
 
-  const handleCopy = () => {
-    const text = `AYAM GEPREK SAMBAL IJO\nNo: #${receipt.id.slice(-6)}\n${fmtDate(receipt.createdAt)}\n\n${receipt.items.map((i) => `${i.productName} x${i.quantity}\t${fmt(i.subtotal)}`).join('\n')}\n\nTotal: ${fmt(receipt.total)}\nPembayaran: ${receipt.paymentMethod}`
-    navigator.clipboard.writeText(text)
-    addToast('Struk disalin ke clipboard', 'info')
+  const handlePrintPDF = () => {
+    const statusText = statusLabel[receipt.status] || receipt.status
+    const pointsText = receipt.status === 'delivered' && receipt.pointsEarned > 0
+      ? `\n+${receipt.pointsEarned} poin didapatkan` : ''
+
+    const itemsHtml = receipt.items.map((item) => `
+      <tr>
+        <td style="padding:3px 0;vertical-align:top;text-align:left;width:55%">${item.productName}<br><span style="font-size:10px;color:#999">${item.quantity} x ${fmt(item.price)}</span></td>
+        <td style="padding:3px 0;vertical-align:top;text-align:right;font-weight:600">${fmt(item.subtotal)}</td>
+      </tr>
+    `).join('')
+
+    const printHtml = `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; max-width:320px; margin:0 auto; padding:20px 16px; color:#333; }
+  .header { text-align:center; border-bottom:2px dashed #ddd; padding-bottom:14px; margin-bottom:14px; }
+  .header h1 { font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+  .header p { font-size:10px; color:#888; line-height:1.4; }
+  .header .phone { font-size:10px; color:#888; margin-top:2px; }
+  .info { font-size:11px; line-height:1.7; margin-bottom:12px; }
+  .info span { font-weight:600; color:#555; }
+  .divider { border:none; border-top:1px dashed #ccc; margin:10px 0; }
+  .items-table { width:100%; border-collapse:collapse; margin-bottom:10px; font-size:12px; }
+  .items-table td { font-size:12px; }
+  .total-section { font-size:12px; line-height:1.8; }
+  .total-section .grand { font-size:15px; font-weight:800; color:#ea580c; }
+  .status { text-align:center; margin:12px 0; }
+  .status span { display:inline-block; padding:4px 16px; border-radius:20px; font-size:11px; font-weight:700; background:#f3f4f6; color:#374151; }
+  .points { text-align:center; font-size:11px; color:#ea580c; font-weight:600; margin-top:4px; }
+  .footer { text-align:center; font-size:10px; color:#999; margin-top:14px; padding-top:12px; border-top:1px dashed #ddd; line-height:1.5; }
+  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+</style></head><body>
+  <div class="header">
+    <h1>Ayam Geprek Sambal Ijo</h1>
+    <p>${STORE_INFO.address}</p>
+    <p class="phone">${STORE_INFO.phone}</p>
+  </div>
+  <div class="info">
+    <div><span>No. Pesanan:</span> #${receipt.id.slice(-6)}</div>
+    <div><span>Tanggal:</span> ${fmtDate(receipt.createdAt)}</div>
+    <div><span>Pemesan:</span> ${receipt.customerName}</div>
+    <div><span>Telepon:</span> ${receipt.customerPhone}</div>
+    <div><span>Pengambilan:</span> ${receipt.customerAddress}</div>
+    ${receipt.notes ? `<div><span>Catatan:</span> ${receipt.notes}</div>` : ''}
+  </div>
+  <hr class="divider">
+  <p style="text-align:center;font-size:11px;font-weight:700;margin-bottom:8px;color:#555">DETAIL PESANAN</p>
+  <table class="items-table">${itemsHtml}</table>
+  <hr class="divider">
+  <div class="total-section">
+    <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span style="font-weight:600">${fmt(receipt.total)}</span></div>
+    <hr class="divider">
+    <div class="grand" style="display:flex;justify-content:space-between"><span>TOTAL</span><span>${fmt(receipt.total)}</span></div>
+    <hr class="divider">
+    <div style="display:flex;justify-content:space-between"><span>Pembayaran</span><span style="font-weight:600">${receipt.paymentMethod}</span></div>
+  </div>
+  <hr class="divider">
+  <div class="status"><span>${statusText}</span></div>
+  ${pointsText ? `<div class="points">⭐ ${pointsText}</div>` : ''}
+  <div class="footer">
+    Terima kasih telah memesan di Ayam Geprek Sambal Ijo.<br>
+    Pesanan Anda sedang diproses. Selamat menikmati!
+  </div>
+  <script>window.onload=function(){window.print();}</script>
+</body></html>`
+
+    const printWin = window.open('', '_blank', 'width=380,height=700')
+    if (printWin) {
+      printWin.document.write(printHtml)
+      printWin.document.close()
+    } else {
+      addToast('Gagal membuka jendela cetak. Izinkan popup untuk mencetak struk.', 'error')
+    }
   }
 
   return (
@@ -1624,7 +1695,8 @@ function ReceiptPage() {
           <div className="bg-orange-500 p-5 text-center">
             <ChefHat className="w-10 h-10 text-white mx-auto mb-2" />
             <h2 className="text-lg font-extrabold text-white uppercase">Ayam Geprek Sambal Ijo</h2>
-            <p className="text-orange-100 text-xs mt-1">Jl. Teuku Nyak Arief, Banda Aceh</p>
+            <p className="text-orange-100 text-xs mt-1">{STORE_INFO.address}</p>
+            <p className="text-orange-200 text-[10px] mt-0.5">{STORE_INFO.phone}</p>
           </div>
 
           <div className="p-5 space-y-4">
@@ -1634,7 +1706,7 @@ function ReceiptPage() {
               <p><span className="font-medium text-gray-700">Tanggal:</span> {fmtDate(receipt.createdAt)}</p>
               <p><span className="font-medium text-gray-700">Pemesan:</span> {receipt.customerName}</p>
               <p><span className="font-medium text-gray-700">Telepon:</span> {receipt.customerPhone}</p>
-              <p><span className="font-medium text-gray-700">Alamat:</span> {receipt.customerAddress}</p>
+              <p><span className="font-medium text-gray-700">Pengambilan:</span> {receipt.customerAddress}</p>
               {receipt.notes && <p><span className="font-medium text-gray-700">Catatan:</span> {receipt.notes}</p>}
             </div>
 
@@ -1661,15 +1733,6 @@ function ReceiptPage() {
             {/* Total */}
             <div className="text-justify text-sm space-y-1 leading-relaxed">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-700">{fmt(receipt.total)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Ongkos Kirim</span>
-                <span className="font-medium text-green-600">GRATIS</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between text-base">
                 <span className="font-bold text-gray-800">Total</span>
                 <span className="font-extrabold text-orange-600">{fmt(receipt.total)}</span>
               </div>
@@ -1695,17 +1758,17 @@ function ReceiptPage() {
             </div>
 
             <p className="text-xs text-gray-400 text-center text-justify leading-relaxed">
-              Terima kasih telah memesan di Ayam Geprek Sambal Ijo. Pesanan Anda sedang diproses dan akan segera diantarkan. Selamat menikmati!
+              Terima kasih telah memesan di Ayam Geprek Sambal Ijo. Pesanan Anda sedang diproses. Selamat menikmati!
             </p>
           </div>
 
           {/* Actions */}
           <div className="border-t border-orange-100 p-4 flex gap-2">
-            <Button variant="outline" className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm" onClick={handleCopy}>
-              <Copy className="w-3.5 h-3.5 mr-1.5" />
-              Salin Struk
+            <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={handlePrintPDF}>
+              <Printer className="w-3.5 h-3.5 mr-1.5" />
+              Cetak Struk PDF
             </Button>
-            <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('home')}>
+            <Button variant="outline" className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm" onClick={() => setPage('home')}>
               <Home className="w-3.5 h-3.5 mr-1.5" />
               Kembali
             </Button>

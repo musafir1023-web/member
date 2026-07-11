@@ -1038,3 +1038,26 @@ Stage Summary:
 - Form "Data Pemesan" now has "Cara Ambil Pesanan" with 2 visual cards
 - "Ambil di Toko" works normally, "Pengiriman" shows "Segera Hadir" warning and blocks submission
 - Clean UI with consistent orange theme for active selection
+---
+Task ID: receipt-address-pdf
+Agent: Main Agent
+Task: Ubah alamat struk ke alamat toko sekarang, ganti Salin Struk jadi Cetak Struk PDF
+
+Work Log:
+- Changed receipt header address from hardcoded "Jl. Teuku Nyak Arief, Banda Aceh" to `STORE_INFO.address` (full address: Jl. Medan - Banda Aceh, Simpang Camat, Gampong Tijue, Kec. Pidie, Kab. Pidie, 24151)
+- Added store phone number below address in orange header
+- Changed "Alamat:" label to "Pengambilan:" (matches "Ambil di Toko" flow)
+- Removed "Ongkos Kirim GRATIS" line (no delivery for now)
+- Removed "Salin Struk" button and `handleCopy` function
+- Removed unused `Copy` icon import
+- Added `Printer` icon import from lucide-react
+- Created `handlePrintPDF` function that opens a new window with styled receipt HTML and auto-triggers `window.print()` for PDF save
+- Print template includes: store header with full address+phone, order details, items table, total, status badge, points, footer
+- Updated footer text: removed "akan segera diantarkan" since it's pickup
+- Button layout changed: "Cetak Struk PDF" (primary) + "Kembali" (outline)
+- Verified via code grep: all changes correct, no old references remain
+
+Stage Summary:
+- Receipt now shows correct store address and phone from STORE_INFO config
+- "Salin Struk" replaced with "Cetak Struk PDF" that opens print dialog for PDF saving
+- Clean thermal-receipt-style print template with dashed dividers
