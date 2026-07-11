@@ -1,0 +1,502 @@
+  2800→                            </Button>
+  2801→                            {order.status === 'pending' && (
+  2802→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'confirmed')}>
+  2803→                                <CheckCircle2 className="w-3 h-3 mr-1" /> Konfirmasi
+  2804→                              </Button>
+  2805→                            )}
+  2806→                            {order.status === 'confirmed' && (
+  2807→                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs" onClick={() => updateStatus(order.id, 'preparing')}>
+  2808→                                <Clock className="w-3 h-3 mr-1" /> Proses
+  2809→                              </Button>
+  2810→                            )}
+  2811→                            {order.status === 'preparing' && (
+  2812→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'delivered')}>
+  2813→                                <Truck className="w-3 h-3 mr-1" /> Selesai
+  2814→                              </Button>
+  2815→                            )}
+  2816→                            {['pending', 'confirmed'].includes(order.status) && (
+  2817→                              <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-xs" onClick={() => updateStatus(order.id, 'cancelled')}>
+  2818→                                <XCircle className="w-3 h-3 mr-1" /> Batal
+  2819→                              </Button>
+  2820→                            )}
+  2821→                          </div>
+  2822→                        </div>
+  2823→                      </div>
+  2824→                    ))}
+  2825→                  </div>
+  2826→                )}
+  2827→              </div>
+  2828→            </div>
+  2829→          </>
+  2830→        )}
+  2831→
+  2832→        {/* ═══ ORDERS TAB (Admin — read-only history) ═══ */}
+  2833→        {activeTab === 'orders' && isAdmin && (
+  2834→          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+  2835→            <div className="p-4 border-b border-orange-100">
+  2836→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+  2837→                <ReceiptText className="w-4 h-4 text-orange-500" />
+  2838→                Riwayat Semua Pesanan
+  2839→              </h3>
+  2840→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+  2841→                Daftar lengkap semua pesanan yang pernah masuk termasuk yang sudah selesai dan dibatalkan. Data ini dapat digunakan untuk analisis penjualan dan evaluasi performa layanan.
+  2842→              </p>
+  2843→            </div>
+  2844→            <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+  2845→              {loading ? (
+  2846→                <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+  2847→              ) : allOrders.length === 0 ? (
+  2848→                <div className="p-8 text-center text-gray-400 text-sm">Belum ada data pesanan</div>
+  2849→              ) : (
+  2850→                <div className="divide-y divide-orange-50">
+  2851→                  {allOrders.map((order) => (
+  2852→                    <button
+  2853→                      key={order.id}
+  2854→                      onClick={() => { setReceipt(order); setPage('receipt') }}
+  2855→                      className="w-full p-3 hover:bg-orange-50 transition-colors text-left"
+  2856→                    >
+  2857→                      <div className="flex items-center justify-between mb-1">
+  2858→                        <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+  2859→                        <Badge className={`${statusColor[order.status]} text-[10px]`}>{statusLabel[order.status]}</Badge>
+  2860→                      </div>
+  2861→                      <p className="text-sm font-medium text-gray-700">{order.customerName}</p>
+  2862→                      <div className="flex justify-between items-center mt-1">
+  2863→                        <span className="text-xs text-gray-400">{fmtDate(order.createdAt)}</span>
+  2864→                        <span className="text-sm font-bold text-orange-600">{fmt(order.total)}</span>
+  2865→                      </div>
+  2866→                    </button>
+  2867→                  ))}
+  2868→                </div>
+  2869→              )}
+  2870→            </div>
+  2871→          </div>
+  2872→        )}
+  2873→
+  2874→        {/* ═══ PRODUCTS TAB (Admin — manage products) ═══ */}
+  2875→        {activeTab === 'products' && isAdmin && (
+  2876→          <>
+  2877→            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+  2878→              <div className="p-4 border-b border-orange-100 flex items-center justify-between">
+  2879→                <div>
+  2880→                  <h2 className="font-bold text-gray-800 flex items-center gap-2">
+  2881→                    <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+  2882→                    Kelola Produk
+  2883→                  </h2>
+  2884→                  <p className="text-xs text-gray-400 mt-0.5">Tambah, edit, atau hapus menu produk</p>
+  2885→                </div>
+  2886→                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white text-xs" onClick={() => { resetProductForm(); setShowProductForm(true) }}>
+  2887→                  <Plus className="w-4 h-4 mr-1" /> Tambah
+  2888→                </Button>
+  2889→              </div>
+  2890→
+  2891→              {showProductForm && (
+  2892→                <div className="p-4 border-b border-orange-100 bg-orange-50/30 space-y-3">
+  2893→                  <div className="flex items-center justify-between">
+  2894→                    <h3 className="font-semibold text-sm text-gray-700">{editingProduct ? 'Edit Produk' : 'Produk Baru'}</h3>
+  2895→                    <Button size="sm" variant="ghost" onClick={resetProductForm}><X className="w-4 h-4" /></Button>
+  2896→                  </div>
+  2897→
+  2898→                  <div>
+  2899→                    <Label className="text-xs text-gray-600">Gambar Produk</Label>
+  2900→                    <div className="mt-1 flex items-center gap-3">
+  2901→                      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-20 h-20 rounded-xl border-2 border-dashed border-orange-300 flex flex-col items-center justify-center text-orange-400 hover:border-orange-500 hover:text-orange-600 transition-colors disabled:opacity-50 flex-shrink-0 overflow-hidden">
+  2902→                        {uploading ? (
+  2903→                          <span className="w-5 h-5 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
+  2904→                        ) : productImage ? (
+  2905→                          <img src={productImage} alt="Preview" className="w-full h-full object-cover" />
+  2906→                        ) : (
+  2907→                          <><Camera className="w-5 h-5" /><span className="text-[9px] mt-0.5">Upload</span></>
+  2908→                        )}
+  2909→                      </button>
+  2910→                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />
+  2911→                      <div className="flex-1 min-w-0">
+  2912→                        <p className="text-[11px] text-gray-400 text-justify leading-relaxed">Klik untuk upload gambar. Maksimal 2MB. Format: JPG, PNG, GIF, WebP.</p>
+  2913→                        {productImage && <p className="text-[10px] text-green-600 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Gambar berhasil diupload</p>}
+  2914→                      </div>
+  2915→                    </div>
+  2916→                  </div>
+  2917→
+  2918→                  <div className="grid grid-cols-2 gap-3">
+  2919→                    <div className="col-span-2">
+  2920→                      <Label className="text-xs text-gray-600">Nama Produk *</Label>
+  2921→                      <Input className="mt-1 h-9 text-sm" value={productForm.name} onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ayam Geprek Sambal Ijo" />
+  2922→                    </div>
+  2923→                    <div className="col-span-2">
+  2924→                      <Label className="text-xs text-gray-600">Deskripsi</Label>
+  2925→                      <Textarea className="mt-1 text-sm" rows={2} value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat produk" />
+  2926→                    </div>
+  2927→                    <div>
+  2928→                      <Label className="text-xs text-gray-600">Harga *</Label>
+  2929→                      <Input type="number" className="mt-1 h-9 text-sm" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} placeholder="15000" />
+  2930→                    </div>
+  2931→                    <div>
+  2932→                      <Label className="text-xs text-gray-600">Harga Asli</Label>
+  2933→                      <Input type="number" className="mt-1 h-9 text-sm" value={productForm.originalPrice} onChange={(e) => setProductForm((p) => ({ ...p, originalPrice: e.target.value }))} placeholder="18000 (opsional)" />
+  2934→                    </div>
+  2935→                    <div>
+  2936→                      <Label className="text-xs text-gray-600">Kategori</Label>
+  2937→                      <select className="mt-1 h-9 w-full rounded-md border border-orange-200 bg-white px-3 text-sm" value={productForm.category} onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}>
+  2938→                        <option value="Makanan">Makanan</option>
+  2939→                        <option value="Minuman">Minuman</option>
+  2940→                        <option value="Paket">Paket</option>
+  2941→                        <option value="Tambahan">Tambahan</option>
+  2942→                      </select>
+  2943→                    </div>
+  2944→                    <div>
+  2945→                      <Label className="text-xs text-gray-600">Tag</Label>
+  2946→                      <select className="mt-1 h-9 w-full rounded-md border border-orange-200 bg-white px-3 text-sm" value={productForm.tag} onChange={(e) => setProductForm((p) => ({ ...p, tag: e.target.value }))}>
+  2947→                        <option value="">Tanpa Tag</option>
+  2948→                        <option value="terbaru">Terbaru</option>
+  2949→                        <option value="terlaris">Terlaris</option>
+  2950→                        <option value="populer">Populer</option>
+  2951→                        <option value="promo">Promo</option>
+  2952→                      </select>
+  2953→                    </div>
+  2954→                    <div className="col-span-2 flex items-center gap-2">
+  2955→                      <input type="checkbox" id="prod-available" checked={productForm.available} onChange={(e) => setProductForm((p) => ({ ...p, available: e.target.checked }))} className="rounded border-orange-300" />
+  2956→                      <Label htmlFor="prod-available" className="text-xs text-gray-600">Tersedia untuk dipesan</Label>
+  2957→                    </div>
+  2958→                  </div>
+  2959→
+  2960→                  <div className="flex gap-2 pt-1">
+  2961→                    <Button onClick={saveProduct} disabled={savingProduct} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm disabled:opacity-50">
+  2962→                      {savingProduct ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><BadgeCheck className="w-4 h-4 mr-1" /> {editingProduct ? 'Update' : 'Simpan'}</>}
+  2963→                    </Button>
+  2964→                    <Button onClick={resetProductForm} variant="outline" className="border-orange-200 text-orange-600 text-sm hover:bg-orange-50">Batal</Button>
+  2965→                  </div>
+  2966→                </div>
+  2967→              )}
+  2968→
+  2969→              <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+  2970→                {allProducts.length === 0 ? (
+  2971→                  <div className="p-8 text-center"><PackageSearch className="w-10 h-10 text-gray-300 mx-auto mb-2" /><p className="text-gray-400 text-sm">Belum ada produk</p></div>
+  2972→                ) : (
+  2973→                  <div className="divide-y divide-orange-50">
+  2974→                    {allProducts.map((p: any) => (
+  2975→                      <div key={p.id} className="p-3 hover:bg-orange-50/50 transition-colors">
+  2976→                        <div className="flex items-center gap-3">
+  2977→                          <div className="w-14 h-14 rounded-lg overflow-hidden bg-orange-100 flex-shrink-0">
+  2978→                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+  2979→                          </div>
+  2980→                          <div className="flex-1 min-w-0">
+  2981→                            <div className="flex items-center gap-2">
+  2982→                              <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+  2983→                              {!p.available && <Badge className="bg-gray-100 text-gray-500 text-[9px]">Nonaktif</Badge>}
+  2984→                            </div>
+  2985→                            <p className="text-xs text-gray-400">{p.category}{p.tag ? ` · ${p.tag}` : ''}</p>
+  2986→                            <div className="flex items-center gap-2 mt-0.5">
+  2987→                              <span className="text-sm font-bold text-orange-600">{fmt(p.price)}</span>
+  2988→                              {p.originalPrice && p.originalPrice > p.price && <span className="text-[10px] text-gray-400 line-through">{fmt(p.originalPrice)}</span>}
+  2989→                            </div>
+  2990→                          </div>
+  2991→                          <div className="flex items-center gap-1 flex-shrink-0">
+  2992→                            <Button size="sm" variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 text-[11px] h-8 px-2" onClick={() => openEditProduct(p)}>
+  2993→                              <Edit3 className="w-3 h-3" />
+  2994→                            </Button>
+  2995→                            <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-[11px] h-8 px-2" onClick={() => setDeleteTarget({ id: p.id, name: p.name })} disabled={deletingProduct === p.id}>
+  2996→                              {deletingProduct === p.id ? <span className="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3 h-3" />}
+  2997→                            </Button>
+  2998→                          </div>
+  2999→                        </div>
+  3000→                      </div>
+  3001→                    ))}
+  3002→                  </div>
+  3003→                )}
+  3004→              </div>
+  3005→            </div>
+  3006→          </>
+  3007→        )}
+  3008→
+  3009→        {/* ═══ VOUCHER TAB ═══ */}
+  3010→        {activeTab === 'vouchers' && isAdmin && (
+  3011→          <>
+  3012→            <div className="bg-white rounded-xl p-5 shadow-md">
+  3013→              <div className="flex items-center justify-between mb-4">
+  3014→                <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+  3015→                  <Tag className="w-4 h-4 text-orange-500" />
+  3016→                  Kelola Voucher
+  3017→                </h3>
+  3018→                <Button
+  3019→                  size="sm"
+  3020→                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
+  3021→                  onClick={() => setShowVoucherForm(!showVoucherForm)}
+  3022→                >
+  3023→                  <Plus className="w-3.5 h-3.5 mr-1" />
+  3024→                  Buat Voucher
+  3025→                </Button>
+  3026→              </div>
+  3027→
+  3028→              {/* Create Voucher Form */}
+  3029→              {showVoucherForm && (
+  3030→                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="border border-orange-100 rounded-lg p-4 mb-4 bg-orange-50/50 space-y-3">
+  3031→                  <h4 className="font-semibold text-gray-700 text-xs">Buat Voucher Baru</h4>
+  3032→                  <div className="grid grid-cols-2 gap-3">
+  3033→                    <div>
+  3034→                      <Label className="text-[11px] text-gray-500">Tipe Diskon</Label>
+  3035→                      <select
+  3036→                        value={voucherForm.type}
+  3037→                        onChange={(e) => setVoucherForm((p) => ({ ...p, type: e.target.value as 'percentage' | 'fixed' }))}
+  3038→                        className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+  3039→                      >
+  3040→                        <option value="percentage">Persentase (%)</option>
+  3041→                        <option value="fixed">Nominal Tetap (Rp)</option>
+  3042→                      </select>
+  3043→                    </div>
+  3044→                    <div>
+  3045→                      <Label className="text-[11px] text-gray-500">Nilai Diskon</Label>
+  3046→                      <Input
+  3047→                        type="number"
+  3048→                        value={voucherForm.value}
+  3049→                        onChange={(e) => setVoucherForm((p) => ({ ...p, value: e.target.value }))}
+  3050→                        placeholder={voucherForm.type === 'percentage' ? '20' : '5000'}
+  3051→                        className="mt-1 text-sm"
+  3052→                      />
+  3053→                    </div>
+  3054→                  </div>
+  3055→                  <div className="grid grid-cols-2 gap-3">
+  3056→                    <div>
+  3057→                      <Label className="text-[11px] text-gray-500">Min. Pesanan (Rp)</Label>
+  3058→                      <Input
+  3059→                        type="number"
+  3060→                        value={voucherForm.minOrder}
+  3061→                        onChange={(e) => setVoucherForm((p) => ({ ...p, minOrder: e.target.value }))}
+  3062→                        placeholder="Opsional, kosongkan"
+  3063→                        className="mt-1 text-sm"
+  3064→                      />
+  3065→                    </div>
+  3066→                    {voucherForm.type === 'percentage' && (
+  3067→                      <div>
+  3068→                        <Label className="text-[11px] text-gray-500">Maks. Diskon (Rp)</Label>
+  3069→                        <Input
+  3070→                          type="number"
+  3071→                          value={voucherForm.maxDiscount}
+  3072→                          onChange={(e) => setVoucherForm((p) => ({ ...p, maxDiscount: e.target.value }))}
+  3073→                          placeholder="Opsional, kosongkan"
+  3074→                          className="mt-1 text-sm"
+  3075→                        />
+  3076→                      </div>
+  3077→                    )}
+  3078→                    {voucherForm.type === 'fixed' && <div />}
+  3079→                  </div>
+  3080→                  <div className="grid grid-cols-2 gap-3">
+  3081→                    <div>
+  3082→                      <Label className="text-[11px] text-gray-500">Untuk Member</Label>
+  3083→                      <select
+  3084→                        value={voucherForm.userId}
+  3085→                        onChange={(e) => setVoucherForm((p) => ({ ...p, userId: e.target.value }))}
+  3086→                        className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+  3087→                      >
+  3088→                        <option value="">Semua Customer</option>
+  3089→                        {allCustomers.map((c) => (
+  3090→                          <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+  3091→                        ))}
+  3092→                      </select>
+  3093→                    </div>
+  3094→                    <div>
+  3095→                      <Label className="text-[11px] text-gray-500">Masa Berlaku</Label>
+  3096→                      <Input
+  3097→                        type="date"
+  3098→                        value={voucherForm.expiresAt}
+  3099→                        onChange={(e) => setVoucherForm((p) => ({ ...p, expiresAt: e.target.value }))}
+  3100→                        className="mt-1 text-sm"
+  3101→                      />
+  3102→                    </div>
+  3103→                  </div>
+  3104→                  <p className="text-[10px] text-gray-400 leading-relaxed">
+  3105→                    * Kode voucher akan dibuat otomatis secara unik. Voucher hanya dapat digunakan 1x pakai dan tidak berlaku kelipatan.
+  3106→                  </p>
+  3107→                  <div className="flex gap-2 pt-1">
+  3108→                    <Button onClick={handleCreateVoucher} disabled={savingVoucher} size="sm" className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs disabled:opacity-50">
+  3109→                      {savingVoucher ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Plus className="w-3.5 h-3.5 mr-1" /> Buat</>}
+  3110→                    </Button>
+  3111→                    <Button onClick={() => setShowVoucherForm(false)} variant="outline" size="sm" className="flex-1 border-orange-200 text-orange-600 text-xs hover:bg-orange-50">
+  3112→                      Batal
+  3113→                    </Button>
+  3114→                  </div>
+  3115→                </motion.div>
+  3116→              )}
+  3117→
+  3118→              {/* Voucher List */}
+  3119→              {vouchers.length === 0 ? (
+  3120→                <div className="text-center py-8">
+  3121→                  <Tag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+  3122→                  <p className="text-sm text-gray-400">Belum ada voucher</p>
+  3123→                  <p className="text-xs text-gray-300 mt-1">Klik "Buat Voucher" untuk menambahkan</p>
+  3124→                </div>
+  3125→              ) : (
+  3126→                <div className="space-y-2 max-h-96 overflow-y-auto card-scrollbar">
+  3127→                  {vouchers.map((v) => {
+  3128→                    const isExpired = v.expiresAt && new Date(v.expiresAt) < new Date()
+  3129→                    return (
+  3130→                      <motion.div
+  3131→                        key={v.id}
+  3132→                        initial={{ opacity: 0, y: 5 }}
+  3133→                        animate={{ opacity: 1, y: 0 }}
+  3134→                        className={`border rounded-lg p-3 ${v.used ? 'border-gray-200 bg-gray-50 opacity-60' : isExpired ? 'border-red-200 bg-red-50/50 opacity-60' : 'border-orange-100 bg-white'}`}
+  3135→                      >
+  3136→                        <div className="flex items-start justify-between gap-2">
+  3137→                          <div className="flex-1 min-w-0">
+  3138→                            <div className="flex items-center gap-2 mb-1">
+  3139→                              <span className="font-mono font-bold text-sm text-gray-800 tracking-wider">{v.code}</span>
+  3140→                              {v.used && <Badge className="bg-gray-200 text-gray-600 text-[9px] border-0">Digunakan</Badge>}
+  3141→                              {isExpired && !v.used && <Badge className="bg-red-100 text-red-600 text-[9px] border-0">Expired</Badge>}
+  3142→                              {!v.used && !isExpired && <Badge className="bg-green-100 text-green-700 text-[9px] border-0">Aktif</Badge>}
+  3143→                            </div>
+  3144→                            <div className="flex flex-wrap gap-1.5 text-[10px] text-gray-500">
+  3145→                              <span className="bg-gray-100 px-1.5 py-0.5 rounded">
+  3146→                                {v.type === 'percentage' ? `Diskon ${v.value}%` : `Diskon ${fmt(v.value)}`}
+  3147→                              </span>
+  3148→                              {v.minOrder > 0 && <span className="bg-gray-100 px-1.5 py-0.5 rounded">Min. {fmt(v.minOrder)}</span>}
+  3149→                              {v.maxDiscount > 0 && <span className="bg-gray-100 px-1.5 py-0.5 rounded">Maks {fmt(v.maxDiscount)}</span>}
+  3150→                              {v.expiresAt && <span className="bg-gray-100 px-1.5 py-0.5 rounded">s/d {new Date(v.expiresAt).toLocaleDateString('id-ID')}</span>}
+  3151→                            </div>
+  3152→                            {v.user && (
+  3153→                              <p className="text-[10px] text-gray-400 mt-1">
+  3154→                                <User className="w-3 h-3 inline mr-0.5" />{v.user.name} ({v.user.email})
+  3155→                              </p>
+  3156→                            )}
+  3157→                            {!v.user && (
+  3158→                              <p className="text-[10px] text-orange-500 mt-1 font-medium">
+  3159→                                <Gift className="w-3 h-3 inline mr-0.5" />Berlaku untuk semua customer
+  3160→                              </p>
+  3161→                            )}
+  3162→                            {v.used && v.usedAt && (
+  3163→                              <p className="text-[10px] text-gray-400 mt-0.5">
+  3164→                                Digunakan: {fmtDate(v.usedAt)}
+  3165→                              </p>
+  3166→                            )}
+  3167→                          </div>
+  3168→                          <div className="flex flex-col gap-1 flex-shrink-0">
+  3169→                            {!v.used && (
+  3170→                              <button
+  3171→                                onClick={() => copyVoucherCode(v.code)}
+  3172→                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-orange-100 text-gray-400 hover:text-orange-600 transition-colors"
+  3173→                                title="Salin kode"
+  3174→                              >
+  3175→                                <Copy className="w-3.5 h-3.5" />
+  3176→                              </button>
+  3177→                            )}
+  3178→                            <button
+  3179→                              onClick={() => setDeleteTarget({ id: v.id, name: `Voucher ${v.code}` })}
+  3180→                              disabled={deletingVoucher === v.id || v.used}
+  3181→                              className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
+  3182→                              title="Hapus"
+  3183→                            >
+  3184→                              {deletingVoucher === v.id ? <span className="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+  3185→                            </button>
+  3186→                          </div>
+  3187→                        </div>
+  3188→                      </motion.div>
+  3189→                    )
+  3190→                  })}
+  3191→                </div>
+  3192→              )}
+  3193→            </div>
+  3194→
+  3195→            {/* Voucher Stats */}
+  3196→            <div className="grid grid-cols-3 gap-3">
+  3197→              {[
+  3198→                { label: 'Total Voucher', value: vouchers.length, color: 'bg-blue-50 text-blue-600' },
+  3199→                { label: 'Aktif', value: vouchers.filter((v) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date())).length, color: 'bg-green-50 text-green-600' },
+  3200→                { label: 'Digunakan', value: vouchers.filter((v) => v.used).length, color: 'bg-orange-50 text-orange-600' },
+  3201→              ].map((s, i) => (
+  3202→                <div key={i} className={`rounded-xl p-3 text-center ${s.color}`}>
+  3203→                  <p className="text-lg font-bold">{s.value}</p>
+  3204→                  <p className="text-[10px] font-medium">{s.label}</p>
+  3205→                </div>
+  3206→              ))}
+  3207→            </div>
+  3208→          </>
+  3209→        )}
+  3210→
+  3211→        {/* ═══ SETTINGS TAB ═══ */}
+  3212→        {/* ═══ CHAT TAB ═══ */}
+  3213→        {activeTab === 'chat' && isAdmin && (
+  3214→          <AdminChatPanel />
+  3215→        )}
+  3216→        {activeTab === 'chat' && !isAdmin && (
+  3217→          <CustomerChatPanel />
+  3218→        )}
+  3219→        {activeTab === 'settings' && (
+  3220→          <>
+  3221→            {/* Edit Profile */}
+  3222→            <div className="bg-white rounded-xl p-5 shadow-md">
+  3223→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-4">
+  3224→                <Edit3 className="w-4 h-4 text-orange-500" />
+  3225→                {editing ? 'Edit Profil' : 'Data Profil'}
+  3226→              </h3>
+  3227→
+  3228→              {editing ? (
+  3229→                <div className="space-y-3">
+  3230→                  <div>
+  3231→                    <Label htmlFor="edit-name" className="text-xs text-gray-600">Nama Lengkap</Label>
+  3232→                    <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="Nama lengkap" />
+  3233→                  </div>
+  3234→                  <div>
+  3235→                    <Label htmlFor="edit-phone" className="text-xs text-gray-600">Nomor Telepon</Label>
+  3236→                    <Input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1" placeholder="081234567890" />
+  3237→                  </div>
+  3238→                  <Separator />
+  3239→                  <div>
+  3240→                    <Label htmlFor="edit-pw" className="text-xs text-gray-600">Password Baru (Opsional)</Label>
+  3241→                    <Input id="edit-pw" type="password" value={editForm.password} onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))} className="mt-1" placeholder="Kosongkan jika tidak ingin diubah" />
+  3242→                  </div>
+  3243→                  {editForm.password && (
+  3244→                    <div>
+  3245→                      <Label htmlFor="edit-pw2" className="text-xs text-gray-600">Konfirmasi Password</Label>
+  3246→                      <Input id="edit-pw2" type="password" value={editForm.confirmPassword} onChange={(e) => setEditForm((p) => ({ ...p, confirmPassword: e.target.value }))} className="mt-1" placeholder="Ulangi password baru" />
+  3247→                    </div>
+  3248→                  )}
+  3249→                  <div className="flex gap-2 pt-1">
+  3250→                    <Button onClick={saveProfile} disabled={saving} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm disabled:opacity-50">
+  3251→                      {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><BadgeCheck className="w-4 h-4 mr-1" /> Simpan</>}
+  3252→                    </Button>
+  3253→                    <Button onClick={() => setEditing(false)} variant="outline" className="flex-1 border-orange-200 text-orange-600 text-sm hover:bg-orange-50">
+  3254→                      Batal
+  3255→                    </Button>
+  3256→                  </div>
+  3257→                </div>
+  3258→              ) : (
+  3259→                <div className="space-y-3">
+  3260→                  {[
+  3261→                    { label: 'Nama', value: user?.name || '-' },
+  3262→                    { label: 'Email', value: user?.email || '-' },
+  3263→                    { label: 'Telepon', value: user?.phone || 'Belum diatur' },
+  3264→                    { label: 'Password', value: '••••••••' },
+  3265→                  ].map((row, i) => (
+  3266→                    <div key={i} className="flex justify-between items-center py-1">
+  3267→                      <span className="text-xs text-gray-400">{row.label}</span>
+  3268→                      <span className="text-sm text-gray-700 font-medium">{row.value}</span>
+  3269→                    </div>
+  3270→                  ))}
+  3271→                  <Button onClick={startEdit} variant="outline" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50 text-sm mt-2">
+  3272→                    <Edit3 className="w-4 h-4 mr-2" /> Ubah Data Profil
+  3273→                  </Button>
+  3274→                </div>
+  3275→              )}
+  3276→            </div>
+  3277→
+  3278→            {/* App Info */}
+  3279→            <div className="bg-white rounded-xl p-5 shadow-md">
+  3280→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+  3281→                <Info className="w-4 h-4 text-orange-500" />
+  3282→                Tentang Aplikasi
+  3283→              </h3>
+  3284→              <div className="space-y-2.5">
+  3285→                {[
+  3286→                  { label: 'Nama Aplikasi', value: 'Ayam Geprek Sambal Ijo' },
+  3287→                  { label: 'Versi', value: '1.0.0' },
+  3288→                  { label: 'Developer', value: 'Z.ai Team' },
+  3289→                  { label: 'Deskripsi', value: 'Aplikasi pemesanan online ayam geprek sambal ijo khas Aceh dengan fitur lengkap untuk kemudahan pemesanan dan pengelolaan usaha kuliner Anda.' },
+  3290→                ].map((row, i) => (
+  3291→                  <div key={i}>
+  3292→                    <p className="text-[11px] text-gray-400">{row.label}</p>
+  3293→                    <p className={`text-sm text-gray-700 ${row.label === 'Deskripsi' ? 'text-justify leading-relaxed' : 'font-medium'}`}>{row.value}</p>
+  3294→                  </div>
+  3295→                ))}
+  3296→              </div>
+  3297→            </div>
+  3298→
+  3299→            {/* Preferences */}
+
+[showing lines 2800-3299 of 4424; use offset=3300 with limit to continue reading]

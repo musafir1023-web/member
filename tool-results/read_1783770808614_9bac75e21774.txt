@@ -1,0 +1,502 @@
+     1→  2400→        const res = await fetch('/api/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+     2→  2401→        if (!res.ok) throw new Error('Gagal update produk')
+     3→  2402→        addToast('Produk berhasil diupdate', 'success')
+     4→  2403→      } else {
+     5→  2404→        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+     6→  2405→        if (!res.ok) throw new Error('Gagal menambah produk')
+     7→  2406→        addToast('Produk berhasil ditambahkan', 'success')
+     8→  2407→      }
+     9→  2408→      resetProductForm()
+    10→  2409→      loadProducts()
+    11→  2410→    } catch (err: any) {
+    12→  2411→      addToast(err.message, 'error')
+    13→  2412→    } finally {
+    14→  2413→      setSavingProduct(false)
+    15→  2414→    }
+    16→  2415→  }
+    17→  2416→
+    18→  2417→  const deleteProduct = async (id: string) => {
+    19→  2418→    setDeletingProduct(id)
+    20→  2419→    try {
+    21→  2420→      const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+    22→  2421→      if (!res.ok) throw new Error('Gagal menghapus')
+    23→  2422→      addToast('Produk dihapus', 'success')
+    24→  2423→      loadProducts()
+    25→  2424→    } catch {
+    26→  2425→      addToast('Gagal menghapus produk', 'error')
+    27→  2426→    } finally {
+    28→  2427→      setDeletingProduct(null)
+    29→  2428→      setDeleteTarget(null)
+    30→  2429→    }
+    31→  2430→  }
+    32→  2431→
+    33→  2432→  const confirmDeleteProduct = () => {
+    34→  2433→    if (!deleteTarget) return
+    35→  2434→    // Check if it's a voucher (name starts with "Voucher")
+    36→  2435→    if (deleteTarget.name.startsWith('Voucher')) {
+    37→  2436→      handleDeleteVoucher(deleteTarget.id)
+    38→  2437→    } else {
+    39→  2438→      deleteProduct(deleteTarget.id)
+    40→  2439→    }
+    41→  2440→  }
+    42→  2441→
+    43→  2442→  const tabs = isAdmin
+    44→  2443→    ? [
+    45→  2444→        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+    46→  2445→        { id: 'admin' as const, label: 'Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
+    47→  2446→        { id: 'products' as const, label: 'Produk', icon: <UtensilsCrossed className="w-4 h-4" /> },
+    48→  2447→        { id: 'vouchers' as const, label: 'Voucher', icon: <Tag className="w-4 h-4" /> },
+    49→  2448→        { id: 'chat' as const, label: 'Chat', icon: <MessageCircle className="w-4 h-4" /> },
+    50→  2449→        { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
+    51→  2450→        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+    52→  2451→      ]
+    53→  2452→    : [
+    54→  2453→        { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
+    55→  2454→        { id: 'orders' as const, label: 'Pesanan Saya', icon: <Package className="w-4 h-4" /> },
+    56→  2455→        { id: 'chat' as const, label: 'Chat', icon: <MessageCircle className="w-4 h-4" /> },
+    57→  2456→        { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+    58→  2457→      ]
+    59→  2458→
+    60→  2459→  return (
+    61→  2460→    <div className="min-h-screen pb-4">
+    62→  2461→      {/* ─── Profile Header ─── */}
+    63→  2462→      <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 relative overflow-visible">
+    64→  2463→        <div className="absolute inset-0 aceh-pattern opacity-20" />
+    65→  2464→        <div className="relative max-w-2xl mx-auto px-4 pt-8 pb-8">
+    66→  2465→          <div className="flex items-center gap-4">
+    67→  2466→            {/* Avatar */}
+    68→  2467→            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border-2 border-white/30 flex-shrink-0">
+    69→  2468→              {isAdmin ? (
+    70→  2469→                <Shield className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+    71→  2470→              ) : (
+    72→  2471→                <User className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+    73→  2472→              )}
+    74→  2473→            </div>
+    75→  2474→            <div className="flex-1 min-w-0">
+    76→  2475→              <div className="flex items-center gap-2">
+    77→  2476→                <h1 className="text-xl sm:text-2xl font-extrabold text-white truncate">{user?.name}</h1>
+    78→  2477→                <Badge className={`${isAdmin ? 'bg-yellow-400 text-yellow-900' : 'bg-white/20 text-white'} text-[10px] border-0 flex-shrink-0`}>
+    79→  2478→                  {isAdmin ? 'Admin' : 'Customer'}
+    80→  2479→                </Badge>
+    81→  2480→              </div>
+    82→  2481→              <p className="text-orange-100 text-xs sm:text-sm truncate">{user?.email}</p>
+    83→  2482→              {user?.phone && (
+    84→  2483→                <p className="text-orange-200/70 text-xs flex items-center gap-1 mt-0.5">
+    85→  2484→                  <Phone className="w-3 h-3" /> {user.phone}
+    86→  2485→                </p>
+    87→  2486→              )}
+    88→  2487→              <p className="text-orange-200/50 text-[10px] mt-1">Bergabung sejak {memberSince}</p>
+    89→  2488→            </div>
+    90→  2489→          </div>
+    91→  2490→
+    92→  2491→        </div>
+    93→  2492→      </div>
+    94→  2493→
+    95→  2494→      {/* ─── Tabs ─── */}
+    96→  2495→      <div className="sticky top-[52px] z-40 bg-orange-500 shadow-sm">
+    97→  2496→        <div className="max-w-2xl mx-auto px-2">
+    98→  2497→          <div className="flex gap-1 p-1 bg-orange-400/50 rounded-xl overflow-x-auto no-scrollbar">
+    99→  2498→            {tabs.map((tab) => (
+   100→  2499→              <button
+   101→  2500→                key={tab.id}
+   102→  2501→                onClick={() => setActiveTab(tab.id)}
+   103→  2502→                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+   104→  2503→                  activeTab === tab.id
+   105→  2504→                    ? 'bg-white text-orange-600 shadow-md'
+   106→  2505→                    : 'text-white/80 hover:text-white hover:bg-white/10'
+   107→  2506→                }`}
+   108→  2507→              >
+   109→  2508→                {tab.icon}
+   110→  2509→                <span className="hidden sm:inline">{tab.label}</span>
+   111→  2510→              </button>
+   112→  2511→            ))}
+   113→  2512→          </div>
+   114→  2513→        </div>
+   115→  2514→      </div>
+   116→  2515→
+   117→  2516→      {/* ─── Tab Content ─── */}
+   118→  2517→      <div className="max-w-2xl mx-auto px-4 mt-5 space-y-4">
+   119→  2518→        {/* ═══ OVERVIEW TAB ═══ */}
+   120→  2519→        {activeTab === 'overview' && (
+   121→  2520→          <>
+   122→  2521→            {/* Quick Stats */}
+   123→  2522→            {loading ? (
+   124→  2523→              <div className="grid grid-cols-2 gap-3">
+   125→  2524→                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+   126→  2525→              </div>
+   127→  2526→            ) : isAdmin ? (
+   128→  2527→              <div className="grid grid-cols-2 gap-3">
+   129→  2528→                {[
+   130→  2529→                  { label: 'Total Pesanan', value: adminStats.total, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+   131→  2530→                  { label: 'Menunggu', value: adminStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+   132→  2531→                  { label: 'Selesai', value: adminStats.delivered, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+   133→  2532→                  { label: 'Pendapatan', value: fmt(adminStats.revenue), icon: <TrendingUp className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+   134→  2533→                ].map((s, i) => (
+   135→  2534→                  <motion.div
+   136→  2535→                    key={i}
+   137→  2536→                    initial={{ opacity: 0, y: 10 }}
+   138→  2537→                    animate={{ opacity: 1, y: 0 }}
+   139→  2538→                    transition={{ delay: i * 0.05 }}
+   140→  2539→                    className="bg-white rounded-xl p-4 shadow-md"
+   141→  2540→                  >
+   142→  2541→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+   143→  2542→                      {s.icon}
+   144→  2543→                    </div>
+   145→  2544→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+   146→  2545→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+   147→  2546→                  </motion.div>
+   148→  2547→                ))}
+   149→  2548→              </div>
+   150→  2549→            ) : (
+   151→  2550→              <div className="grid grid-cols-2 gap-3">
+   152→  2551→                {[
+   153→  2552→                  { label: 'Total Pesanan', value: customerStats.totalOrders, icon: <Package className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+   154→  2553→                  { label: 'Sedang Proses', value: customerStats.pending, icon: <Clock className="w-5 h-5" />, color: 'bg-yellow-50 text-yellow-600' },
+   155→  2554→                  { label: 'Selesai', value: customerStats.completed, icon: <CheckCircle2 className="w-5 h-5" />, color: 'bg-green-50 text-green-600' },
+   156→  2555→                  { label: 'Total Belanja', value: fmt(customerStats.totalSpent), icon: <CreditCard className="w-5 h-5" />, color: 'bg-orange-50 text-orange-600' },
+   157→  2556→                ].map((s, i) => (
+   158→  2557→                  <motion.div
+   159→  2558→                    key={i}
+   160→  2559→                    initial={{ opacity: 0, y: 10 }}
+   161→  2560→                    animate={{ opacity: 1, y: 0 }}
+   162→  2561→                    transition={{ delay: i * 0.05 }}
+   163→  2562→                    className="bg-white rounded-xl p-4 shadow-md"
+   164→  2563→                  >
+   165→  2564→                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${s.color}`}>
+   166→  2565→                      {s.icon}
+   167→  2566→                    </div>
+   168→  2567→                    <p className="text-[11px] text-gray-500 text-justify leading-relaxed">{s.label}</p>
+   169→  2568→                    <p className="text-lg font-extrabold text-gray-800 mt-0.5">{s.value}</p>
+   170→  2569→                  </motion.div>
+   171→  2570→                ))}
+   172→  2571→              </div>
+   173→  2572→            )}
+   174→  2573→
+   175→  2574→            {/* Info Cards */}
+   176→  2575→            <div className="bg-white rounded-xl p-5 shadow-md">
+   177→  2576→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
+   178→  2577→                <Info className="w-4 h-4 text-orange-500" />
+   179→  2578→                Informasi Akun
+   180→  2579→              </h3>
+   181→  2580→              <div className="space-y-3">
+   182→  2581→                {[
+   183→  2582→                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Nama', value: user?.name || '-' },
+   184→  2583→                  { icon: <Mail className="w-4 h-4 text-gray-400" />, label: 'Email', value: user?.email || '-' },
+   185→  2584→                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Telepon', value: user?.phone || 'Belum diatur' },
+   186→  2585→                  { icon: <Shield className="w-4 h-4 text-gray-400" />, label: 'Role', value: isAdmin ? 'Administrator' : 'Customer' },
+   187→  2586→                  { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Bergabung', value: memberSince },
+   188→  2587→                ].map((row, i) => (
+   189→  2588→                  <div key={i} className="flex items-center gap-3">
+   190→  2589→                    {row.icon}
+   191→  2590→                    <div className="flex-1">
+   192→  2591→                      <p className="text-[11px] text-gray-400">{row.label}</p>
+   193→  2592→                      <p className="text-sm text-gray-700 font-medium">{row.value}</p>
+   194→  2593→                    </div>
+   195→  2594→                  </div>
+   196→  2595→                ))}
+   197→  2596→              </div>
+   198→  2597→              <Button onClick={startEdit} variant="outline" className="w-full mt-4 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm">
+   199→  2598→                <Edit3 className="w-4 h-4 mr-2" />
+   200→  2599→                Edit Profil
+   201→  2600→              </Button>
+   202→  2601→            </div>
+   203→  2602→
+   204→  2603→            {/* Quick Actions */}
+   205→  2604→            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+   206→  2605→              {[
+   207→  2606→                { icon: <Package className="w-5 h-5" />, label: 'Lihat Pesanan Saya', desc: 'Lihat riwayat dan status pesanan Anda', onClick: () => setActiveTab('orders') },
+   208→  2607→                { icon: <UtensilsCrossed className="w-5 h-5" />, label: 'Jelajahi Menu', desc: 'Temukan varian ayam geprek favorit Anda', onClick: () => setPage('menu') },
+   209→  2608→                { icon: <HelpCircle className="w-5 h-5" />, label: 'Bantuan', desc: 'Hubungi kami untuk pertanyaan dan bantuan', onClick: () => addToast('Fitur bantuan segera hadir', 'info') },
+   210→  2609→              ].map((action, i) => (
+   211→  2610→                <button
+   212→  2611→                  key={i}
+   213→  2612→                  onClick={action.onClick}
+   214→  2613→                  className="w-full flex items-center gap-3 p-4 hover:bg-orange-50 transition-colors text-left border-b border-orange-50 last:border-0"
+   215→  2614→                >
+   216→  2615→                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+   217→  2616→                    {action.icon}
+   218→  2617→                  </div>
+   219→  2618→                  <div className="flex-1 min-w-0">
+   220→  2619→                    <p className="text-sm font-semibold text-gray-800">{action.label}</p>
+   221→  2620→                    <p className="text-[11px] text-gray-400 text-justify leading-relaxed">{action.desc}</p>
+   222→  2621→                  </div>
+   223→  2622→                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+   224→  2623→                </button>
+   225→  2624→              ))}
+   226→  2625→            </div>
+   227→  2626→
+   228→  2627→            {/* Logout */}
+   229→  2628→            <button
+   230→  2629→              onClick={() => setShowLogoutDialog(true)}
+   231→  2630→              className="w-full flex items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-md text-red-500 hover:bg-red-50 transition-colors font-medium text-sm"
+   232→  2631→            >
+   233→  2632→              <LogOut className="w-4 h-4" />
+   234→  2633→              Keluar dari Akun
+   235→  2634→            </button>
+   236→  2635→          </>
+   237→  2636→        )}
+   238→  2637→
+   239→  2638→        {/* ═══ ORDERS TAB (Customer) ═══ */}
+   240→  2639→        {activeTab === 'orders' && !isAdmin && (
+   241→  2640→          <>
+   242→  2641→            <div className="bg-white rounded-xl p-4 shadow-md">
+   243→  2642→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+   244→  2643→                <Package className="w-4 h-4 text-orange-500" />
+   245→  2644→                Riwayat Pesanan Saya
+   246→  2645→              </h3>
+   247→  2646→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+   248→  2647→                Berikut adalah daftar semua pesanan yang pernah Anda buat. Klik detail untuk melihat informasi lengkap setiap pesanan termasuk produk yang dipesan dan status pengiriman saat ini.
+   249→  2648→              </p>
+   250→  2649→            </div>
+   251→  2650→
+   252→  2651→            {loading ? (
+   253→  2652→              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+   254→  2653→            ) : orders.length === 0 ? (
+   255→  2654→              <div className="bg-white rounded-xl p-8 shadow-md text-center">
+   256→  2655→                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+   257→  2656→                <p className="text-gray-500 font-medium mb-1">Belum ada pesanan</p>
+   258→  2657→                <p className="text-xs text-gray-400 text-justify max-w-xs mx-auto leading-relaxed">
+   259→  2658→                  Anda belum pernah membuat pesanan. Mulai dengan menjelajahi menu kami dan tambahkan item favorit ke keranjang.
+   260→  2659→                </p>
+   261→  2660→                <Button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white text-sm" onClick={() => setPage('menu')}>
+   262→  2661→                  <UtensilsCrossed className="w-4 h-4 mr-2" /> Pesan Sekarang
+   263→  2662→                </Button>
+   264→  2663→              </div>
+   265→  2664→            ) : (
+   266→  2665→              <div className="space-y-3 max-h-[60vh] overflow-y-auto card-scrollbar pr-1">
+   267→  2666→                {orders.map((order) => (
+   268→  2667→                  <motion.div
+   269→  2668→                    key={order.id}
+   270→  2669→                    initial={{ opacity: 0, y: 10 }}
+   271→  2670→                    animate={{ opacity: 1, y: 0 }}
+   272→  2671→                    className="bg-white rounded-xl p-4 shadow-md"
+   273→  2672→                  >
+   274→  2673→                    <div className="flex items-start justify-between mb-2">
+   275→  2674→                      <div>
+   276→  2675→                        <p className="text-xs text-gray-400 flex items-center gap-1">
+   277→  2676→                          <Clock className="w-3 h-3" /> {fmtDate(order.createdAt)}
+   278→  2677→                        </p>
+   279→  2678→                        <p className="text-sm font-bold text-gray-700 mt-1">#{order.id.slice(-6)}</p>
+   280→  2679→                      </div>
+   281→  2680→                      <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+   282→  2681→                    </div>
+   283→  2682→                    <div className="space-y-1 mb-2">
+   284→  2683→                      {order.items.slice(0, 3).map((item) => (
+   285→  2684→                        <div key={item.id} className="flex justify-between text-xs text-gray-500">
+   286→  2685→                          <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+   287→  2686→                          <span className="flex-shrink-0">{fmt(item.subtotal)}</span>
+   288→  2687→                        </div>
+   289→  2688→                      ))}
+   290→  2689→                      {order.items.length > 3 && (
+   291→  2690→                        <p className="text-[11px] text-gray-400">+{order.items.length - 3} item lainnya</p>
+   292→  2691→                      )}
+   293→  2692→                    </div>
+   294→  2693→                    <Separator className="mb-2" />
+   295→  2694→                    <div className="flex items-center justify-between">
+   296→  2695→                      <div className="text-xs text-gray-400">
+   297→  2696→                        <span>{order.items.length} item</span>
+   298→  2697→                        <span className="mx-1">&middot;</span>
+   299→  2698→                        <span>{order.paymentMethod}</span>
+   300→  2699→                      </div>
+   301→  2700→                      <div className="flex items-center gap-2">
+   302→  2701→                        <span className="font-bold text-orange-600 text-sm">{fmt(order.total)}</span>
+   303→  2702→                        <Button
+   304→  2703→                          size="sm"
+   305→  2704→                          variant="outline"
+   306→  2705→                          className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+   307→  2706→                          onClick={() => { setReceipt(order); setPage('receipt') }}
+   308→  2707→                        >
+   309→  2708→                          <Eye className="w-3 h-3 mr-1" /> Detail
+   310→  2709→                        </Button>
+   311→  2710→                      </div>
+   312→  2711→                    </div>
+   313→  2712→                  </motion.div>
+   314→  2713→                ))}
+   315→  2714→              </div>
+   316→  2715→            )}
+   317→  2716→          </>
+   318→  2717→        )}
+   319→  2718→
+   320→  2719→        {/* ═══ ADMIN TAB ═══ */}
+   321→  2720→        {activeTab === 'admin' && isAdmin && (
+   322→  2721→          <>
+   323→  2722→            {/* Admin Stats Expanded */}
+   324→  2723→            {loading ? (
+   325→  2724→              <div className="grid grid-cols-3 gap-2">
+   326→  2725→                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+   327→  2726→              </div>
+   328→  2727→            ) : (
+   329→  2728→              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+   330→  2729→                {[
+   331→  2730→                  { label: 'Pending', value: adminStats.pending, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+   332→  2731→                  { label: 'Dikonfirmasi', value: adminStats.confirmed, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+   333→  2732→                  { label: 'Diproses', value: adminStats.preparing, color: 'bg-orange-50 text-orange-700 border-orange-200' },
+   334→  2733→                  { label: 'Selesai', value: adminStats.delivered, color: 'bg-green-50 text-green-700 border-green-200' },
+   335→  2734→                  { label: 'Dibatalkan', value: adminStats.cancelled, color: 'bg-red-50 text-red-700 border-red-200' },
+   336→  2735→                  { label: 'Rata-rata', value: fmt(adminStats.avgOrder), color: 'bg-purple-50 text-purple-700 border-purple-200' },
+   337→  2736→                ].map((s, i) => (
+   338→  2737→                  <motion.div
+   339→  2738→                    key={i}
+   340→  2739→                    initial={{ opacity: 0, scale: 0.9 }}
+   341→  2740→                    animate={{ opacity: 1, scale: 1 }}
+   342→  2741→                    transition={{ delay: i * 0.03 }}
+   343→  2742→                    className={`rounded-xl p-3 text-center border ${s.color}`}
+   344→  2743→                  >
+   345→  2744→                    <p className="text-lg sm:text-xl font-extrabold">{s.value}</p>
+   346→  2745→                    <p className="text-[10px] sm:text-xs font-medium opacity-70">{s.label}</p>
+   347→  2746→                  </motion.div>
+   348→  2747→                ))}
+   349→  2748→              </div>
+   350→  2749→            )}
+   351→  2750→
+   352→  2751→            {/* Order Management */}
+   353→  2752→            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+   354→  2753→              <div className="p-4 border-b border-orange-100">
+   355→  2754→                <h2 className="font-bold text-gray-800 flex items-center gap-2">
+   356→  2755→                  <LayoutDashboard className="w-4 h-4 text-orange-500" />
+   357→  2756→                  Kelola Semua Pesanan
+   358→  2757→                </h2>
+   359→  2758→                <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+   360→  2759→                  Kelola semua pesanan yang masuk dari pelanggan. Anda dapat mengubah status pesanan sesuai tahap pemrosesan: konfirmasi, proses, hingga selesai dikirim ke pelanggan.
+   361→  2760→                </p>
+   362→  2761→              </div>
+   363→  2762→              <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+   364→  2763→                {loading ? (
+   365→  2764→                  <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}</div>
+   366→  2765→                ) : allOrders.length === 0 ? (
+   367→  2766→                  <div className="p-8 text-center">
+   368→  2767→                    <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+   369→  2768→                    <p className="text-gray-400 text-sm">Belum ada pesanan masuk</p>
+   370→  2769→                  </div>
+   371→  2770→                ) : (
+   372→  2771→                  <div className="divide-y divide-orange-50">
+   373→  2772→                    {allOrders.map((order) => (
+   374→  2773→                      <div key={order.id} className="p-4 hover:bg-orange-50/50 transition-colors">
+   375→  2774→                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+   376→  2775→                          <div className="flex-1 min-w-0">
+   377→  2776→                            <div className="flex items-center gap-2 mb-1">
+   378→  2777→                              <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+   379→  2778→                              <Badge className={`${statusColor[order.status]} text-xs`}>{statusLabel[order.status]}</Badge>
+   380→  2779→                            </div>
+   381→  2780→                            <p className="text-sm font-medium text-gray-700 truncate">{order.customerName}</p>
+   382→  2781→                            <p className="text-xs text-gray-400 mt-0.5">
+   383→  2782→                              {order.items.length} item &middot; {fmt(order.total)} &middot; {fmtDate(order.createdAt)}
+   384→  2783→                            </p>
+   385→  2784→                            <p className="text-xs text-gray-400 text-justify mt-0.5 leading-relaxed truncate">
+   386→  2785→                              <MapPin className="w-3 h-3 inline mr-0.5" />{order.customerAddress}
+   387→  2786→                            </p>
+   388→  2787→                            <p className="text-xs text-gray-400">
+   389→  2788→                              <Phone className="w-3 h-3 inline mr-0.5" />{order.customerPhone}
+   390→  2789→                              {order.notes && <span className="ml-2"><Bell className="w-3 h-3 inline mr-0.5" />{order.notes}</span>}
+   391→  2790→                            </p>
+   392→  2791→                          </div>
+   393→  2792→                          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+   394→  2793→                            <Button
+   395→  2794→                              size="sm"
+   396→  2795→                              variant="outline"
+   397→  2796→                              className="border-orange-200 text-orange-600 hover:bg-orange-50 text-xs"
+   398→  2797→                              onClick={() => { setReceipt(order); setPage('receipt') }}
+   399→  2798→                            >
+   400→  2799→                              <Eye className="w-3 h-3 mr-1" /> Detail
+   401→  2800→                            </Button>
+   402→  2801→                            {order.status === 'pending' && (
+   403→  2802→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'confirmed')}>
+   404→  2803→                                <CheckCircle2 className="w-3 h-3 mr-1" /> Konfirmasi
+   405→  2804→                              </Button>
+   406→  2805→                            )}
+   407→  2806→                            {order.status === 'confirmed' && (
+   408→  2807→                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs" onClick={() => updateStatus(order.id, 'preparing')}>
+   409→  2808→                                <Clock className="w-3 h-3 mr-1" /> Proses
+   410→  2809→                              </Button>
+   411→  2810→                            )}
+   412→  2811→                            {order.status === 'preparing' && (
+   413→  2812→                              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white text-xs" onClick={() => updateStatus(order.id, 'delivered')}>
+   414→  2813→                                <Truck className="w-3 h-3 mr-1" /> Selesai
+   415→  2814→                              </Button>
+   416→  2815→                            )}
+   417→  2816→                            {['pending', 'confirmed'].includes(order.status) && (
+   418→  2817→                              <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 text-xs" onClick={() => updateStatus(order.id, 'cancelled')}>
+   419→  2818→                                <XCircle className="w-3 h-3 mr-1" /> Batal
+   420→  2819→                              </Button>
+   421→  2820→                            )}
+   422→  2821→                          </div>
+   423→  2822→                        </div>
+   424→  2823→                      </div>
+   425→  2824→                    ))}
+   426→  2825→                  </div>
+   427→  2826→                )}
+   428→  2827→              </div>
+   429→  2828→            </div>
+   430→  2829→          </>
+   431→  2830→        )}
+   432→  2831→
+   433→  2832→        {/* ═══ ORDERS TAB (Admin — read-only history) ═══ */}
+   434→  2833→        {activeTab === 'orders' && isAdmin && (
+   435→  2834→          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+   436→  2835→            <div className="p-4 border-b border-orange-100">
+   437→  2836→              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+   438→  2837→                <ReceiptText className="w-4 h-4 text-orange-500" />
+   439→  2838→                Riwayat Semua Pesanan
+   440→  2839→              </h3>
+   441→  2840→              <p className="text-xs text-gray-400 text-justify mt-1 leading-relaxed">
+   442→  2841→                Daftar lengkap semua pesanan yang pernah masuk termasuk yang sudah selesai dan dibatalkan. Data ini dapat digunakan untuk analisis penjualan dan evaluasi performa layanan.
+   443→  2842→              </p>
+   444→  2843→            </div>
+   445→  2844→            <div className="max-h-[55vh] overflow-y-auto card-scrollbar">
+   446→  2845→              {loading ? (
+   447→  2846→                <div className="p-4 space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+   448→  2847→              ) : allOrders.length === 0 ? (
+   449→  2848→                <div className="p-8 text-center text-gray-400 text-sm">Belum ada data pesanan</div>
+   450→  2849→              ) : (
+   451→  2850→                <div className="divide-y divide-orange-50">
+   452→  2851→                  {allOrders.map((order) => (
+   453→  2852→                    <button
+   454→  2853→                      key={order.id}
+   455→  2854→                      onClick={() => { setReceipt(order); setPage('receipt') }}
+   456→  2855→                      className="w-full p-3 hover:bg-orange-50 transition-colors text-left"
+   457→  2856→                    >
+   458→  2857→                      <div className="flex items-center justify-between mb-1">
+   459→  2858→                        <span className="text-xs font-mono text-gray-400">#{order.id.slice(-6)}</span>
+   460→  2859→                        <Badge className={`${statusColor[order.status]} text-[10px]`}>{statusLabel[order.status]}</Badge>
+   461→  2860→                      </div>
+   462→  2861→                      <p className="text-sm font-medium text-gray-700">{order.customerName}</p>
+   463→  2862→                      <div className="flex justify-between items-center mt-1">
+   464→  2863→                        <span className="text-xs text-gray-400">{fmtDate(order.createdAt)}</span>
+   465→  2864→                        <span className="text-sm font-bold text-orange-600">{fmt(order.total)}</span>
+   466→  2865→                      </div>
+   467→  2866→                    </button>
+   468→  2867→                  ))}
+   469→  2868→                </div>
+   470→  2869→              )}
+   471→  2870→            </div>
+   472→  2871→          </div>
+   473→  2872→        )}
+   474→  2873→
+   475→  2874→        {/* ═══ PRODUCTS TAB (Admin — manage products) ═══ */}
+   476→  2875→        {activeTab === 'products' && isAdmin && (
+   477→  2876→          <>
+   478→  2877→            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+   479→  2878→              <div className="p-4 border-b border-orange-100 flex items-center justify-between">
+   480→  2879→                <div>
+   481→  2880→                  <h2 className="font-bold text-gray-800 flex items-center gap-2">
+   482→  2881→                    <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+   483→  2882→                    Kelola Produk
+   484→  2883→                  </h2>
+   485→  2884→                  <p className="text-xs text-gray-400 mt-0.5">Tambah, edit, atau hapus menu produk</p>
+   486→  2885→                </div>
+   487→  2886→                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white text-xs" onClick={() => { resetProductForm(); setShowProductForm(true) }}>
+   488→  2887→                  <Plus className="w-4 h-4 mr-1" /> Tambah
+   489→  2888→                </Button>
+   490→  2889→              </div>
+   491→  2890→
+   492→  2891→              {showProductForm && (
+   493→  2892→                <div className="p-4 border-b border-orange-100 bg-orange-50/30 space-y-3">
+   494→  2893→                  <div className="flex items-center justify-between">
+   495→  2894→                    <h3 className="font-semibold text-sm text-gray-700">{editingProduct ? 'Edit Produk' : 'Produk Baru'}</h3>
+   496→  2895→                    <Button size="sm" variant="ghost" onClick={resetProductForm}><X className="w-4 h-4" /></Button>
+   497→  2896→                  </div>
+   498→  2897→
+   499→  2898→                  <div>
+   500→  2899→                    <Label className="text-xs text-gray-600">Gambar Produk</Label>
+   501→
+   502→[showing lines 2400-2899 of 4424; use offset=2900 with limit to continue reading]

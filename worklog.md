@@ -1089,3 +1089,24 @@ Stage Summary:
 - Full voucher system implemented: admin CRUD, customer validation, one-time use enforcement, per-member unique codes
 - Key files modified: prisma/schema.prisma, src/lib/store.ts, src/app/page.tsx, src/app/api/vouchers/route.ts, src/app/api/orders/route.ts, src/app/api/auth/profile/route.ts
 - Verified with Agent Browser + VLM: admin voucher tab, create form with member dropdown, checkout voucher input, applied state with discount display
+---
+Task ID: 1
+Agent: Main Agent
+Task: Tampilkan voucher yang dimiliki di kartu member (Display member's vouchers in member card)
+
+Work Log:
+- Read and analyzed existing codebase: schema.prisma (Voucher model already exists), page.tsx (member card, voucher list, checkout, admin panel), store.ts, API routes
+- Found that the voucher feature was already partially implemented but had a critical parsing error caused by Box Drawing characters (═══) inside a JSX comment at line 762
+- Fixed the parsing error by replacing the multi-line comment with special characters to a simple single-line comment
+- Fixed a React hooks lint warning about calling setState synchronously within an effect (moved setLoadingVouchers into async IIFE)
+- Made voucher list expanded by default (changed showUserVouchers initial state from false to true)
+- Updated the member card's "Voucher" count to dynamically show actual active (unused + not expired) voucher count from userVouchers array instead of the static user.voucher field
+- Created test vouchers (percentage 15% max Rp8000, fixed Rp3000) for customer account
+- Verified via agent-browser: member card displays with correct voucher count, voucher list expands/collapses correctly, voucher cards show code/discount/expiry/status, copy button works
+
+Stage Summary:
+- Fixed JSX parsing error in page.tsx (line 762-764 special character comment)
+- Voucher section now displays expanded by default below the member card
+- Member card voucher count is now dynamic (calculated from actual voucher data)
+- All functionality verified via VLM + agent-browser testing
+- No new files created; all changes in existing src/app/page.tsx
