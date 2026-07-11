@@ -25,6 +25,8 @@ export interface OrderData {
   id: string
   userId?: string
   total: number
+  discount?: number
+  voucherCode?: string
   status: string
   paymentMethod: string
   customerName: string
@@ -41,6 +43,15 @@ export interface OrderData {
     price: number
     subtotal: number
   }[]
+}
+
+export interface AppliedVoucher {
+  id: string
+  code: string
+  type: string
+  value: number
+  discount: number
+  finalTotal: number
 }
 
 interface AppState {

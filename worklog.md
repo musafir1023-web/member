@@ -1061,3 +1061,31 @@ Stage Summary:
 - Receipt now shows correct store address and phone from STORE_INFO config
 - "Salin Struk" replaced with "Cetak Struk PDF" that opens print dialog for PDF saving
 - Clean thermal-receipt-style print template with dashed dividers
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Implement voucher feature - admin management + customer checkout + one-time use per member
+
+Work Log:
+- Updated Prisma schema: Added Voucher model (code, type, value, minOrder, maxDiscount, userId, used, usedAt, usedOrderId, expiresAt), added discount/voucherCode/voucherId to Order model, added vouchers relation to User
+- Pushed schema to database with `bun run db:push`
+- Created `/api/vouchers/route.ts` with POST (create), GET (list + validate), DELETE endpoints. Auto-generates unique 8-char alphanumeric codes. Validation checks: used, expired, user-specific, min order
+- Updated `/api/orders/route.ts` POST to accept voucherCode, validate server-side, calculate discount, mark voucher as used after order creation
+- Updated `/api/auth/profile/route.ts` GET to support `?admin=true` for listing all customers (used in voucher member dropdown)
+- Updated `src/lib/store.ts`: Added `AppliedVoucher` interface, added `discount` and `voucherCode` fields to `OrderData`
+- Updated checkout form in `page.tsx`: Added voucher code input with "Pakai" button, applied voucher display with green checkmark and remove button, discount line in order summary, subtotal/total calculation with discount
+- Updated receipt page in `page.tsx`: Both visual receipt and print-PDF HTML now show subtotal, discount voucher line, and correct total
+- Added "Voucher" tab to admin profile page with:
+  - Create voucher form (type: percentage/fixed, value, min order, max discount, target member, expiry date)
+  - Member dropdown populated from customer list API
+  - Voucher list with status badges (Aktif/Digunakan/Expired), copy code button, delete button
+  - Voucher stats (Total, Aktif, Digunakan)
+  - Delete confirmation reuses existing AlertDialog
+- Added imports: Tag, Copy, Check from lucide-react; AppliedVoucher from store
+- VLM verification confirmed: admin tab shows voucher codes with status, checkout shows green voucher applied state with discount details
+
+Stage Summary:
+- Full voucher system implemented: admin CRUD, customer validation, one-time use enforcement, per-member unique codes
+- Key files modified: prisma/schema.prisma, src/lib/store.ts, src/app/page.tsx, src/app/api/vouchers/route.ts, src/app/api/orders/route.ts, src/app/api/auth/profile/route.ts
+- Verified with Agent Browser + VLM: admin voucher tab, create form with member dropdown, checkout voucher input, applied state with discount display

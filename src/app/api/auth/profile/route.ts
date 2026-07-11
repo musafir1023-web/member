@@ -5,6 +5,17 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    const admin = searchParams.get('admin')
+
+    // Admin: list all customers
+    if (admin === 'true') {
+      const users = await db.user.findMany({
+        where: { role: 'customer' },
+        select: { id: true, name: true, email: true, phone: true, points: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      return NextResponse.json(users)
+    }
 
     if (!userId) {
       return NextResponse.json({ error: 'ID user diperlukan' }, { status: 400 })

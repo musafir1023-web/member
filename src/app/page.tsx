@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, type CartItem, type OrderData, type Page } from '@/lib/store'
+import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -78,6 +78,9 @@ import {
   Volume2,
   Printer,
   ShoppingBag,
+  Tag,
+  Copy,
+  Check,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -1244,8 +1247,38 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
     paymentMethod: 'COD',
     deliveryMethod: 'pickup' as 'pickup' | 'delivery',
   })
+  const [voucherCode, setVoucherCode] = useState('')
+  const [appliedVoucher, setAppliedVoucher] = useState<AppliedVoucher | null>(null)
+  const [validatingVoucher, setValidatingVoucher] = useState(false)
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
+
+  const finalTotal = appliedVoucher ? appliedVoucher.finalTotal : total
+
+  const handleValidateVoucher = async () => {
+    if (!voucherCode.trim()) {
+      addToast('Masukkan kode voucher', 'error')
+      return
+    }
+    setValidatingVoucher(true)
+    try {
+      const res = await fetch(`/api/vouchers?action=validate&code=${encodeURIComponent(voucherCode.trim())}&total=${total}&customerId=${user?.id || ''}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Voucher tidak valid')
+      setAppliedVoucher(data.voucher)
+      addToast(`Voucher ${data.voucher.code} berhasil diterapkan! Diskon ${fmt(data.voucher.discount)}`, 'success')
+    } catch (err: unknown) {
+      setAppliedVoucher(null)
+      addToast(err instanceof Error ? err.message : 'Voucher tidak valid', 'error')
+    } finally {
+      setValidatingVoucher(false)
+    }
+  }
+
+  const handleRemoveVoucher = () => {
+    setVoucherCode('')
+    setAppliedVoucher(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1279,6 +1312,7 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
           customerAddress: 'Ambil di Toko',
           notes: form.notes,
           paymentMethod: form.paymentMethod,
+          voucherCode: appliedVoucher?.code || null,
         }),
       })
 
@@ -1429,6 +1463,63 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
             </div>
           </div>
 
+          {/* Voucher */}
+          <div className="bg-white rounded-xl p-5 shadow-lg">
+            <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
+              <Tag className="w-4 h-4 text-orange-500" />
+              Kode Voucher
+            </h2>
+            {appliedVoucher ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600" />
+                    <div>
+                      <p className="text-sm font-bold text-green-800">{appliedVoucher.code}</p>
+                      <p className="text-xs text-green-600">
+                        {appliedVoucher.type === 'percentage' ? `Diskon ${appliedVoucher.value}%` : `Diskon ${fmt(appliedVoucher.value)}`}
+                        {appliedVoucher.type === 'percentage' && appliedVoucher.maxDiscount ? ` (maks ${fmt(appliedVoucher.maxDiscount)})` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={handleRemoveVoucher} className="text-red-500 hover:text-red-700 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span className="text-green-700 font-medium">Hemat {fmt(appliedVoucher.discount)}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={voucherCode}
+                  onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                  placeholder="Masukkan kode voucher"
+                  className="flex-1 uppercase tracking-wider font-mono text-sm"
+                  maxLength={10}
+                  disabled={validatingVoucher}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-orange-200 text-orange-600 hover:bg-orange-50 px-4 disabled:opacity-50"
+                  onClick={handleValidateVoucher}
+                  disabled={validatingVoucher || !voucherCode.trim()}
+                >
+                  {validatingVoucher ? (
+                    <span className="w-4 h-4 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
+                  ) : (
+                    'Pakai'
+                  )}
+                </Button>
+              </div>
+            )}
+            <p className="text-[10px] text-gray-400 mt-2 text-justify leading-relaxed">
+              * Voucher hanya berlaku 1x pakai per kode dan tidak dapat digabungkan dengan voucher lainnya.
+            </p>
+          </div>
+
           {/* Order Summary */}
           <div className="bg-white rounded-xl p-5 shadow-lg">
             <h2 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
@@ -1444,9 +1535,21 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
               ))}
             </div>
             <Separator className="my-3" />
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-gray-700">Total</span>
-              <span className="text-lg font-extrabold text-orange-600">{fmt(total)}</span>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="text-gray-700">{fmt(total)}</span>
+              </div>
+              {appliedVoucher && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex justify-between text-sm">
+                  <span className="text-green-600 font-medium">Diskon Voucher</span>
+                  <span className="text-green-600 font-bold">-{fmt(appliedVoucher.discount)}</span>
+                </motion.div>
+              )}
+              <div className="flex justify-between items-center pt-1.5 border-t border-gray-100">
+                <span className="font-bold text-gray-700">Total</span>
+                <span className="text-lg font-extrabold text-orange-600">{fmt(finalTotal)}</span>
+              </div>
             </div>
           </div>
 
@@ -1600,12 +1703,19 @@ function ReceiptPage() {
     const pointsText = receipt.status === 'delivered' && receipt.pointsEarned > 0
       ? `\n+${receipt.pointsEarned} poin didapatkan` : ''
 
+    const subtotal = receipt.items.reduce((s, i) => s + i.subtotal, 0)
+    const discountAmount = receipt.discount || 0
+
     const itemsHtml = receipt.items.map((item) => `
       <tr>
         <td style="padding:3px 0;vertical-align:top;text-align:left;width:55%">${item.productName}<br><span style="font-size:10px;color:#999">${item.quantity} x ${fmt(item.price)}</span></td>
         <td style="padding:3px 0;vertical-align:top;text-align:right;font-weight:600">${fmt(item.subtotal)}</td>
       </tr>
     `).join('')
+
+    const discountHtml = discountAmount > 0 ? `
+    <div style="display:flex;justify-content:space-between;color:#16a34a"><span>Diskon Voucher${receipt.voucherCode ? ` (${receipt.voucherCode})` : ''}</span><span style="font-weight:600">-${fmt(discountAmount)}</span></div>
+    ` : ''
 
     const printHtml = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -1647,7 +1757,8 @@ function ReceiptPage() {
   <table class="items-table">${itemsHtml}</table>
   <hr class="divider">
   <div class="total-section">
-    <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span style="font-weight:600">${fmt(receipt.total)}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span style="font-weight:600">${fmt(subtotal)}</span></div>
+    ${discountHtml}
     <hr class="divider">
     <div class="grand" style="display:flex;justify-content:space-between"><span>TOTAL</span><span>${fmt(receipt.total)}</span></div>
     <hr class="divider">
@@ -1732,6 +1843,18 @@ function ReceiptPage() {
 
             {/* Total */}
             <div className="text-justify text-sm space-y-1 leading-relaxed">
+              {(receipt.discount && receipt.discount > 0) && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-700 font-medium">{fmt(receipt.items.reduce((s, i) => s + i.subtotal, 0) + receipt.discount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-green-600 font-medium">Diskon Voucher {receipt.voucherCode ? `(${receipt.voucherCode})` : ''}</span>
+                    <span className="text-green-600 font-bold">-{fmt(receipt.discount)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between">
                 <span className="font-bold text-gray-800">Total</span>
                 <span className="font-extrabold text-orange-600">{fmt(receipt.total)}</span>
@@ -1978,7 +2101,7 @@ function RegisterPage() {
 /* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
 function ProfilePage() {
   const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products' | 'chat'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'settings' | 'admin' | 'products' | 'vouchers' | 'chat'>('overview')
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
@@ -2127,6 +2250,89 @@ function ProfilePage() {
   const [deletingProduct, setDeletingProduct] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ─── Voucher Management State ───
+  const [vouchers, setVouchers] = useState<any[]>([])
+  const [allCustomers, setAllCustomers] = useState<{ id: string; name: string; email: string }[]>([])
+  const [showVoucherForm, setShowVoucherForm] = useState(false)
+  const [savingVoucher, setSavingVoucher] = useState(false)
+  const [deletingVoucher, setDeletingVoucher] = useState<string | null>(null)
+  const [voucherForm, setVoucherForm] = useState({
+    type: 'percentage' as 'percentage' | 'fixed',
+    value: '',
+    minOrder: '',
+    maxDiscount: '',
+    userId: '',
+    expiresAt: '',
+  })
+
+  const loadVouchers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/vouchers')
+      const data = await res.json()
+      if (Array.isArray(data)) setVouchers(data)
+    } catch { /* silent */ }
+  }, [])
+
+  const loadCustomers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/profile?admin=true')
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) setAllCustomers(data)
+      }
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { if (isAdmin) { loadVouchers(); loadCustomers() } }, [isAdmin, loadVouchers, loadCustomers])
+
+  const handleCreateVoucher = async () => {
+    if (!voucherForm.value) {
+      addToast('Nilai voucher wajib diisi', 'error'); return
+    }
+    setSavingVoucher(true)
+    try {
+      const body: any = {
+        type: voucherForm.type,
+        value: Number(voucherForm.value),
+        minOrder: voucherForm.minOrder ? Number(voucherForm.minOrder) : undefined,
+        maxDiscount: voucherForm.type === 'percentage' && voucherForm.maxDiscount ? Number(voucherForm.maxDiscount) : undefined,
+        userId: voucherForm.userId || undefined,
+        expiresAt: voucherForm.expiresAt || undefined,
+      }
+      const res = await fetch('/api/vouchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal membuat voucher')
+      addToast(`Voucher ${data.code} berhasil dibuat!`, 'success')
+      setVoucherForm({ type: 'percentage', value: '', minOrder: '', maxDiscount: '', userId: '', expiresAt: '' })
+      setShowVoucherForm(false)
+      loadVouchers()
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Gagal membuat voucher', 'error')
+    } finally {
+      setSavingVoucher(false)
+    }
+  }
+
+  const handleDeleteVoucher = async (id: string) => {
+    setDeletingVoucher(id)
+    try {
+      const res = await fetch(`/api/vouchers?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      addToast('Voucher berhasil dihapus', 'success')
+      loadVouchers()
+    } catch {
+      addToast('Gagal menghapus voucher', 'error')
+    } finally {
+      setDeletingVoucher(null)
+      setDeleteTarget(null)
+    }
+  }
+
+  const copyVoucherCode = (code: string) => {
+    navigator.clipboard.writeText(code)
+    addToast(`Kode ${code} disalin!`, 'success')
+  }
+
   const loadProducts = useCallback(async () => {
     try {
       const res = await fetch('/api/products?all=true')
@@ -2224,7 +2430,13 @@ function ProfilePage() {
   }
 
   const confirmDeleteProduct = () => {
-    if (deleteTarget) deleteProduct(deleteTarget.id)
+    if (!deleteTarget) return
+    // Check if it's a voucher (name starts with "Voucher")
+    if (deleteTarget.name.startsWith('Voucher')) {
+      handleDeleteVoucher(deleteTarget.id)
+    } else {
+      deleteProduct(deleteTarget.id)
+    }
   }
 
   const tabs = isAdmin
@@ -2232,6 +2444,7 @@ function ProfilePage() {
         { id: 'overview' as const, label: 'Ringkasan', icon: <UserCircle className="w-4 h-4" /> },
         { id: 'admin' as const, label: 'Pesanan', icon: <LayoutDashboard className="w-4 h-4" /> },
         { id: 'products' as const, label: 'Produk', icon: <UtensilsCrossed className="w-4 h-4" /> },
+        { id: 'vouchers' as const, label: 'Voucher', icon: <Tag className="w-4 h-4" /> },
         { id: 'chat' as const, label: 'Chat', icon: <MessageCircle className="w-4 h-4" /> },
         { id: 'orders' as const, label: 'Riwayat', icon: <ReceiptText className="w-4 h-4" /> },
         { id: 'settings' as const, label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
@@ -2789,6 +3002,208 @@ function ProfilePage() {
                   </div>
                 )}
               </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══ VOUCHER TAB ═══ */}
+        {activeTab === 'vouchers' && isAdmin && (
+          <>
+            <div className="bg-white rounded-xl p-5 shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-orange-500" />
+                  Kelola Voucher
+                </h3>
+                <Button
+                  size="sm"
+                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
+                  onClick={() => setShowVoucherForm(!showVoucherForm)}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Buat Voucher
+                </Button>
+              </div>
+
+              {/* Create Voucher Form */}
+              {showVoucherForm && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="border border-orange-100 rounded-lg p-4 mb-4 bg-orange-50/50 space-y-3">
+                  <h4 className="font-semibold text-gray-700 text-xs">Buat Voucher Baru</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-[11px] text-gray-500">Tipe Diskon</Label>
+                      <select
+                        value={voucherForm.type}
+                        onChange={(e) => setVoucherForm((p) => ({ ...p, type: e.target.value as 'percentage' | 'fixed' }))}
+                        className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      >
+                        <option value="percentage">Persentase (%)</option>
+                        <option value="fixed">Nominal Tetap (Rp)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-gray-500">Nilai Diskon</Label>
+                      <Input
+                        type="number"
+                        value={voucherForm.value}
+                        onChange={(e) => setVoucherForm((p) => ({ ...p, value: e.target.value }))}
+                        placeholder={voucherForm.type === 'percentage' ? '20' : '5000'}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-[11px] text-gray-500">Min. Pesanan (Rp)</Label>
+                      <Input
+                        type="number"
+                        value={voucherForm.minOrder}
+                        onChange={(e) => setVoucherForm((p) => ({ ...p, minOrder: e.target.value }))}
+                        placeholder="Opsional, kosongkan"
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                    {voucherForm.type === 'percentage' && (
+                      <div>
+                        <Label className="text-[11px] text-gray-500">Maks. Diskon (Rp)</Label>
+                        <Input
+                          type="number"
+                          value={voucherForm.maxDiscount}
+                          onChange={(e) => setVoucherForm((p) => ({ ...p, maxDiscount: e.target.value }))}
+                          placeholder="Opsional, kosongkan"
+                          className="mt-1 text-sm"
+                        />
+                      </div>
+                    )}
+                    {voucherForm.type === 'fixed' && <div />}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-[11px] text-gray-500">Untuk Member</Label>
+                      <select
+                        value={voucherForm.userId}
+                        onChange={(e) => setVoucherForm((p) => ({ ...p, userId: e.target.value }))}
+                        className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+                      >
+                        <option value="">Semua Customer</option>
+                        {allCustomers.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-gray-500">Masa Berlaku</Label>
+                      <Input
+                        type="date"
+                        value={voucherForm.expiresAt}
+                        onChange={(e) => setVoucherForm((p) => ({ ...p, expiresAt: e.target.value }))}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    * Kode voucher akan dibuat otomatis secara unik. Voucher hanya dapat digunakan 1x pakai dan tidak berlaku kelipatan.
+                  </p>
+                  <div className="flex gap-2 pt-1">
+                    <Button onClick={handleCreateVoucher} disabled={savingVoucher} size="sm" className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs disabled:opacity-50">
+                      {savingVoucher ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Plus className="w-3.5 h-3.5 mr-1" /> Buat</>}
+                    </Button>
+                    <Button onClick={() => setShowVoucherForm(false)} variant="outline" size="sm" className="flex-1 border-orange-200 text-orange-600 text-xs hover:bg-orange-50">
+                      Batal
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Voucher List */}
+              {vouchers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Tag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">Belum ada voucher</p>
+                  <p className="text-xs text-gray-300 mt-1">Klik "Buat Voucher" untuk menambahkan</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto card-scrollbar">
+                  {vouchers.map((v) => {
+                    const isExpired = v.expiresAt && new Date(v.expiresAt) < new Date()
+                    return (
+                      <motion.div
+                        key={v.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`border rounded-lg p-3 ${v.used ? 'border-gray-200 bg-gray-50 opacity-60' : isExpired ? 'border-red-200 bg-red-50/50 opacity-60' : 'border-orange-100 bg-white'}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-mono font-bold text-sm text-gray-800 tracking-wider">{v.code}</span>
+                              {v.used && <Badge className="bg-gray-200 text-gray-600 text-[9px] border-0">Digunakan</Badge>}
+                              {isExpired && !v.used && <Badge className="bg-red-100 text-red-600 text-[9px] border-0">Expired</Badge>}
+                              {!v.used && !isExpired && <Badge className="bg-green-100 text-green-700 text-[9px] border-0">Aktif</Badge>}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 text-[10px] text-gray-500">
+                              <span className="bg-gray-100 px-1.5 py-0.5 rounded">
+                                {v.type === 'percentage' ? `Diskon ${v.value}%` : `Diskon ${fmt(v.value)}`}
+                              </span>
+                              {v.minOrder > 0 && <span className="bg-gray-100 px-1.5 py-0.5 rounded">Min. {fmt(v.minOrder)}</span>}
+                              {v.maxDiscount > 0 && <span className="bg-gray-100 px-1.5 py-0.5 rounded">Maks {fmt(v.maxDiscount)}</span>}
+                              {v.expiresAt && <span className="bg-gray-100 px-1.5 py-0.5 rounded">s/d {new Date(v.expiresAt).toLocaleDateString('id-ID')}</span>}
+                            </div>
+                            {v.user && (
+                              <p className="text-[10px] text-gray-400 mt-1">
+                                <User className="w-3 h-3 inline mr-0.5" />{v.user.name} ({v.user.email})
+                              </p>
+                            )}
+                            {!v.user && (
+                              <p className="text-[10px] text-orange-500 mt-1 font-medium">
+                                <Gift className="w-3 h-3 inline mr-0.5" />Berlaku untuk semua customer
+                              </p>
+                            )}
+                            {v.used && v.usedAt && (
+                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                Digunakan: {fmtDate(v.usedAt)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-1 flex-shrink-0">
+                            {!v.used && (
+                              <button
+                                onClick={() => copyVoucherCode(v.code)}
+                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-orange-100 text-gray-400 hover:text-orange-600 transition-colors"
+                                title="Salin kode"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setDeleteTarget({ id: v.id, name: `Voucher ${v.code}` })}
+                              disabled={deletingVoucher === v.id || v.used}
+                              className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                              title="Hapus"
+                            >
+                              {deletingVoucher === v.id ? <span className="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Voucher Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Total Voucher', value: vouchers.length, color: 'bg-blue-50 text-blue-600' },
+                { label: 'Aktif', value: vouchers.filter((v) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date())).length, color: 'bg-green-50 text-green-600' },
+                { label: 'Digunakan', value: vouchers.filter((v) => v.used).length, color: 'bg-orange-50 text-orange-600' },
+              ].map((s, i) => (
+                <div key={i} className={`rounded-xl p-3 text-center ${s.color}`}>
+                  <p className="text-lg font-bold">{s.value}</p>
+                  <p className="text-[10px] font-medium">{s.label}</p>
+                </div>
+              ))}
             </div>
           </>
         )}
