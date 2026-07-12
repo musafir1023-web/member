@@ -934,81 +934,102 @@ function HomePage() {
                 style={{ maxWidth: 360 }}
               >
                 {/* Header */}
-                <div className="flex items-center gap-2 mb-2.5">
-                  <Gift className="w-4 h-4 text-white/80" />
-                  <span className="text-white/80 text-sm font-medium">Voucher Aktif</span>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-400/20 flex items-center justify-center">
+                      <Gift className="w-3.5 h-3.5 text-amber-300" />
+                    </div>
+                    <span className="text-white/90 text-sm font-semibold">Voucher Aktif</span>
+                  </div>
                   {!loadingVouchers && activeVoucherList.length > 0 && (
-                    <span className="bg-green-500/30 rounded-full px-2 py-0.5 text-[10px] text-white font-bold">
-                      {activeVoucherList.length}
+                    <span className="bg-green-500/20 border border-green-400/30 rounded-full px-2.5 py-0.5 text-[10px] text-green-300 font-bold">
+                      {activeVoucherList.length} tersedia
                     </span>
                   )}
                 </div>
 
                 {/* Voucher cards */}
-                <div className="space-y-2.5 max-h-80 overflow-y-auto no-scrollbar">
+                <div className="space-y-2.5 max-h-96 overflow-y-auto no-scrollbar">
                   {loadingVouchers ? (
                     <div className="space-y-2">
                       {[...Array(2)].map((_, i) => (
-                        <Skeleton key={i} className="w-full h-20 rounded-xl bg-white/10" />
+                        <Skeleton key={i} className="w-full h-24 rounded-2xl bg-white/10" />
                       ))}
                     </div>
                   ) : activeVoucherList.length === 0 ? (
-                    <div className="text-center py-4">
-                      <Gift className="w-8 h-8 text-white/30 mx-auto mb-2" />
-                      <p className="text-white/50 text-xs">Belum ada voucher aktif</p>
-                      <p className="text-white/30 text-[10px] mt-0.5">Voucher aktif akan muncul di sini</p>
+                    <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 p-5 text-center">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
+                        <Gift className="w-5 h-5 text-white/40" />
+                      </div>
+                      <p className="text-white/60 text-xs font-medium">Belum ada voucher aktif</p>
+                      <p className="text-white/30 text-[10px] mt-1 leading-relaxed">Voucher aktif akan muncul di sini saat admin memberikan</p>
                     </div>
                   ) : (
-                    activeVoucherList.map((v: any) => (
-                        <div key={v.id} className="relative rounded-xl overflow-hidden shadow-md">
-                          <div className="flex">
-                            <div className="bg-orange-500 text-white px-4 py-3 flex flex-col items-center justify-center min-w-[80px] relative">
-                              <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-orange-500" style={{ boxShadow: 'inset 0 0 0 4px white' }} />
-                              {v.type === 'percentage' ? (
-                                <>
-                                  <span className="text-2xl font-extrabold leading-none">{v.value}%</span>
-                                  <span className="text-[8px] text-white/70 font-medium mt-0.5">OFF</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-lg font-extrabold leading-none">{fmt(v.value).replace('Rp', '')}</span>
-                                  <span className="text-[8px] text-white/70 font-medium mt-0.5">DISKON</span>
-                                </>
-                              )}
+                    activeVoucherList.map((v: any, idx: number) => (
+                      <motion.div
+                        key={v.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.08 * idx }}
+                        className="relative rounded-2xl overflow-hidden shadow-lg"
+                      >
+                        <div className="flex">
+                          {/* Left: Discount Badge */}
+                          <div className="bg-gradient-to-b from-orange-500 to-amber-500 text-white px-5 py-4 flex flex-col items-center justify-center min-w-[90px] relative">
+                            <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-orange-500" style={{ boxShadow: 'inset 0 0 0 4px white' }} />
+                            <Sparkles className="w-3 h-3 text-white/60 mb-1" />
+                            {v.type === 'percentage' ? (
+                              <>
+                                <span className="text-2xl font-black leading-none">{v.value}%</span>
+                                <span className="text-[8px] text-white/80 font-bold mt-0.5 uppercase tracking-wider">Off</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-lg font-black leading-none">{fmt(v.value).replace('Rp', '').trim()}</span>
+                                <span className="text-[8px] text-white/80 font-bold mt-0.5 uppercase tracking-wider">Diskon</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Right: Voucher Details */}
+                          <div className="flex-1 bg-white/95 backdrop-blur-sm p-3.5 flex flex-col justify-between min-w-0">
+                            <div className="flex items-start justify-between">
+                              <div className="min-w-0">
+                                <p className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Kode Voucher</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <p className="font-mono font-black text-sm text-gray-800 tracking-wider">{v.code}</p>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      navigator.clipboard.writeText(v.code)
+                                      addToast('Kode voucher disalin!', 'success')
+                                    }}
+                                    className="text-gray-300 hover:text-orange-500 transition-colors"
+                                  >
+                                    <Copy className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                              <span className="bg-green-100 text-green-700 text-[9px] font-bold px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                Aktif
+                              </span>
                             </div>
-                            <div className="flex-1 bg-white p-3 flex flex-col justify-between min-w-0">
-                              <div className="flex items-start justify-between">
-                                <div className="min-w-0">
-                                  <p className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Kode Voucher</p>
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    <p className="font-mono font-extrabold text-sm text-gray-800 tracking-wide">{v.code}</p>
-                                    <button
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(v.code)
-                                        addToast('Kode voucher disalin!', 'success')
-                                      }}
-                                      className="text-gray-300 hover:text-orange-500 transition-colors"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                </div>
-                                <span className="bg-green-50 text-green-600 text-[9px] font-semibold px-2 py-0.5 rounded shrink-0">Aktif</span>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                {v.minOrder && <span>Min. {fmt(v.minOrder)}</span>}
+                                {v.type === 'percentage' && v.maxDiscount && <span>Maks. {fmt(v.maxDiscount)}</span>}
                               </div>
-                              <div className="flex items-center justify-between mt-1.5">
-                                <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                                  {v.minOrder && <span>Min. {fmt(v.minOrder)}</span>}
-                                  {v.type === 'percentage' && v.maxDiscount && <span>Maks. {fmt(v.maxDiscount)}</span>}
-                                </div>
-                                {v.expiresAt && (
-                                  <span className="text-[10px] font-medium text-gray-400">
-                                    s/d {new Date(v.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  </span>
-                                )}
-                              </div>
+                              {v.expiresAt && (
+                                <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  s/d {new Date(v.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
+                      </motion.div>
                     ))
                   )}
                 </div>
