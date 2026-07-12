@@ -1234,3 +1234,28 @@ Stage Summary:
 - "Tentang Aplikasi" section completely removed from settings tab
 - Member card now displays active voucher codes as styled pills with discount values
 - All changes verified working in browser, lint clean, no console errors
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix order creation failure on Vercel (Turso)
+
+Work Log:
+- Connected to Turso database and inspected full schema via PRAGMA table_info
+- Found root cause: Order table in Turso was missing 5 columns that Prisma schema expects:
+  - `discount` (INTEGER NOT NULL DEFAULT 0)
+  - `voucherCode` (TEXT)
+  - `voucherId` (TEXT)
+  - `pointsAwarded` (BOOLEAN NOT NULL DEFAULT 0)
+  - `pointsEarned` (INTEGER NOT NULL DEFAULT 0)
+- These columns were added to the Prisma schema after the initial Turso setup but never migrated
+- Added all 5 missing columns via ALTER TABLE statements on Turso
+- Verified all columns now exist and match Prisma schema
+- Improved error handling in /api/orders POST to return actual error message instead of generic "Gagal membuat pesanan"
+- Updated frontend catch block to display the actual API error message in toast
+- Pushed fix to GitHub
+
+Stage Summary:
+- Root cause: Turso Order table was out of sync with Prisma schema (5 missing columns)
+- Fix: Added missing columns directly to Turso via ALTER TABLE
+- Error messages now show actual database/API error for easier future debugging
+- Deployed to Vercel via git push
