@@ -95,7 +95,9 @@ const statusColor: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
   preparing: 'bg-orange-100 text-orange-800',
+  delivering: 'bg-purple-100 text-purple-800',
   delivered: 'bg-green-100 text-green-800',
+  completed: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
 }
 
@@ -103,7 +105,9 @@ const statusLabel: Record<string, string> = {
   pending: 'Menunggu',
   confirmed: 'Dikonfirmasi',
   preparing: 'Diproses',
+  delivering: 'Dikirim',
   delivered: 'Selesai',
+  completed: 'Selesai',
   cancelled: 'Dibatalkan',
 }
 
@@ -2466,7 +2470,10 @@ function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
       const data = await res.json()
       if (data.pointsInfo?.awarded) {
         addToast(`Pesanan selesai! +${data.pointsInfo.points} poin untuk pelanggan`, 'success')
@@ -2474,8 +2481,9 @@ function ProfilePage() {
         addToast('Status pesanan berhasil diupdate', 'success')
       }
       loadOrders()
-    } catch {
-      addToast('Gagal mengupdate status', 'error')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengupdate status'
+      addToast(msg, 'error')
     }
   }
 
@@ -4438,14 +4446,18 @@ function OrderNotificationPopup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
       const data = await res.json()
       if (data.pointsInfo?.awarded) {
         useAppStore.getState().addToast(`Pesanan selesai! +${data.pointsInfo.points} poin untuk pelanggan`, 'success')
       }
       setCurrentPopup(null)
-    } catch {
-      // keep popup open on error
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengupdate status'
+      useAppStore.getState().addToast(msg, 'error')
     } finally {
       setActionLoading(false)
     }

@@ -4,6 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 // 1 poin per Rp 1.000 belanja
 const POINT_RATE = 1000
 
+// 'completed' is treated as alias for 'delivered'
+const normalizeStatus = (s: string): string =>
+  s === 'completed' ? 'delivered' : s
+
+const validStatuses = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'completed', 'cancelled']
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,10 +23,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Status diperlukan' }, { status: 400 })
     }
 
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled']
     if (!validStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Status tidak valid' }, { status: 400 })
+      return NextResponse.json({ error: `Status "${status}" tidak valid. Status yang diperbolehkan: ${validStatuses.join(', ')}` }, { status: 400 })
     }
+
+    // Normalize 'completed' → 'delivered'
+    const finalStatus = normalizeStatus(status)
 
     // Fetch the order first to check current state
     const existing = await db.order.findUnique({
@@ -34,8 +42,8 @@ export async function PATCH(
 
     const pointsInfo = { awarded: false, points: 0, newTotal: 0 }
 
-    // If marking as delivered and points not yet awarded, add points to customer
-    if (status === 'delivered' && !existing.pointsAwarded && existing.userId) {
+    // If marking as delivered/completed and points not yet awarded, add points to customer
+    if (finalStatus === 'delivered' && !existing.pointsAwarded && existing.userId) {
       const earned = Math.floor(existing.total / POINT_RATE)
 
       if (earned > 0) {
@@ -63,14 +71,15 @@ export async function PATCH(
 
     const order = await db.order.update({
       where: { id },
-      data: { status },
+      data: { status: finalStatus },
       include: { items: true },
     })
 
     return NextResponse.json({ ...order, pointsInfo })
   } catch (error) {
     console.error('Update order error:', error)
-    return NextResponse.json({ error: 'Gagal mengupdate pesanan' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Gagal mengupdate pesanan'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
