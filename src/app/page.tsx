@@ -624,6 +624,7 @@ function HomePage() {
   const barcodeRef = useRef<SVGSVGElement>(null)
 
   const memberCode = user ? `AGSI-${user.id.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}` : ''
+  const activeVoucherList = (userVouchers || []).filter((v: any) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date()))
 
   // Generate barcode when back side is visible
   useEffect(() => {
@@ -798,7 +799,7 @@ function HomePage() {
                 <div className="relative w-full" style={{ animation: 'v7-float 5s ease-in-out infinite' }}>
                   <div className="relative w-full cursor-pointer" style={{ transformStyle: 'preserve-3d' }} onClick={() => setShowBarcode(!showBarcode)}>
 
-                    <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)', minHeight: 210 }}>
+                    <div className="relative w-full" style={{ transformStyle: 'preserve-3d', transform: showBarcode ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
 
                       {/* ═══ FRONT FACE ═══ */}
                       <div className="relative rounded-2xl overflow-hidden shadow-xl" style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #EA580C 0%, #F97316 50%, #FB923C 100%)' }}>
@@ -807,7 +808,7 @@ function HomePage() {
                         <div className="absolute -bottom-8 -left-8 w-20 h-20 rounded-full bg-white/[0.05]" />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-white/[0.03]" />
 
-                        <div className="relative z-10 flex flex-col px-5 pt-5 pb-4" style={{ minHeight: 210 }}>
+                        <div className="relative z-10 flex flex-col px-5 pt-5 pb-4">
                           {/* Header */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -830,8 +831,8 @@ function HomePage() {
                           {/* Divider */}
                           <div className="h-px bg-white/20 mb-3" />
 
-                          {/* Stats */}
-                          <div className="flex gap-3">
+                          {/* Stats Row */}
+                          <div className="flex gap-3 mb-3">
                             <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
                               <Star className="w-3.5 h-3.5 text-white/80 mx-auto mb-1" />
                               <p className="text-[7px] text-white/60 font-semibold uppercase tracking-wider mb-0.5">Poin</p>
@@ -840,9 +841,32 @@ function HomePage() {
                             <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
                               <Gift className="w-3.5 h-3.5 text-white/80 mx-auto mb-1" />
                               <p className="text-[7px] text-white/60 font-semibold uppercase tracking-wider mb-0.5">Voucher</p>
-                              <p className="text-white font-extrabold text-xl leading-none">{userVouchers.filter((v: any) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date())).length}</p>
+                              <p className="text-white font-extrabold text-xl leading-none">{activeVoucherList.length}</p>
                             </div>
                           </div>
+
+                          {/* Active Voucher Pills */}
+                          {activeVoucherList.length > 0 && (
+                            <div>
+                              <p className="text-[7px] text-white/50 font-semibold uppercase tracking-[0.2em] mb-1.5">Voucher Aktif</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {activeVoucherList.slice(0, 3).map((v: any) => (
+                                  <div key={v.id} className="bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1 flex items-center gap-1.5">
+                                    <Tag className="w-2.5 h-2.5 text-white/70" />
+                                    <span className="text-[9px] text-white font-bold tracking-wide">{v.code}</span>
+                                    <span className="text-[8px] text-white/70">
+                                      {v.type === 'percentage' ? `${v.value}%` : fmt(v.value).replace('Rp', '').trim()}
+                                    </span>
+                                  </div>
+                                ))}
+                                {activeVoucherList.length > 3 && (
+                                  <div className="bg-white/10 rounded-lg px-2 py-1">
+                                    <span className="text-[8px] text-white/60 font-semibold">+{activeVoucherList.length - 3} lagi</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                           <p className="text-center text-[7px] text-white/30 font-medium mt-3 tracking-wide">Ketuk untuk melihat barcode</p>
                         </div>
@@ -915,7 +939,7 @@ function HomePage() {
                   <span className="text-white/80 text-sm font-medium">Voucher Saya</span>
                   {!loadingVouchers && (
                     <span className="bg-white/20 rounded-full px-2 py-0.5 text-[10px] text-white font-bold">
-                      {userVouchers.filter((v: any) => !v.used && !(v.expiresAt && new Date(v.expiresAt) < new Date())).length} aktif
+                      {(userVouchers || []).filter((v: any) => !v.used && !(v.expiresAt && new Date(v.expiresAt) < new Date())).length} aktif
                     </span>
                   )}
                 </div>
@@ -2400,24 +2424,27 @@ function ProfilePage() {
   }, [loadOrders])
 
   // Computed stats
+  const safeOrders = Array.isArray(orders) ? orders : []
+  const safeAllOrders = Array.isArray(allOrders) ? allOrders : []
+
   const customerStats = {
-    totalOrders: orders.length,
-    completed: orders.filter((o) => o.status === 'delivered').length,
-    pending: orders.filter((o) => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
-    totalSpent: orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
-    firstOrder: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
-    lastOrder: orders.length > 0 ? orders[0].createdAt : null,
+    totalOrders: safeOrders.length,
+    completed: safeOrders.filter((o: any) => o.status === 'delivered').length,
+    pending: safeOrders.filter((o: any) => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
+    totalSpent: safeOrders.filter((o: any) => o.status === 'delivered').reduce((s: number, o: any) => s + o.total, 0),
+    firstOrder: safeOrders.length > 0 ? safeOrders[safeOrders.length - 1].createdAt : null,
+    lastOrder: safeOrders.length > 0 ? safeOrders[0].createdAt : null,
   }
 
   const adminStats = {
-    total: allOrders.length,
-    pending: allOrders.filter((o) => o.status === 'pending').length,
-    confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
-    preparing: allOrders.filter((o) => o.status === 'preparing').length,
-    delivered: allOrders.filter((o) => o.status === 'delivered').length,
-    cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
-    revenue: allOrders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0),
-    avgOrder: allOrders.length > 0 ? Math.round(allOrders.reduce((s, o) => s + o.total, 0) / allOrders.length) : 0,
+    total: safeAllOrders.length,
+    pending: safeAllOrders.filter((o: any) => o.status === 'pending').length,
+    confirmed: safeAllOrders.filter((o: any) => o.status === 'confirmed').length,
+    preparing: safeAllOrders.filter((o: any) => o.status === 'preparing').length,
+    delivered: safeAllOrders.filter((o: any) => o.status === 'delivered').length,
+    cancelled: safeAllOrders.filter((o: any) => o.status === 'cancelled').length,
+    revenue: safeAllOrders.filter((o: any) => o.status === 'delivered').reduce((s: number, o: any) => s + o.total, 0),
+    avgOrder: safeAllOrders.length > 0 ? Math.round(safeAllOrders.reduce((s: number, o: any) => s + o.total, 0) / safeAllOrders.length) : 0,
   }
 
   const startEdit = () => {
@@ -3457,8 +3484,8 @@ function ProfilePage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: 'Total Voucher', value: vouchers.length, color: 'bg-blue-50 text-blue-600' },
-                { label: 'Aktif', value: vouchers.filter((v) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date())).length, color: 'bg-green-50 text-green-600' },
-                { label: 'Digunakan', value: vouchers.filter((v) => v.used).length, color: 'bg-orange-50 text-orange-600' },
+                { label: 'Aktif', value: (Array.isArray(vouchers) ? vouchers : []).filter((v) => !v.used && (!v.expiresAt || new Date(v.expiresAt) >= new Date())).length, color: 'bg-green-50 text-green-600' },
+                { label: 'Digunakan', value: (Array.isArray(vouchers) ? vouchers : []).filter((v) => v.used).length, color: 'bg-orange-50 text-orange-600' },
               ].map((s, i) => (
                 <div key={i} className={`rounded-xl p-3 text-center ${s.color}`}>
                   <p className="text-lg font-bold">{s.value}</p>
@@ -3534,27 +3561,6 @@ function ProfilePage() {
                   </Button>
                 </div>
               )}
-            </div>
-
-            {/* App Info */}
-            <div className="bg-white rounded-xl p-5 shadow-md">
-              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4 text-orange-500" />
-                Tentang Aplikasi
-              </h3>
-              <div className="space-y-2.5">
-                {[
-                  { label: 'Nama Aplikasi', value: 'Ayam Geprek Sambal Ijo' },
-                  { label: 'Versi', value: '1.0.0' },
-                  { label: 'Developer', value: 'Z.ai Team' },
-                  { label: 'Deskripsi', value: 'Aplikasi pemesanan online ayam geprek sambal ijo khas Aceh dengan fitur lengkap untuk kemudahan pemesanan dan pengelolaan usaha kuliner Anda.' },
-                ].map((row, i) => (
-                  <div key={i}>
-                    <p className="text-[11px] text-gray-400">{row.label}</p>
-                    <p className={`text-sm text-gray-700 ${row.label === 'Deskripsi' ? 'text-justify leading-relaxed' : 'font-medium'}`}>{row.value}</p>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Preferences */}

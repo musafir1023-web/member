@@ -1211,3 +1211,26 @@ Stage Summary:
 - 'completed' automatically maps to 'delivered' for DB consistency
 - Error messages now show root cause (e.g., "Status X tidak valid. Status yang diperbolehkan: ...")
 - postinstall ensures Prisma client is generated automatically on fresh clone
+---
+Task ID: 3-a
+Agent: Main Agent
+Task: Fix p.filter error, remove Tentang Aplikasi, show active vouchers on member card
+
+Work Log:
+- Analyzed `p.filter is not a function` error — added defensive `Array.isArray()` guards and `(var || [])` fallbacks to all `.filter()` calls on `orders`, `allOrders`, `userVouchers`, `vouchers` in ProfilePage and HomePage
+- Created `safeOrders` and `safeAllOrders` computed variables with `Array.isArray` guards for customerStats and adminStats
+- Removed "Tentang Aplikasi" section (lines 3539-3558) from ProfilePage settings tab — applies to both admin and customer views
+- Redesigned member card front face to display active voucher pills:
+  - Added `activeVoucherList` computed variable filtering unused, non-expired vouchers
+  - Replaced static minHeight with auto-height layout
+  - Added "Voucher Aktif" section showing up to 3 voucher code pills (Tag icon + code + discount value)
+  - Shows "+N lagi" indicator when more than 3 active vouchers
+  - Used `fmt()` for fixed amount display and percentage for percentage type
+- Created 3 test vouchers via API for Safir user to verify member card display
+- Verified all changes via agent-browser: profile page loads without error, settings tab has no Tentang Aplikasi, member card shows active voucher pills correctly
+
+Stage Summary:
+- `p.filter is not a function` error fixed with defensive guards on all array operations
+- "Tentang Aplikasi" section completely removed from settings tab
+- Member card now displays active voucher codes as styled pills with discount values
+- All changes verified working in browser, lint clean, no console errors
