@@ -1259,3 +1259,24 @@ Stage Summary:
 - Fix: Added missing columns directly to Turso via ALTER TABLE
 - Error messages now show actual database/API error for easier future debugging
 - Deployed to Vercel via git push
+
+---
+Task ID: upload-fix
+Agent: Main Agent
+Task: Fix "server error respons bukan JSON" when uploading product images
+
+Work Log:
+- Investigated the image upload flow: `handleImageUpload` in page.tsx sends FormData to `/api/upload`
+- Found that `/api/upload` route did NOT exist — only `/api/products` was present
+- When Next.js receives a request to a non-existent API route, it returns a 404 HTML page
+- The client code at line 2654 checks `contentType.includes('application/json')` and throws "Server error: respons bukan JSON"
+- Created `/src/app/api/upload/route.ts` with POST handler that:
+  - Validates file existence, type (JPG/PNG/GIF/WebP), and size (max 2MB)
+  - Saves files to `public/uploads/products/` with unique timestamps
+  - Returns JSON response with `{ url, filename }`
+  - Proper error handling with JSON error responses
+
+Stage Summary:
+- Created file: `/src/app/api/upload/route.ts`
+- Root cause: Missing API route — Next.js returned 404 HTML instead of JSON
+- Fix verified with curl: valid PNG → 200 JSON with URL; SVG → 400 JSON error
