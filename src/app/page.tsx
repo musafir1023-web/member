@@ -1604,8 +1604,9 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
       clearCart()
       addToast('Pesanan berhasil dibuat!', 'success')
       setPage('receipt')
-    } catch {
-      addToast('Gagal membuat pesanan. Silakan coba lagi.', 'error')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal membuat pesanan'
+      addToast(msg, 'error')
     } finally {
       setSubmitting(false)
     }

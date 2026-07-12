@@ -93,9 +93,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(order)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Create order error:', error)
-    return NextResponse.json({ error: 'Gagal membuat pesanan' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Gagal membuat pesanan'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
