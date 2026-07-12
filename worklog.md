@@ -1187,3 +1187,27 @@ Stage Summary:
 - 6 staggered animation phases: panel → header → status → address → phone/whatsapp → share/close
 - All animations use framer-motion spring physics for natural feel
 - No errors in compilation or browser runtime
+
+---
+Task ID: fix-order-status-update
+Agent: Main Agent
+Task: Fix order status update to "Selesai" failing after push
+
+Work Log:
+- Investigated PATCH /api/orders/[id] route — found validStatuses missing 'completed' and 'delivering'
+- Tested all status transitions via curl — API worked locally for 'delivered'
+- Enhanced API route: added 'completed' (alias→delivered), 'delivering' to validStatuses
+- Added normalizeStatus() to map 'completed' → 'delivered' at DB level
+- Improved API error messages to include actual error detail and list of valid statuses
+- Fixed frontend updateStatus() — now parses API error body and shows specific message instead of generic "Gagal mengupdate status"
+- Fixed OrderNotificationPopup handleAction() — same error detail improvement, shows toast on error instead of silently failing
+- Added 'delivering' and 'completed' to statusColor and statusLabel mappings
+- Added postinstall script ("prisma generate") to package.json for proper setup after git clone
+- Verified: 'completed' → normalized to 'delivered', 'delivering' → saved correctly, lint clean
+- Pushed fix to GitHub
+
+Stage Summary:
+- API now accepts 7 statuses: pending, confirmed, preparing, delivering, delivered, completed, cancelled
+- 'completed' automatically maps to 'delivered' for DB consistency
+- Error messages now show root cause (e.g., "Status X tidak valid. Status yang diperbolehkan: ...")
+- postinstall ensures Prisma client is generated automatically on fresh clone
