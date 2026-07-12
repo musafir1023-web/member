@@ -1840,7 +1840,7 @@ function OrdersPage() {
       const url = user?.id ? `/api/orders?userId=${user.id}` : '/api/orders'
       const res = await fetch(url)
       const data = await res.json()
-      setOrders(data)
+      setOrders(Array.isArray(data) ? data : [])
     } catch {
       addToast('Gagal memuat pesanan', 'error')
     } finally {
@@ -2376,12 +2376,12 @@ function ProfilePage() {
       if (isAdmin) {
         const res = await fetch('/api/orders')
         const data = await res.json()
-        setAllOrders(data)
-        setOrders(data)
+        setAllOrders(Array.isArray(data) ? data : [])
+        setOrders(Array.isArray(data) ? data : [])
       } else if (user?.id) {
         const res = await fetch(`/api/orders?userId=${user.id}`)
         const data = await res.json()
-        setOrders(data)
+        setOrders(Array.isArray(data) ? data : [])
       }
     } catch {
       addToast('Gagal memuat data', 'error')
