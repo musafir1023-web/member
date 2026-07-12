@@ -5,17 +5,15 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL || ''
 
   if (databaseUrl.startsWith('libsql://')) {
     const adapter = new PrismaLibSQL({ url: databaseUrl })
-    return new PrismaClient({ adapter })
+    return new PrismaClient({ adapter, log: [] })
   }
 
-  return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query'] : [],
-  })
+  return new PrismaClient({ log: [] })
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient()
