@@ -924,7 +924,7 @@ function HomePage() {
 
 
 
-            {/* USER VOUCHER LIST */}
+            {/* ACTIVE VOUCHER LIST */}
             {user && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -936,10 +936,10 @@ function HomePage() {
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-2.5">
                   <Gift className="w-4 h-4 text-white/80" />
-                  <span className="text-white/80 text-sm font-medium">Voucher Saya</span>
-                  {!loadingVouchers && (
-                    <span className="bg-white/20 rounded-full px-2 py-0.5 text-[10px] text-white font-bold">
-                      {(userVouchers || []).filter((v: any) => !v.used && !(v.expiresAt && new Date(v.expiresAt) < new Date())).length} aktif
+                  <span className="text-white/80 text-sm font-medium">Voucher Aktif</span>
+                  {!loadingVouchers && activeVoucherList.length > 0 && (
+                    <span className="bg-green-500/30 rounded-full px-2 py-0.5 text-[10px] text-white font-bold">
+                      {activeVoucherList.length}
                     </span>
                   )}
                 </div>
@@ -952,21 +952,17 @@ function HomePage() {
                         <Skeleton key={i} className="w-full h-20 rounded-xl bg-white/10" />
                       ))}
                     </div>
-                  ) : userVouchers.length === 0 ? (
+                  ) : activeVoucherList.length === 0 ? (
                     <div className="text-center py-4">
                       <Gift className="w-8 h-8 text-white/30 mx-auto mb-2" />
-                      <p className="text-white/50 text-xs">Belum ada voucher</p>
-                      <p className="text-white/30 text-[10px] mt-0.5">Voucher akan muncul di sini saat admin memberikan</p>
+                      <p className="text-white/50 text-xs">Belum ada voucher aktif</p>
+                      <p className="text-white/30 text-[10px] mt-0.5">Voucher aktif akan muncul di sini</p>
                     </div>
                   ) : (
-                    userVouchers.map((v: any) => {
-                      const isExpired = v.expiresAt && new Date(v.expiresAt) < new Date()
-                      const isUsed = v.used
-                      const isInvalid = isUsed || isExpired
-                      return (
-                        <div key={v.id} className={`relative rounded-xl overflow-hidden shadow-md ${isInvalid ? 'opacity-60' : ''}`}>
+                    activeVoucherList.map((v: any) => (
+                        <div key={v.id} className="relative rounded-xl overflow-hidden shadow-md">
                           <div className="flex">
-                            <div className={`${isInvalid ? 'bg-gray-400' : 'bg-orange-500'} text-white px-4 py-3 flex flex-col items-center justify-center min-w-[80px] relative`}>
+                            <div className="bg-orange-500 text-white px-4 py-3 flex flex-col items-center justify-center min-w-[80px] relative">
                               <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-orange-500" style={{ boxShadow: 'inset 0 0 0 4px white' }} />
                               {v.type === 'percentage' ? (
                                 <>
@@ -997,13 +993,7 @@ function HomePage() {
                                     </button>
                                   </div>
                                 </div>
-                                {isUsed ? (
-                                  <span className="bg-gray-100 text-gray-500 text-[9px] font-semibold px-2 py-0.5 rounded shrink-0">Dipakai</span>
-                                ) : isExpired ? (
-                                  <span className="bg-red-50 text-red-500 text-[9px] font-semibold px-2 py-0.5 rounded shrink-0">Expired</span>
-                                ) : (
-                                  <span className="bg-green-50 text-green-600 text-[9px] font-semibold px-2 py-0.5 rounded shrink-0">Aktif</span>
-                                )}
+                                <span className="bg-green-50 text-green-600 text-[9px] font-semibold px-2 py-0.5 rounded shrink-0">Aktif</span>
                               </div>
                               <div className="flex items-center justify-between mt-1.5">
                                 <div className="flex items-center gap-2 text-[10px] text-gray-400">
@@ -1011,7 +1001,7 @@ function HomePage() {
                                   {v.type === 'percentage' && v.maxDiscount && <span>Maks. {fmt(v.maxDiscount)}</span>}
                                 </div>
                                 {v.expiresAt && (
-                                  <span className={`text-[10px] font-medium ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
+                                  <span className="text-[10px] font-medium text-gray-400">
                                     s/d {new Date(v.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </span>
                                 )}
@@ -1019,8 +1009,7 @@ function HomePage() {
                             </div>
                           </div>
                         </div>
-                      )
-                    })
+                    ))
                   )}
                 </div>
               </motion.div>
