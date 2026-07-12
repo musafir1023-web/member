@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore, Component, type ReactNode, type ErrorInfo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -4610,6 +4610,31 @@ function OrderNotificationPopup() {
   )
 }
 
+/* ─────────────────────── ERROR BOUNDARY ─────────────────────── */
+interface EBState { hasError: boolean; error: Error | null }
+class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  state: EBState = { hasError: false, error: null }
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error } }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('ErrorBoundary:', error, info.componentStack) }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-orange-500 p-6 text-center">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h2 className="font-bold text-lg text-gray-800 mb-2">Terjadi Kesalahan</h2>
+            <p className="text-sm text-gray-500 mb-4 break-all">{this.state.error?.message || 'Error tidak diketahui'}</p>
+            <Button onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload() }} className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+              Muat Ulang Halaman
+            </Button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
@@ -4669,6 +4694,7 @@ export default function AppPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen flex flex-col bg-orange-500">
       <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -4685,5 +4711,6 @@ export default function AppPage() {
       <ToastContainer />
       <OrderNotificationPopup />
     </div>
+    </ErrorBoundary>
   )
 }
