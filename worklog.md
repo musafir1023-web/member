@@ -1304,3 +1304,35 @@ Stage Summary:
 - API already existed at /api/auth/forgot-password (POST verify + PUT reset)
 - Password was successfully changed and verified via login test
 - No lint errors, no runtime errors
+---
+Task ID: 1
+Agent: Main Agent
+Task: Buatkan fitur tukar point dengan verifikasi password
+
+Work Log:
+- Added PointRedemption model to prisma/schema.prisma (id, userId, pointsUsed, voucherValue, voucherId, createdAt)
+- Added reverse relations: User.pointRedemptions[], Voucher.redemptions[]
+- Ran db:push to sync schema + regenerate Prisma client
+- Updated db.ts ensureMigrated() to also create PointRedemption table on Turso
+- Created POST /api/points/redeem endpoint:
+  - Validates: userId, points (min 10), password required
+  - Verifies password matches user's password in DB
+  - Checks sufficient points balance
+  - Conversion rate: 1 point = Rp100
+  - Generates unique voucher code (prefix "PT" + 6 random alphanumeric)
+  - Uses Prisma transaction: decrement points, create fixed voucher (30 days expiry), record redemption
+  - Returns voucher details + remaining points
+- Added "Tukar Poin" to Quick Actions in profile page overview tab
+- Built redemption dialog (AlertDialog) with two states:
+  - Input state: shows current points, equivalent value, points input with live preview, password input with show/hide toggle
+  - Success state: shows voucher code card (gradient), value, expiry, copy code button, remaining points
+- Added state management: showRedeemDialog, redeemPoints, redeemPassword, showRedeemPassword, redeeming, redeemResult
+- Added handleRedeemPoints and closeRedeemDialog functions
+- Lint passes, dev server compiles and serves successfully
+
+Stage Summary:
+- Full Tukar Poin feature implemented with password verification
+- Points are deducted atomically via Prisma transaction
+- Voucher created automatically with 30-day validity
+- UI shows live conversion preview (e.g., "50 poin = Rp5.000 voucher diskon")
+- Success screen with voucher code, copy button, and remaining points

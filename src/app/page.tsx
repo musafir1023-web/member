@@ -2650,6 +2650,12 @@ function ProfilePage() {
   const [allOrders, setAllOrders] = useState<OrderData[]>([])
   const [loading, setLoading] = useState(true)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [showRedeemDialog, setShowRedeemDialog] = useState(false)
+  const [redeemPoints, setRedeemPoints] = useState('')
+  const [redeemPassword, setRedeemPassword] = useState('')
+  const [showRedeemPassword, setShowRedeemPassword] = useState(false)
+  const [redeeming, setRedeeming] = useState(false)
+  const [redeemResult, setRedeemResult] = useState<{ code: string; value: number; expiresAt: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const isAdmin = user?.role === 'admin'
@@ -2782,6 +2788,49 @@ function ProfilePage() {
   const confirmLogout = () => {
     setShowLogoutDialog(false)
     handleLogout()
+  }
+
+  const handleRedeemPoints = async () => {
+    const pts = parseInt(redeemPoints)
+    if (!pts || pts < 10) {
+      addToast('Minimal penukaran 10 poin', 'error')
+      return
+    }
+    if (!redeemPassword) {
+      addToast('Password harus diisi', 'error')
+      return
+    }
+    if ((user?.points ?? 0) < pts) {
+      addToast(`Poin tidak cukup. Sisa poin Anda: ${user?.points ?? 0}`, 'error')
+      return
+    }
+    setRedeeming(true)
+    try {
+      const res = await fetch('/api/points/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user!.id, points: pts, password: redeemPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      // Update user points in store
+      setUser({ ...user!, points: data.pointsRemaining })
+      setRedeemResult({ code: data.voucher.code, value: data.voucher.value, expiresAt: data.voucher.expiresAt })
+      addToast(`${pts} poin berhasil ditukar menjadi voucher!`, 'success')
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Gagal menukar poin', 'error')
+    } finally {
+      setRedeeming(false)
+    }
+  }
+
+  const closeRedeemDialog = () => {
+    setShowRedeemDialog(false)
+    setRedeemPoints('')
+    setRedeemPassword('')
+    setShowRedeemPassword(false)
+    setRedeemResult(null)
   }
 
   const memberSince = user ? new Date(user.id.slice(0, 8) === 'cmr08ugr' ? '2026-06-30' : '2026-06-30').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : ''
@@ -3153,6 +3202,7 @@ function ProfilePage() {
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               {[
+                { icon: <Star className="w-5 h-5" />, label: 'Tukar Poin', desc: `Tukar ${user?.points ?? 0} poin Anda menjadi voucher diskon`, onClick: () => { setRedeemPoints(''); setRedeemPassword(''); setRedeemResult(null); setShowRedeemDialog(true) } },
                 { icon: <Package className="w-5 h-5" />, label: 'Lihat Pesanan Saya', desc: 'Lihat riwayat dan status pesanan Anda', onClick: () => setActiveTab('orders') },
                 { icon: <UtensilsCrossed className="w-5 h-5" />, label: 'Jelajahi Menu', desc: 'Temukan varian ayam geprek favorit Anda', onClick: () => setPage('menu') },
                 { icon: <HelpCircle className="w-5 h-5" />, label: 'Bantuan', desc: 'Hubungi kami untuk pertanyaan dan bantuan', onClick: () => addToast('Fitur bantuan segera hadir', 'info') },
@@ -3948,6 +3998,148 @@ function ProfilePage() {
               <LogOut className="w-4 h-4 mr-1.5 inline" /> Ya, Keluar
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ═══ TUKAR POIN DIALOG ═══ */}
+      <AlertDialog open={showRedeemDialog} onOpenChange={(open) => { if (!open) closeRedeemDialog() }}>
+        <AlertDialogContent className="rounded-2xl bg-white border border-gray-200 max-w-sm mx-auto">
+          {!redeemResult ? (
+            <>
+              <AlertDialogHeader>
+                <div className="mx-auto w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mb-2">
+                  <Star className="w-7 h-7 text-orange-500" />
+                </div>
+                <AlertDialogTitle className="text-center text-lg text-gray-900">Tukar Poin</AlertDialogTitle>
+                <AlertDialogDescription className="text-center text-justify leading-relaxed text-gray-600">
+                  Tukar poin Anda menjadi voucher diskon. <span className="font-semibold text-orange-600">1 poin = Rp100</span>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="space-y-4 mt-3">
+                {/* Current points info */}
+                <div className="bg-orange-50 rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] text-gray-500">Sisa Poin Anda</p>
+                    <p className="text-xl font-extrabold text-orange-600">{user?.points ?? 0} <span className="text-sm font-semibold text-gray-400">poin</span></p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-gray-500">Setara</p>
+                    <p className="text-sm font-bold text-gray-700">{fmt((user?.points ?? 0) * 100)}</p>
+                  </div>
+                </div>
+
+                {/* Points input */}
+                <div>
+                  <Label className="text-sm text-gray-600 flex items-center gap-1.5">
+                    <Star className="w-3.5 h-3.5" /> Jumlah Poin
+                  </Label>
+                  <Input
+                    type="number"
+                    min={10}
+                    max={user?.points ?? 0}
+                    value={redeemPoints}
+                    onChange={(e) => setRedeemPoints(e.target.value)}
+                    placeholder={`Minimal 10, maks ${user?.points ?? 0}`}
+                    className="mt-1.5"
+                  />
+                  {redeemPoints && parseInt(redeemPoints) >= 10 && (
+                    <p className="text-xs text-green-600 mt-1.5 font-medium">
+                      = {fmt(parseInt(redeemPoints) * 100)} voucher diskon
+                    </p>
+                  )}
+                </div>
+
+                {/* Password input */}
+                <div>
+                  <Label className="text-sm text-gray-600 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5" /> Konfirmasi Password
+                  </Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      type={showRedeemPassword ? 'text' : 'password'}
+                      value={redeemPassword}
+                      onChange={(e) => setRedeemPassword(e.target.value)}
+                      placeholder="Masukkan password Anda"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRedeemPassword(!showRedeemPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <AlertDialogFooter className="flex-col gap-2 sm:flex-row mt-4">
+                <AlertDialogCancel className="m-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 border-0" onClick={closeRedeemDialog}>Batal</AlertDialogCancel>
+                <Button
+                  onClick={handleRedeemPoints}
+                  disabled={redeeming || !redeemPoints || !redeemPassword}
+                  className="m-0 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold disabled:opacity-50"
+                >
+                  {redeeming ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Menukar...
+                    </span>
+                  ) : (
+                    <>
+                      <Star className="w-4 h-4 mr-1.5 inline" /> Tukar Poin
+                    </>
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            <>
+              <AlertDialogHeader>
+                <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                  <CheckCircle2 className="w-7 h-7 text-green-500" />
+                </div>
+                <AlertDialogTitle className="text-center text-lg text-gray-900">Poin Berhasil Ditukar!</AlertDialogTitle>
+                <AlertDialogDescription className="text-center text-justify leading-relaxed text-gray-600">
+                  Poin Anda telah dikonversi menjadi voucher berikut.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="mt-3 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl p-5 text-center text-white">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 font-semibold mb-2">Voucher Diskon</p>
+                <p className="text-2xl font-extrabold">{fmt(redeemResult.value)}</p>
+                <div className="bg-white/20 rounded-lg px-4 py-2.5 mt-3 inline-flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  <span className="font-mono font-bold text-lg tracking-wider">{redeemResult.code}</span>
+                </div>
+                <p className="text-[10px] text-white/60 mt-3">
+                  Berlaku hingga {new Date(redeemResult.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+
+              <div className="mt-3 bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] text-gray-500">Sisa Poin</p>
+                  <p className="text-lg font-extrabold text-gray-800">{user?.points ?? 0}</p>
+                </div>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(redeemResult.code); addToast('Kode voucher disalin!', 'success') }}
+                  className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Salin Kode
+                </button>
+              </div>
+
+              <AlertDialogFooter className="flex-col gap-2 sm:flex-row mt-4">
+                <Button
+                  onClick={closeRedeemDialog}
+                  className="m-0 w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold"
+                >
+                  Selesai
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
 

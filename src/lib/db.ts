@@ -21,7 +21,7 @@ export const db = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
 
-// Ensure VoucherProduct table exists on Turso (blocking — call with await)
+// Ensure VoucherProduct + PointRedemption tables exist on Turso (blocking — call with await)
 let _migrated = false
 export async function ensureMigrated() {
   if (_migrated) return
@@ -36,13 +36,25 @@ export async function ensureMigrated() {
       try {
         const { createClient } = await import('@libsql/client')
         const libsql = createClient({ url: databaseUrl })
-        const result = await libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='VoucherProduct'")
-        if (result.rows.length === 0) {
+
+        const [vpResult, prResult] = await Promise.all([
+          libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='VoucherProduct'"),
+          libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='PointRedemption'"),
+        ])
+
+        if (vpResult.rows.length === 0) {
           await libsql.execute(`CREATE TABLE VoucherProduct (id TEXT NOT NULL PRIMARY KEY, voucherId TEXT NOT NULL REFERENCES Voucher(id) ON DELETE CASCADE, productId TEXT NOT NULL REFERENCES Product(id))`)
           await libsql.execute('CREATE UNIQUE INDEX VoucherProduct_voucherId_productId_key ON VoucherProduct(voucherId, productId)')
           await libsql.execute('CREATE INDEX idx_voucherproduct_voucherId ON VoucherProduct(voucherId)')
           await libsql.execute('CREATE INDEX idx_voucherproduct_productId ON VoucherProduct(productId)')
           console.log('[DB] VoucherProduct table created')
+        }
+
+        if (prResult.rows.length === 0) {
+          await libsql.execute(`CREATE TABLE PointRedemption (id TEXT NOT NULL PRIMARY KEY, userId TEXT NOT NULL REFERENCES User(id), pointsUsed INTEGER NOT NULL, voucherValue INTEGER NOT NULL, voucherId TEXT NOT NULL REFERENCES Voucher(id), createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`)
+          await libsql.execute('CREATE INDEX idx_pointredemption_userId ON PointRedemption(userId)')
+          await libsql.execute('CREATE INDEX idx_pointredemption_voucherId ON PointRedemption(voucherId)')
+          console.log('[DB] PointRedemption table created')
         }
       } catch (e) {
         console.error('[DB] Auto-migration failed:', e)
