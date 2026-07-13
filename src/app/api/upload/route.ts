@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'products')
+
+// Map MIME types to base64 prefix
+const MIME_PREFIX: Record<string, string> = {
+  'image/jpeg': 'data:image/jpeg;base64,',
+  'image/png': 'data:image/png;base64,',
+  'image/gif': 'data:image/gif;base64,',
+  'image/webp': 'data:image/webp;base64,',
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,22 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ukuran file maksimal 2MB' }, { status: 400 })
     }
 
-    // Ensure upload directory exists
-    await mkdir(UPLOAD_DIR, { recursive: true })
-
-    // Generate unique filename
-    const ext = path.extname(file.name) || '.png'
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`
-    const filePath = path.join(UPLOAD_DIR, filename)
-
-    // Write file
+    // Convert file to base64 data URL (no filesystem write needed — works on Vercel)
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    const base64 = buffer.toString('base64')
+    const url = `${MIME_PREFIX[file.type] || 'data:image/png;base64,'}${base64}`
 
-    const url = `/uploads/products/${filename}`
-
-    return NextResponse.json({ url, filename })
+    return NextResponse.json({ url })
   } catch (error: unknown) {
     console.error('Upload error:', error)
     const msg = error instanceof Error ? error.message : 'Gagal mengunggah gambar'
