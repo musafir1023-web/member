@@ -158,7 +158,13 @@ export async function GET(request: NextRequest) {
 
     // List vouchers
     const where: Record<string, unknown> = {}
-    if (userId) where.userId = userId
+    if (userId) {
+      // Customer: show vouchers assigned to them OR vouchers for all customers (userId: null)
+      where.OR = [
+        { userId },
+        { userId: null },
+      ]
+    }
 
     const vouchers = await db.voucher.findMany({
       where,
