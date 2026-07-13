@@ -1280,3 +1280,27 @@ Stage Summary:
 - Created file: `/src/app/api/upload/route.ts`
 - Root cause: Missing API route — Next.js returned 404 HTML instead of JSON
 - Fix verified with curl: valid PNG → 200 JSON with URL; SVG → 400 JSON error
+---
+Task ID: 1
+Agent: Main Agent
+Task: Aktifkan fitur lupa password dan buatkan splash screen
+
+Work Log:
+- Added 'forgot-password' to Page type in store.ts
+- Created ForgotPasswordPage component with 3-step flow: (1) Email verification, (2) New password + confirmation, (3) Success with redirect to login
+- Step indicator UI showing progress (1→2→3) with green checkmarks for completed steps
+- Password fields have show/hide toggle (eye icon)
+- Client-side validation: min 6 chars, password match check
+- Wired "Lupa Password" button in LoginPage to navigate to forgot-password page
+- Added 'forgot-password' case to renderPage switch
+- Created SplashScreen component with animated logo (ChefHat), app name "Ayam Geprek Sambal Ijo", tagline "Sambal Ijo Khas Aceh", loading spinner, and rotating status messages
+- Splash shows during hydration + 2.2s after mount for branding effect
+- Replaced old skeleton loading state with branded splash screen
+- Verified via Agent Browser: splash → home → login → lupa password → email verify → password reset → login with new password (all working)
+
+Stage Summary:
+- Forgot password fully functional with 3-step wizard UI
+- Splash screen with logo, name, tagline, and animated loading status
+- API already existed at /api/auth/forgot-password (POST verify + PUT reset)
+- Password was successfully changed and verified via login test
+- No lint errors, no runtime errors

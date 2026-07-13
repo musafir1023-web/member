@@ -2311,7 +2311,7 @@ function LoginPage() {
         </form>
 
         <div className="mt-5 space-y-2 text-center">
-          <button onClick={() => addToast('Fitur lupa password akan segera hadir', 'info')} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 mx-auto transition-colors">
+          <button onClick={() => setPage('forgot-password')} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 mx-auto transition-colors">
             <KeyRound className="w-3 h-3" /> Lupa Password
           </button>
           <p className="text-xs text-gray-400">
@@ -2320,6 +2320,225 @@ function LoginPage() {
               Daftar Akun
             </button>
           </p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+/* ─────────────────────── FORGOT PASSWORD PAGE ─────────────────────── */
+function ForgotPasswordPage() {
+  const { setPage, addToast } = useAppStore()
+  const [step, setStep] = useState<'email' | 'reset' | 'done'>('email')
+  const [email, setEmail] = useState('')
+  const [userName, setUserName] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) {
+      addToast('Email harus diisi', 'error')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setUserName(data.name)
+      setStep('reset')
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Gagal memverifikasi email', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPassword || !confirmPassword) {
+      addToast('Password baru dan konfirmasi harus diisi', 'error')
+      return
+    }
+    if (newPassword.length < 6) {
+      addToast('Password baru minimal 6 karakter', 'error')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      addToast('Konfirmasi password tidak cocok', 'error')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setStep('done')
+    } catch (err: unknown) {
+      addToast(err instanceof Error ? err.message : 'Gagal mengubah password', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+      <div className="absolute inset-0 aceh-pattern opacity-20" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm"
+      >
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <KeyRound className="w-7 h-7 text-orange-500" />
+          </div>
+          <h1 className="text-xl font-extrabold text-gray-800">Lupa Password</h1>
+          <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
+            {step === 'email' && 'Masukkan email yang terdaftar untuk memverifikasi akun Anda.'}
+            {step === 'reset' && `Hai, <span className="font-semibold text-gray-700">${userName}</span>. Masukkan password baru Anda.`}
+            {step === 'done' && 'Password berhasil diubah! Silakan login dengan password baru Anda.'}
+          </p>
+        </div>
+
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {['email', 'reset', 'done'].map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step === s
+                  ? 'bg-orange-500 text-white scale-110'
+                  : ['email', 'reset', 'done'].indexOf(step) > i
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-gray-400'
+              }`}>
+                {['email', 'reset', 'done'].indexOf(step) > i ? <Check className="w-4 h-4" /> : i + 1}
+              </div>
+              {i < 2 && <div className={`w-10 h-0.5 transition-all ${['email', 'reset', 'done'].indexOf(step) > i ? 'bg-green-500' : 'bg-gray-200'}`} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Step 1: Email */}
+        {step === 'email' && (
+          <form onSubmit={handleVerifyEmail} className="space-y-4">
+            <div>
+              <Label htmlFor="fp-email" className="text-sm text-gray-600 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> Email Terdaftar
+              </Label>
+              <Input
+                id="fp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="contoh@email.com"
+                className="mt-1.5"
+                autoFocus
+              />
+            </div>
+            <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50">
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Memverifikasi...
+                </span>
+              ) : (
+                'Verifikasi Email'
+              )}
+            </Button>
+          </form>
+        )}
+
+        {/* Step 2: Reset Password */}
+        {step === 'reset' && (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+              <Label htmlFor="fp-new" className="text-sm text-gray-600 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> Password Baru
+              </Label>
+              <div className="relative mt-1.5">
+                <Input
+                  id="fp-new"
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  autoFocus
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <Eye className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="fp-confirm" className="text-sm text-gray-600 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> Konfirmasi Password
+              </Label>
+              <div className="relative mt-1.5">
+                <Input
+                  id="fp-confirm"
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Ulangi password baru"
+                />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <Eye className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <Button type="submit" disabled={submitting} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg disabled:opacity-50">
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Mengubah Password...
+                </span>
+              ) : (
+                'Ubah Password'
+              )}
+            </Button>
+            <button type="button" onClick={() => { setStep('email'); setNewPassword(''); setConfirmPassword('') }} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 mx-auto transition-colors">
+              <ArrowLeft className="w-3 h-3" /> Kembali ke verifikasi email
+            </button>
+          </form>
+        )}
+
+        {/* Step 3: Done */}
+        {step === 'done' && (
+          <div className="space-y-4">
+            <div className="text-center py-3">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-9 h-9 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-500 text-justify leading-relaxed">
+                Password Anda telah berhasil diubah. Silakan login menggunakan password baru Anda.
+              </p>
+            </div>
+            <Button onClick={() => setPage('login')} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 shadow-lg">
+              <LogIn className="w-4 h-4 mr-2" />
+              Login Sekarang
+            </Button>
+          </div>
+        )}
+
+        {/* Back to login */}
+        <div className="mt-5 text-center">
+          <button onClick={() => setPage('login')} className="text-xs text-gray-400 hover:text-orange-500 font-medium flex items-center gap-1 mx-auto transition-colors">
+            <ArrowLeft className="w-3 h-3" /> Kembali ke Login
+          </button>
         </div>
       </motion.div>
     </div>
@@ -4748,6 +4967,93 @@ class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
   }
 }
 
+/* ─────────────────────── SPLASH SCREEN ─────────────────────── */
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [status, setStatus] = useState('Memuat data...')
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setStatus('Menyiapkan menu...'), 600),
+      setTimeout(() => setStatus('Hampir siap...'), 1400),
+      setTimeout(() => onDone(), 2200),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [onDone])
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-gradient-to-br from-orange-600 via-orange-500 to-amber-400 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 aceh-pattern opacity-20" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative z-10 flex flex-col items-center"
+      >
+        {/* Logo circle */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl mb-5"
+        >
+          <ChefHat className="w-14 h-14 text-orange-500" />
+        </motion.div>
+
+        {/* App name */}
+        <motion.h1
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-extrabold text-white text-center uppercase tracking-wide"
+        >
+          Ayam Geprek
+        </motion.h1>
+        <motion.p
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.55, duration: 0.5 }}
+          className="text-base sm:text-lg font-bold text-orange-100 text-center"
+        >
+          Sambal Ijo
+        </motion.p>
+
+        {/* Tagline */}
+        <motion.p
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.4 }}
+          className="text-xs text-orange-200/80 mt-2 text-center"
+        >
+          Sambal Ijo Khas Aceh
+        </motion.p>
+      </motion.div>
+
+      {/* Loading status */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9, duration: 0.4 }}
+        className="relative z-10 mt-10 flex flex-col items-center gap-3"
+      >
+        {/* Spinner */}
+        <div className="w-6 h-6 border-2.5 border-white/30 border-t-white rounded-full animate-spin" />
+        <p className="text-sm text-white/80 font-medium animate-pulse">{status}</p>
+      </motion.div>
+
+      {/* Bottom text */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.4 }}
+        className="absolute bottom-10 text-[10px] text-white/50 text-center px-4"
+      >
+        © 2025 Ayam Geprek Sambal Ijo
+      </motion.p>
+    </div>
+  )
+}
+
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
@@ -4755,6 +5061,7 @@ export default function AppPage() {
   const logout = useAppStore((s) => s.logout)
   const addToast = useAppStore((s) => s.addToast)
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+  const [showSplash, setShowSplash] = useState(true)
 
   useEffect(() => {
     useAppStore.persist.rehydrate()
@@ -4766,7 +5073,6 @@ export default function AppPage() {
     fetch(`/api/auth/profile?userId=${encodeURIComponent(user.id)}`)
       .then((res) => {
         if (!res.ok) {
-          // User no longer exists in DB — clear session
           logout()
           addToast('Sesi Anda telah berakhir. Silakan login kembali.', 'info')
         }
@@ -4774,22 +5080,9 @@ export default function AppPage() {
       .catch(() => {})
   }, [mounted, user, logout, addToast])
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex flex-col bg-orange-500">
-        <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
-        <div className="relative z-10 flex flex-col min-h-screen">
-          <header className="sticky top-0 z-50"><div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 h-14" /></header>
-          <main className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Skeleton className="w-12 h-12 rounded-full bg-white/20" />
-              <Skeleton className="w-40 h-4 bg-white/20" />
-            </div>
-          </main>
-          <nav className="fixed bottom-0 left-0 right-0 z-50"><div className="bg-white border-t h-16" /></nav>
-        </div>
-      </div>
-    )
+  // Show splash screen during hydration and for a brief period after mount
+  if (!mounted || showSplash) {
+    return <SplashScreen onDone={() => setShowSplash(false)} />
   }
 
   const renderPage = () => {
@@ -4799,6 +5092,7 @@ export default function AppPage() {
       case 'cart': return <CartPage />
       case 'orders': return <OrdersPage />
       case 'login': return <LoginPage />
+      case 'forgot-password': return <ForgotPasswordPage />
       case 'register': return <RegisterPage />
       case 'profile': return <ProfilePage />
       case 'receipt': return <ReceiptPage />
