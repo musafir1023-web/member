@@ -2167,17 +2167,15 @@ function ReceiptPage() {
 
             {/* Total */}
             <div className="text-justify text-sm space-y-1 leading-relaxed">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-700 font-medium">{fmt(receipt.items.reduce((s, i) => s + i.subtotal, 0))}</span>
+              </div>
               {(receipt.discount && receipt.discount > 0) && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="text-gray-700 font-medium">{fmt(receipt.items.reduce((s, i) => s + i.subtotal, 0) + receipt.discount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-600 font-medium">Diskon Voucher {receipt.voucherCode ? `(${receipt.voucherCode})` : ''}</span>
-                    <span className="text-green-600 font-bold">-{fmt(receipt.discount)}</span>
-                  </div>
-                </>
+                <div className="flex justify-between">
+                  <span className="text-green-600 font-medium">Diskon Voucher {receipt.voucherCode ? `(${receipt.voucherCode})` : ''}</span>
+                  <span className="text-green-600 font-bold">-{fmt(receipt.discount)}</span>
+                </div>
               )}
               <div className="flex justify-between">
                 <span className="font-bold text-gray-800">Total</span>
