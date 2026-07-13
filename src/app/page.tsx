@@ -535,7 +535,7 @@ function TopBar() {
 
 /* ─────────────────────── BOTTOM NAVIGATION ─────────────────────── */
 function BottomNav() {
-  const { currentPage, setPage, user, logout, getCartCount } = useAppStore()
+  const { currentPage, setPage, user, logout, addToast, getCartCount } = useAppStore()
   const cartCount = useAppStore(getCartCount)
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
@@ -550,6 +550,12 @@ function BottomNav() {
   const handleNav = (page: Page) => {
     if (user && page === 'login') {
       logout()
+      return
+    }
+    const protectedPages: Page[] = ['cart', 'orders', 'profile', 'receipt']
+    if (!user && protectedPages.includes(page)) {
+      addToast('Silakan login terlebih dahulu', 'info')
+      setPage('login')
       return
     }
     setPage(page)
@@ -1225,6 +1231,8 @@ function MenuPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const addToCart = useAppStore((s) => s.addToCart)
   const addToast = useAppStore((s) => s.addToast)
+  const setPage = useAppStore((s) => s.setPage)
+  const user = useAppStore((s) => s.user)
 
   useEffect(() => {
     fetch('/api/products')
@@ -1247,6 +1255,11 @@ function MenuPage() {
 
   const handleAdd = (p: Product) => {
     if (!p.available) return
+    if (!user) {
+      addToast('Silakan login terlebih dahulu untuk menambahkan produk', 'error')
+      setPage('login')
+      return
+    }
     addToCart({ productId: p.id, productName: p.name, price: p.price, quantity: 1, image: p.image })
     addToast(`${p.name} ditambahkan ke keranjang`)
   }
@@ -5249,6 +5262,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 /* ─────────────────────── MAIN APP ─────────────────────── */
 export default function AppPage() {
   const currentPage = useAppStore((s) => s.currentPage)
+  const setPage = useAppStore((s) => s.setPage)
   const user = useAppStore((s) => s.user)
   const logout = useAppStore((s) => s.logout)
   const addToast = useAppStore((s) => s.addToast)
@@ -5258,6 +5272,15 @@ export default function AppPage() {
   useEffect(() => {
     useAppStore.persist.rehydrate()
   }, [])
+
+  // Auth guard: redirect to login if not authenticated on protected pages
+  const protectedPages: Page[] = ['cart', 'orders', 'profile', 'receipt']
+  useEffect(() => {
+    if (mounted && !user && protectedPages.includes(currentPage)) {
+      addToast('Silakan login terlebih dahulu', 'info')
+      setPage('login')
+    }
+  }, [mounted, user, currentPage, setPage, addToast])
 
   // Validate user session after hydration
   useEffect(() => {
