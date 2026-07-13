@@ -4012,7 +4012,7 @@ function ProfilePage() {
                 </div>
                 <AlertDialogTitle className="text-center text-lg text-gray-900">Tukar Poin</AlertDialogTitle>
                 <AlertDialogDescription className="text-center text-justify leading-relaxed text-gray-600">
-                  Tukar poin Anda menjadi voucher diskon. <span className="font-semibold text-orange-600">1 poin = Rp100</span>
+                  Tukar poin Anda menjadi voucher diskon. <span className="font-semibold text-orange-600">1 poin = Rp1</span>
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
@@ -4025,7 +4025,7 @@ function ProfilePage() {
                   </div>
                   <div className="text-right">
                     <p className="text-[11px] text-gray-500">Setara</p>
-                    <p className="text-sm font-bold text-gray-700">{fmt((user?.points ?? 0) * 100)}</p>
+                    <p className="text-sm font-bold text-gray-700">{fmt((user?.points ?? 0) * 1)}</p>
                   </div>
                 </div>
 
@@ -4045,7 +4045,7 @@ function ProfilePage() {
                   />
                   {redeemPoints && parseInt(redeemPoints) >= 10 && (
                     <p className="text-xs text-green-600 mt-1.5 font-medium">
-                      = {fmt(parseInt(redeemPoints) * 100)} voucher diskon
+                      = {fmt(parseInt(redeemPoints) * 1)} voucher diskon
                     </p>
                   )}
                 </div>

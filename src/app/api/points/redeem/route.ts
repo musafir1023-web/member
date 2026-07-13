@@ -1,8 +1,8 @@
 import { db, ensureMigrated } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Conversion rate: 1 point = Rp100
-const POINT_VALUE = 100
+// Conversion rate: 1 point = Rp1
+const POINT_VALUE = 1
 
 function generateVoucherCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
