@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, ensureMigrated } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Generate a random voucher code (uppercase alphanumeric, 8 chars)
@@ -23,6 +23,8 @@ async function uniqueCode(): Promise<string> {
 // ─── POST: Admin creates voucher(s) ───
 export async function POST(request: NextRequest) {
   try {
+    await ensureMigrated()
+
     const body = await request.json()
     const { type, value, minOrder, maxDiscount, userId: targetUserId, expiresAt, productIds } = body
 
@@ -65,15 +67,18 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(voucher)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Create voucher error:', error)
-    return NextResponse.json({ error: 'Gagal membuat voucher' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Gagal membuat voucher'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 // ─── GET: Admin lists all vouchers / Customer gets their vouchers / Validate ───
 export async function GET(request: NextRequest) {
   try {
+    await ensureMigrated()
+
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const action = searchParams.get('action')
@@ -165,15 +170,18 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(vouchers)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Get vouchers error:', error)
-    return NextResponse.json({ error: 'Gagal mengambil voucher' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Gagal mengambil voucher'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 // ─── DELETE: Admin deletes a voucher ───
 export async function DELETE(request: NextRequest) {
   try {
+    await ensureMigrated()
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -181,11 +189,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID voucher diperlukan' }, { status: 400 })
     }
 
-    // VoucherProduct will be cascade-deleted
     await db.voucher.delete({ where: { id } })
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Delete voucher error:', error)
-    return NextResponse.json({ error: 'Gagal menghapus voucher' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Gagal menghapus voucher'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
