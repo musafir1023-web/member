@@ -1019,9 +1019,16 @@ function HomePage() {
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                                {v.minOrder && <span>Min. {fmt(v.minOrder)}</span>}
-                                {v.type === 'percentage' && v.maxDiscount && <span>Maks. {fmt(v.maxDiscount)}</span>}
+                              <div className="flex flex-col gap-0.5 text-[10px] text-gray-400">
+                                <div className="flex items-center gap-2">
+                                  {v.minOrder && <span>Min. {fmt(v.minOrder)}</span>}
+                                  {v.type === 'percentage' && v.maxDiscount && <span>Maks. {fmt(v.maxDiscount)}</span>}
+                                </div>
+                                {v.products && v.products.length > 0 && (
+                                  <span className="text-blue-600 font-medium">
+                                    Untuk: {v.products.map((vp: any) => vp.product?.name).filter(Boolean).join(', ')}
+                                  </span>
+                                )}
                               </div>
                               {v.expiresAt && (
                                 <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
@@ -1577,7 +1584,8 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
     }
     setValidatingVoucher(true)
     try {
-      const res = await fetch(`/api/vouchers?action=validate&code=${encodeURIComponent(voucherCode.trim())}&total=${total}&customerId=${user?.id || ''}`)
+      const cartProductIds = cart.map((c) => c.productId).join(',')
+      const res = await fetch(`/api/vouchers?action=validate&code=${encodeURIComponent(voucherCode.trim())}&total=${total}&customerId=${user?.id || ''}&productIds=${cartProductIds}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Voucher tidak valid')
       setAppliedVoucher(data.voucher)
@@ -2586,6 +2594,7 @@ function ProfilePage() {
     maxDiscount: '',
     userId: '',
     expiresAt: '',
+    selectedProductIds: [] as string[],
   })
 
   const loadVouchers = useCallback(async () => {
@@ -2621,12 +2630,13 @@ function ProfilePage() {
         maxDiscount: voucherForm.type === 'percentage' && voucherForm.maxDiscount ? Number(voucherForm.maxDiscount) : undefined,
         userId: voucherForm.userId || undefined,
         expiresAt: voucherForm.expiresAt || undefined,
+        productIds: voucherForm.selectedProductIds.length > 0 ? voucherForm.selectedProductIds : undefined,
       }
       const res = await fetch('/api/vouchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal membuat voucher')
       addToast(`Voucher ${data.code} berhasil dibuat!`, 'success')
-      setVoucherForm({ type: 'percentage', value: '', minOrder: '', maxDiscount: '', userId: '', expiresAt: '' })
+      setVoucherForm({ type: 'percentage', value: '', minOrder: '', maxDiscount: '', userId: '', expiresAt: '', selectedProductIds: [] })
       setShowVoucherForm(false)
       loadVouchers()
     } catch (err: unknown) {
@@ -3424,6 +3434,60 @@ function ProfilePage() {
                       />
                     </div>
                   </div>
+                  {/* Product Picker */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label className="text-[11px] text-gray-500">Berlaku untuk Produk Tertentu</Label>
+                      {voucherForm.selectedProductIds.length > 0 && (
+                        <button type="button" onClick={() => setVoucherForm((p) => ({ ...p, selectedProductIds: [] }))} className="text-[10px] text-red-500 hover:text-red-700 font-medium">
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                    {voucherForm.selectedProductIds.length === 0 ? (
+                      <p className="text-[10px] text-gray-400 italic">Kosongkan = berlaku untuk semua produk</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {voucherForm.selectedProductIds.map((pid) => {
+                          const prod = allProducts.find((p: any) => p.id === pid)
+                          return prod ? (
+                            <span key={pid} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                              {prod.name}
+                              <button type="button" onClick={() => setVoucherForm((f) => ({ ...f, selectedProductIds: f.selectedProductIds.filter((id) => id !== pid) }))} className="hover:text-red-600">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ) : null
+                        })}
+                      </div>
+                    )}
+                    <div className="max-h-28 overflow-y-auto card-scrollbar border border-gray-100 rounded-lg bg-white">
+                      {allProducts.filter((p: any) => p.available).map((p: any) => {
+                        const selected = voucherForm.selectedProductIds.includes(p.id)
+                        return (
+                          <label key={p.id} className={`flex items-center gap-2 px-3 py-1.5 text-[11px] cursor-pointer hover:bg-orange-50/50 transition-colors ${selected ? 'bg-orange-50' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setVoucherForm((f) => ({ ...f, selectedProductIds: [...f.selectedProductIds, p.id] }))
+                                } else {
+                                  setVoucherForm((f) => ({ ...f, selectedProductIds: f.selectedProductIds.filter((id) => id !== p.id) }))
+                                }
+                              }}
+                              className="rounded border-gray-300 text-orange-500 focus:ring-orange-300 w-3.5 h-3.5"
+                            />
+                            <span className="flex-1 truncate text-gray-700">{p.name}</span>
+                            <span className="text-gray-400 shrink-0">{fmt(p.price)}</span>
+                          </label>
+                        )
+                      })}
+                      {allProducts.filter((p: any) => p.available).length === 0 && (
+                        <p className="text-[10px] text-gray-400 text-center py-3">Belum ada produk tersedia</p>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-[10px] text-gray-400 leading-relaxed">
                     * Kode voucher akan dibuat otomatis secara unik. Voucher hanya dapat digunakan 1x pakai dan tidak berlaku kelipatan.
                   </p>
@@ -3480,6 +3544,16 @@ function ProfilePage() {
                             {!v.user && (
                               <p className="text-[10px] text-orange-500 mt-1 font-medium">
                                 <Gift className="w-3 h-3 inline mr-0.5" />Berlaku untuk semua customer
+                              </p>
+                            )}
+                            {v.products && v.products.length > 0 && (
+                              <p className="text-[10px] text-blue-600 mt-1 font-medium">
+                                <PackageSearch className="w-3 h-3 inline mr-0.5" />Produk: {v.products.map((vp: any) => vp.product?.name).filter(Boolean).join(', ')}
+                              </p>
+                            )}
+                            {!v.products?.length && (
+                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                <ShoppingBag className="w-3 h-3 inline mr-0.5" />Berlaku untuk semua produk
                               </p>
                             )}
                             {v.used && v.usedAt && (

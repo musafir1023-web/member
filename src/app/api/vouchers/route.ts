@@ -24,7 +24,7 @@ async function uniqueCode(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { type, value, minOrder, maxDiscount, userId: targetUserId, expiresAt } = body
+    const { type, value, minOrder, maxDiscount, userId: targetUserId, expiresAt, productIds } = body
 
     if (!type || !value) {
       return NextResponse.json({ error: 'Tipe dan nilai voucher wajib diisi' }, { status: 400 })
@@ -50,8 +50,18 @@ export async function POST(request: NextRequest) {
         maxDiscount: maxDiscount ? Number(maxDiscount) : null,
         userId: targetUserId || null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        ...(Array.isArray(productIds) && productIds.length > 0
+          ? {
+              products: {
+                create: productIds.map((pid: string) => ({ productId: pid })),
+              },
+            }
+          : {}),
       },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        products: { include: { product: { select: { id: true, name: true, image: true } } } },
+      },
     })
 
     return NextResponse.json(voucher)
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── GET: Admin lists all vouchers / Customer gets their vouchers ───
+// ─── GET: Admin lists all vouchers / Customer gets their vouchers / Validate ───
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -73,12 +83,16 @@ export async function GET(request: NextRequest) {
       const code = searchParams.get('code')
       const orderTotal = Number(searchParams.get('total') || 0)
       const customerId = searchParams.get('customerId')
+      const cartProductIds = searchParams.get('productIds')?.split(',').filter(Boolean) || []
 
       if (!code) {
         return NextResponse.json({ error: 'Kode voucher wajib diisi' }, { status: 400 })
       }
 
-      const voucher = await db.voucher.findUnique({ where: { code: code.toUpperCase() } })
+      const voucher = await db.voucher.findUnique({
+        where: { code: code.toUpperCase() },
+        include: { products: { include: { product: { select: { id: true, name: true } } } } },
+      })
       if (!voucher) {
         return NextResponse.json({ error: 'Kode voucher tidak valid' }, { status: 404 })
       }
@@ -93,6 +107,19 @@ export async function GET(request: NextRequest) {
       }
       if (voucher.minOrder && orderTotal < voucher.minOrder) {
         return NextResponse.json({ error: `Minimal pesanan ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(voucher.minOrder)}` }, { status: 400 })
+      }
+
+      // Check product eligibility
+      if (voucher.products.length > 0) {
+        const eligibleIds = voucher.products.map((vp) => vp.productId)
+        const hasEligible = cartProductIds.some((pid) => eligibleIds.includes(pid))
+        if (!hasEligible) {
+          const productNames = voucher.products.map((vp) => vp.product.name).join(', ')
+          return NextResponse.json(
+            { error: `Voucher hanya berlaku untuk: ${productNames}` },
+            { status: 400 }
+          )
+        }
       }
 
       // Calculate discount
@@ -119,6 +146,7 @@ export async function GET(request: NextRequest) {
           maxDiscount: voucher.maxDiscount,
           minOrder: voucher.minOrder,
           expiresAt: voucher.expiresAt,
+          productNames: voucher.products.length > 0 ? voucher.products.map((vp) => vp.product.name) : null,
         },
       })
     }
@@ -129,7 +157,10 @@ export async function GET(request: NextRequest) {
 
     const vouchers = await db.voucher.findMany({
       where,
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        products: { include: { product: { select: { id: true, name: true, image: true } } } },
+      },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -150,6 +181,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID voucher diperlukan' }, { status: 400 })
     }
 
+    // VoucherProduct will be cascade-deleted
     await db.voucher.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {

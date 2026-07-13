@@ -34,7 +34,8 @@ model Product {
   available    Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  orderItems   OrderItem[]
+  orderItems     OrderItem[]
+  voucherProducts VoucherProduct[]
 }
 
 model Order {
@@ -71,20 +72,31 @@ model OrderItem {
 }
 
 model Voucher {
-  id          String    @id @default(cuid())
-  code        String    @unique
-  type        String    // "percentage" or "fixed"
-  value       Int       // e.g. 20 for 20% or 5000 for Rp5.000
+  id          String           @id @default(cuid())
+  code        String           @unique
+  type        String           // "percentage" or "fixed"
+  value       Int              // e.g. 20 for 20% or 5000 for Rp5.000
   minOrder    Int?
   maxDiscount Int?
-  userId      String?   // null = all users, specific = only that user
-  used        Boolean   @default(false)
+  userId      String?          // null = all users, specific = only that user
+  used        Boolean          @default(false)
   usedAt      DateTime?
   usedOrderId String?
   expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User?     @relation(fields: [userId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User?            @relation(fields: [userId], references: [id])
+  products    VoucherProduct[]
+}
+
+model VoucherProduct {
+  id        String  @id @default(cuid())
+  voucherId String
+  productId String
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([voucherId, productId])
 }
 
 model ChatRoom {
