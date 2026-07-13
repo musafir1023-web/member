@@ -617,6 +617,7 @@ function HomePage() {
   const [promoProducts, setPromoProducts] = useState<HomeProduct[]>([])
   const [terlarisProducts, setTerlarisProducts] = useState<HomeProduct[]>([])
   const [populerProducts, setPopulerProducts] = useState<HomeProduct[]>([])
+  const [terbaruProducts, setTerbaruProducts] = useState<HomeProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [showBarcode, setShowBarcode] = useState(false)
   const [userVouchers, setUserVouchers] = useState<any[]>([])
@@ -672,11 +673,13 @@ function HomePage() {
       fetch('/api/products?tag=promo').then((r) => r.json()),
       fetch('/api/products?tag=terlaris').then((r) => r.json()),
       fetch('/api/products?tag=populer').then((r) => r.json()),
+      fetch('/api/products?tag=terbaru').then((r) => r.json()),
     ])
-      .then(([promo, terlaris, populer]) => {
+      .then(([promo, terlaris, populer, terbaru]) => {
         setPromoProducts(Array.isArray(promo) ? promo : [])
         setTerlarisProducts(Array.isArray(terlaris) ? terlaris : [])
         setPopulerProducts(Array.isArray(populer) ? populer : [])
+        setTerbaruProducts(Array.isArray(terbaru) ? terbaru : [])
         setLoading(false)
       })
       .catch(() => {
@@ -717,7 +720,7 @@ function HomePage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-white/60 text-sm py-4">{emptyText}</p>
+        <p className="text-gray-400 text-sm py-4">{emptyText}</p>
       ) : (
         items.map((p, i) => {
           const disc = getDiscount(p)
@@ -739,7 +742,7 @@ function HomePage() {
                 )}
                 {badgeTag && p.tag === badgeTag && !disc && (
                   <div className="absolute top-2 left-2 bg-amber-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shadow-md z-10 flex items-center gap-0.5">
-                    <Star className="w-2.5 h-2.5" /> {badgeTag === 'terlaris' ? 'Laris' : 'Populer'}
+                    {badgeTag === 'terlaris' ? <><Star className="w-2.5 h-2.5" /> Laris</> : badgeTag === 'populer' ? <><TrendingUp className="w-2.5 h-2.5" /> Populer</> : <><Sparkles className="w-2.5 h-2.5" /> Baru</>}
                   </div>
                 )}
                 <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
@@ -1122,6 +1125,27 @@ function HomePage() {
             </button>
           </div>
           {renderProductScroll(populerProducts, 'Populer', 'Menu favorit', 'bg-amber-500', 'text-amber-500', 'populer', 'Belum ada produk populer')}
+        </div>
+      </section>
+
+      {/* ═══ TERBARU ═══ */}
+      <section className="bg-white py-5 sm:py-7 relative">
+        <div className="relative max-w-5xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+                <Sparkles className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Terbaru</h2>
+                <p className="text-gray-400 text-[10px] sm:text-xs">Menu baru yang baru ditambahkan</p>
+              </div>
+            </div>
+            <button onClick={() => setPage('menu')} className="text-gray-400 hover:text-gray-600 text-xs font-medium flex items-center gap-0.5 transition-colors">
+              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {renderProductScroll(terbaruProducts, 'Terbaru', 'Menu baru', 'bg-emerald-500', 'text-emerald-500', 'terbaru', 'Belum ada menu terbaru')}
         </div>
       </section>
 

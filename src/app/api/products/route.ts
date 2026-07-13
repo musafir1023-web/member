@@ -79,12 +79,13 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ error: 'ID diperlukan' }, { status: 400 })
     }
+    // Hapus OrderItem terkait terlebih dahulu (foreign key constraint)
+    await db.orderItem.deleteMany({ where: { productId: id } })
     await db.product.delete({ where: { id } })
     return NextResponse.json({ success: true })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Gagal menghapus produk' },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    console.error('Delete product error:', error)
+    const msg = error instanceof Error ? error.message : 'Gagal menghapus produk'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
