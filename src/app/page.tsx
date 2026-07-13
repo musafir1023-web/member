@@ -2422,7 +2422,7 @@ function ForgotPasswordPage() {
           <h1 className="text-xl font-extrabold text-gray-800">Lupa Password</h1>
           <p className="text-sm text-gray-500 text-justify mt-2 leading-relaxed">
             {step === 'email' && 'Masukkan email yang terdaftar untuk memverifikasi akun Anda.'}
-            {step === 'reset' && `Hai, <span className="font-semibold text-gray-700">${userName}</span>. Masukkan password baru Anda.`}
+            {step === 'reset' && <>Hai, <span className="font-semibold text-gray-700">{userName}</span>. Masukkan password baru Anda.</>}
             {step === 'done' && 'Password berhasil diubah! Silakan login dengan password baru Anda.'}
           </p>
         </div>
