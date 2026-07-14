@@ -5173,89 +5173,248 @@ class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
 }
 
 /* ─────────────────────── SPLASH SCREEN ─────────────────────── */
+const SPLASH_STEPS = [
+  { text: 'Memuat data...' },
+  { text: 'Menyiapkan menu...' },
+  { text: 'Hampir siap...' },
+]
+
 function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [status, setStatus] = useState('Memuat data...')
+  const [step, setStep] = useState(0)
+  const [exiting, setExiting] = useState(false)
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStatus('Menyiapkan menu...'), 600),
-      setTimeout(() => setStatus('Hampir siap...'), 1400),
-      setTimeout(() => onDone(), 2200),
+      setTimeout(() => setStep(1), 700),
+      setTimeout(() => setStep(2), 1500),
+      setTimeout(() => setExiting(true), 2200),
+      setTimeout(() => onDone(), 2700),
     ]
     return () => timers.forEach(clearTimeout)
   }, [onDone])
 
+  const progress = ((step + 1) / SPLASH_STEPS.length) * 100
+
   return (
-    <div className="fixed inset-0 z-[200] bg-gradient-to-br from-orange-600 via-orange-500 to-amber-400 flex flex-col items-center justify-center">
-      <div className="absolute inset-0 aceh-pattern opacity-20" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="relative z-10 flex flex-col items-center"
-      >
-        {/* Logo circle */}
+    <AnimatePresence>
+      {!exiting && (
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl mb-5"
+          key="splash"
+          exit={{ opacity: 0, scale: 1.02, filter: 'blur(12px)' }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden"
+          style={{ background: 'linear-gradient(160deg, #0a0a0a 0%, #171717 40%, #1a0a0a 100%)' }}
         >
-          <ChefHat className="w-14 h-14 text-orange-500" />
+          {/* Ambient light effect */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%)' }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
+          {/* Subtle top-down light beam */}
+          <motion.div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[60%]"
+            style={{ background: 'linear-gradient(to bottom, rgba(220,38,38,0.15), transparent)' }}
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
+          {/* ── Icon Section ── */}
+          <motion.div
+            className="relative z-10 flex flex-col items-center"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.15 } },
+            }}
+          >
+            {/* Icon glow ring */}
+            <motion.div
+              className="absolute -inset-4 rounded-[2rem]"
+              style={{ border: '1px solid rgba(220,38,38,0.15)' }}
+              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.03, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            {/* Icon with refined entrance */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, scale: 0.8, y: 20 },
+                visible: {
+                  opacity: 1, scale: 1, y: 0,
+                  transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                },
+              }}
+              className="relative"
+            >
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-28 h-28 sm:w-32 sm:h-32 rounded-[1.75rem] shadow-2xl overflow-hidden"
+                style={{
+                  boxShadow: '0 25px 60px -12px rgba(220,38,38,0.25), 0 0 0 1px rgba(255,255,255,0.08)',
+                }}
+              >
+                <img
+                  src="/icons/icon-192x192.png"
+                  alt="AYAM GEPREK"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+
+              {/* Subtle corner accents */}
+              <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-red-500/30 rounded-tl" />
+              <div className="absolute -top-2 -right-2 w-4 h-4 border-t border-r border-red-500/30 rounded-tr" />
+              <div className="absolute -bottom-2 -left-2 w-4 h-4 border-b border-l border-red-500/30 rounded-bl" />
+              <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-red-500/30 rounded-br" />
+            </motion.div>
+
+            {/* Premium divider line */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, scaleX: 0 },
+                visible: {
+                  opacity: 1, scaleX: 1,
+                  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                },
+              }}
+              className="w-12 h-px my-5"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent)' }}
+            />
+
+            {/* App Name */}
+            <motion.h1
+              variants={{
+                hidden: { opacity: 0, y: 15, filter: 'blur(8px)' },
+                visible: {
+                  opacity: 1, y: 0, filter: 'blur(0px)',
+                  transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+                },
+              }}
+              className="text-3xl sm:text-4xl font-black text-white text-center tracking-[0.25em] uppercase"
+              style={{ textShadow: '0 0 40px rgba(220,38,38,0.15)' }}
+            >
+              Ayam Geprek
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              variants={{
+                hidden: { opacity: 0, y: 10, filter: 'blur(4px)' },
+                visible: {
+                  opacity: 1, y: 0, filter: 'blur(0px)',
+                  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                },
+              }}
+              className="text-[11px] tracking-[0.4em] uppercase mt-1.5"
+              style={{ color: 'rgba(220,38,38,0.7)' }}
+            >
+              Sambal Ijo
+            </motion.p>
+          </motion.div>
+
+          {/* ── Loading Section ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.5, ease: 'easeOut' }}
+            className="relative z-10 mt-16 w-56 flex flex-col items-center"
+          >
+            {/* Thin progress bar */}
+            <div className="w-full h-[2px] rounded-full overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #dc2626, #f97316)' }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+
+            {/* Step indicators */}
+            <div className="flex items-center gap-5">
+              {SPLASH_STEPS.map((s, i) => {
+                const isDone = i < step
+                const isActive = i === step
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{
+                      opacity: isActive || isDone ? 1 : 0.25,
+                      scale: isActive ? 1.1 : 1,
+                    }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <div className="relative">
+                      {isActive && (
+                        <motion.div
+                          className="absolute -inset-1.5 rounded-full"
+                          style={{ border: '1px solid rgba(220,38,38,0.3)' }}
+                          animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeOut' }}
+                        />
+                      )}
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 ${
+                        isDone
+                          ? 'bg-red-600'
+                          : isActive
+                            ? 'bg-white'
+                            : ''
+                      }`} style={!isDone && !isActive ? { background: 'rgba(255,255,255,0.08)' } : {}}>
+                        {isDone ? (
+                          <motion.div
+                            initial={{ scale: 0, rotate: -90 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                          >
+                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                          </motion.div>
+                        ) : isActive ? (
+                          <div className="w-3 h-3 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} />
+                        )}
+                      </div>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {(isActive || isDone) && (
+                        <motion.p
+                          key={`${i}-${isActive}`}
+                          initial={{ opacity: 0, y: 6, filter: 'blur(3px)' }}
+                          animate={{ opacity: isActive ? 0.8 : 0.4, y: 0, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, y: -6, filter: 'blur(3px)' }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                          className="text-[9px] font-medium whitespace-nowrap tracking-wide"
+                          style={{ color: isActive ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)' }}
+                        >
+                          {s.text}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+
+          {/* Bottom text */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5, duration: 0.5 }}
+            className="absolute bottom-10 text-[9px] tracking-[0.2em] uppercase text-center px-4"
+            style={{ color: 'rgba(255,255,255,0.15)' }}
+          >
+            © 2025 Ayam Geprek Sambal Ijo
+          </motion.p>
         </motion.div>
-
-        {/* App name */}
-        <motion.h1
-          initial={{ y: 15, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="text-2xl sm:text-3xl font-extrabold text-white text-center uppercase tracking-wide"
-        >
-          Ayam Geprek
-        </motion.h1>
-        <motion.p
-          initial={{ y: 15, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.55, duration: 0.5 }}
-          className="text-base sm:text-lg font-bold text-orange-100 text-center"
-        >
-          Sambal Ijo
-        </motion.p>
-
-        {/* Tagline */}
-        <motion.p
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.4 }}
-          className="text-xs text-orange-200/80 mt-2 text-center"
-        >
-          Sambal Ijo Khas Aceh
-        </motion.p>
-      </motion.div>
-
-      {/* Loading status */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9, duration: 0.4 }}
-        className="relative z-10 mt-10 flex flex-col items-center gap-3"
-      >
-        {/* Spinner */}
-        <div className="w-6 h-6 border-2.5 border-white/30 border-t-white rounded-full animate-spin" />
-        <p className="text-sm text-white/80 font-medium animate-pulse">{status}</p>
-      </motion.div>
-
-      {/* Bottom text */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.4 }}
-        className="absolute bottom-10 text-[10px] text-white/50 text-center px-4"
-      >
-        © 2025 Ayam Geprek Sambal Ijo
-      </motion.p>
-    </div>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -5317,7 +5476,12 @@ export default function AppPage() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen flex flex-col bg-orange-500">
+    <motion.div
+      className="min-h-screen flex flex-col bg-orange-500"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <div className="fixed inset-0 aceh-pattern opacity-[0.03] pointer-events-none z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
         <TopBar />
@@ -5332,7 +5496,7 @@ export default function AppPage() {
       </div>
       <ToastContainer />
       <OrderNotificationPopup />
-    </div>
+    </motion.div>
     </ErrorBoundary>
   )
 }

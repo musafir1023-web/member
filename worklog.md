@@ -1336,3 +1336,34 @@ Stage Summary:
 - Voucher created automatically with 30-day validity
 - UI shows live conversion preview (e.g., "50 poin = Rp5.000 voucher diskon")
 - Success screen with voucher code, copy button, and remaining points
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Gunakan ikon upload sebagai PWA, nama aplikasi AYAM GEPREK, tampilan premium
+
+Work Log:
+- Analyzed uploaded screenshot (653x350px) containing a red-orange gradient "C"/flame app icon on white background
+- Extracted icon via center crop (351x350) and generated all PWA icon sizes (32, 192, 512, 1024) using sharp
+- Created `/public/manifest.json` with name "AYAM GEPREK", theme_color "#dc2626", dark background
+- Created `/public/sw.js` service worker (network-first API, stale-while-revalidate pages)
+- Updated `/src/app/layout.tsx` with PWA metadata, manifest link, apple-touch-icon, ServiceWorkerRegistration, viewport themeColor
+- Completely redesigned splash screen with premium dark aesthetic:
+  - Background: dark gradient (#0a0a0a → #171717 → #1a0a0a) with subtle red tint
+  - Ambient red radial glow behind icon (pulsing)
+  - Top-down light beam effect
+  - Icon: user's uploaded icon with floating animation, red glow ring, corner accent borders
+  - Premium divider line (gradient red, center-out)
+  - "AYAM GEPREK" in white with 0.25em tracking, text-shadow red glow
+  - "SAMBAL IJO" subtitle in red-600/70 with 0.4em tracking
+  - 3-step loading indicators with ring pulse, spring checkmarks, blur transitions
+  - Thin 2px progress bar with red→orange gradient
+  - Blur(12px) + scale(1.02) exit transition
+  - App fade-in after splash (motion.div opacity 0→1)
+- Verified via browser + VLM: dark background, user's icon, AYAM GEPREK text all confirmed
+
+Stage Summary:
+- PWA fully configured with user's custom icon
+- App name: "AYAM GEPREK" (PWA/manifest/splash/metadata)
+- Premium dark splash screen with sophisticated animations
+- All icon sizes generated from uploaded image
