@@ -1367,3 +1367,37 @@ Stage Summary:
 - App name: "AYAM GEPREK" (PWA/manifest/splash/metadata)
 - Premium dark splash screen with sophisticated animations
 - All icon sizes generated from uploaded image
+---
+Task ID: 4
+Agent: Main Agent
+Task: Build top-of-screen notification system for orders, chat, and general events
+
+Work Log:
+- Verified existing codebase: upload route, 6 sound presets, sound picker, OrderNotificationPopup all intact
+- Added TopNotifType and TopNotif interface to Zustand store (src/lib/store.ts)
+- Implemented addTopNotif (max 5, auto-dismiss via setTimeout) and dismissTopNotif actions
+- Created TopNotificationBanner component with:
+  - 5 color themes: order (orange), chat (teal), general (slate), success (green), error (red)
+  - Slide-down spring animation via Framer Motion
+  - Progress bar showing remaining time
+  - Type badges, action buttons, dismiss (X) button
+  - Responsive design, stacks vertically
+- Hooked notifications into:
+  - OrderNotificationPopup: new orders + existing pending on load (admin)
+  - CustomerChatPanel: admin reply messages
+  - AdminChatPanel: customer messages from other rooms
+  - OrdersPage: order status changes via 10s polling (customer)
+  - Checkout: successful order creation
+  - LoginPage: login success
+  - ProfilePage: voucher redemption success
+- Rendered TopNotificationBanner at z-[200] above all other elements
+- Lint clean, page compiles and renders without errors
+- Pushed to GitHub (commit 2a3d84c)
+
+Stage Summary:
+- Top notification banner system fully implemented
+- 5 notification types with distinct visual themes
+- Real-time notifications for orders, chat, and general events
+- Store supports max 5 stacked notifications with auto-dismiss
+- All existing features (upload, sounds, modal popup) remain intact
+
