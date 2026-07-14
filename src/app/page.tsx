@@ -5200,25 +5200,40 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
       {!exiting && (
         <motion.div
           key="splash"
-          exit={{ opacity: 0, scale: 1.02, filter: 'blur(12px)' }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          exit={{ opacity: 0, scale: 1.05, filter: 'blur(8px)' }}
+          transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
           className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: 'linear-gradient(160deg, #0a0a0a 0%, #171717 40%, #1a0a0a 100%)' }}
+          style={{ background: 'linear-gradient(160deg, #ea580c 0%, #f97316 35%, #fb923c 70%, #fdba74 100%)' }}
         >
-          {/* Ambient light effect */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%)' }}
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          {/* Animated background particles */}
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2.5 h-2.5 rounded-full bg-white/10"
+              style={{
+                left: `${10 + (i % 4) * 25}%`,
+                top: `${8 + Math.floor(i / 4) * 35}%`,
+              }}
+              animate={{
+                y: [0, -25, 0],
+                opacity: [0.08, 0.25, 0.08],
+                scale: [1, 1.4, 1],
+              }}
+              transition={{
+                duration: 2.5 + i * 0.3,
+                repeat: Infinity,
+                delay: i * 0.25,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
 
-          {/* Subtle top-down light beam */}
+          {/* Ambient warm glow */}
           <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-[60%]"
-            style={{ background: 'linear-gradient(to bottom, rgba(220,38,38,0.15), transparent)' }}
-            animate={{ opacity: [0.3, 0.7, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)' }}
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />
 
           {/* ── Icon Section ── */}
@@ -5228,34 +5243,34 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
             animate="visible"
             variants={{
               hidden: {},
-              visible: { transition: { staggerChildren: 0.15 } },
+              visible: { transition: { staggerChildren: 0.12 } },
             }}
           >
-            {/* Icon glow ring */}
+            {/* Pulsing glow ring */}
             <motion.div
-              className="absolute -inset-4 rounded-[2rem]"
-              style={{ border: '1px solid rgba(220,38,38,0.15)' }}
-              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.03, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -inset-5 rounded-[2.2rem]"
+              style={{ background: 'rgba(255,255,255,0.06)', filter: 'blur(8px)' }}
+              animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
             />
 
-            {/* Icon with refined entrance */}
+            {/* Icon with elastic entrance + float */}
             <motion.div
               variants={{
-                hidden: { opacity: 0, scale: 0.8, y: 20 },
+                hidden: { opacity: 0, scale: 0, rotateZ: -10 },
                 visible: {
-                  opacity: 1, scale: 1, y: 0,
-                  transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                  opacity: 1, scale: 1, rotateZ: 0,
+                  transition: { type: 'spring', stiffness: 180, damping: 14, duration: 0.9 },
                 },
               }}
               className="relative"
             >
               <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-[1.75rem] shadow-2xl overflow-hidden"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-28 h-28 sm:w-36 sm:h-36 rounded-[1.5rem] overflow-hidden ring-4 ring-white/25"
                 style={{
-                  boxShadow: '0 25px 60px -12px rgba(220,38,38,0.25), 0 0 0 1px rgba(255,255,255,0.08)',
+                  boxShadow: '0 20px 50px -10px rgba(0,0,0,0.2), 0 8px 20px -6px rgba(0,0,0,0.15)',
                 }}
               >
                 <img
@@ -5265,14 +5280,32 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
                 />
               </motion.div>
 
-              {/* Subtle corner accents */}
-              <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-red-500/30 rounded-tl" />
-              <div className="absolute -top-2 -right-2 w-4 h-4 border-t border-r border-red-500/30 rounded-tr" />
-              <div className="absolute -bottom-2 -left-2 w-4 h-4 border-b border-l border-red-500/30 rounded-bl" />
-              <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-red-500/30 rounded-br" />
+              {/* Sparkle decorations */}
+              {[
+                { top: '-6px', right: '-6px', delay: 0, size: 'w-3 h-3' },
+                { bottom: '10px', left: '-8px', delay: 0.6, size: 'w-2.5 h-2.5' },
+                { top: '15px', left: '-12px', delay: 1.2, size: 'w-2 h-2' },
+              ].map((pos, i) => (
+                <motion.div
+                  key={i}
+                  className={`absolute ${pos.size} bg-yellow-200 rounded-full shadow-lg shadow-yellow-200/50`}
+                  style={{ top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left }}
+                  animate={{
+                    scale: [0, 1.3, 0],
+                    opacity: [0, 1, 0],
+                    rotate: [0, 180, 360],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: pos.delay,
+                    ease: 'easeInOut',
+                  }}
+                />
+              ))}
             </motion.div>
 
-            {/* Premium divider line */}
+            {/* Premium divider */}
             <motion.div
               variants={{
                 hidden: { opacity: 0, scaleX: 0 },
@@ -5281,21 +5314,21 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
                   transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
                 },
               }}
-              className="w-12 h-px my-5"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent)' }}
+              className="w-14 h-px my-5"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)' }}
             />
 
             {/* App Name */}
             <motion.h1
               variants={{
-                hidden: { opacity: 0, y: 15, filter: 'blur(8px)' },
+                hidden: { opacity: 0, y: 20, filter: 'blur(6px)' },
                 visible: {
                   opacity: 1, y: 0, filter: 'blur(0px)',
-                  transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+                  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
                 },
               }}
-              className="text-3xl sm:text-4xl font-black text-white text-center tracking-[0.25em] uppercase"
-              style={{ textShadow: '0 0 40px rgba(220,38,38,0.15)' }}
+              className="text-3xl sm:text-4xl font-black text-white text-center uppercase tracking-[0.2em]"
+              style={{ textShadow: '0 2px 15px rgba(0,0,0,0.15)' }}
             >
               Ayam Geprek
             </motion.h1>
@@ -5303,16 +5336,29 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
             {/* Subtitle */}
             <motion.p
               variants={{
-                hidden: { opacity: 0, y: 10, filter: 'blur(4px)' },
+                hidden: { opacity: 0, y: 12, filter: 'blur(4px)' },
                 visible: {
                   opacity: 1, y: 0, filter: 'blur(0px)',
-                  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
                 },
               }}
-              className="text-[11px] tracking-[0.4em] uppercase mt-1.5"
-              style={{ color: 'rgba(220,38,38,0.7)' }}
+              className="text-sm sm:text-base font-bold text-orange-100/90 text-center tracking-[0.15em] uppercase mt-1"
             >
               Sambal Ijo
+            </motion.p>
+
+            {/* Tagline */}
+            <motion.p
+              variants={{
+                hidden: { opacity: 0, y: 8 },
+                visible: {
+                  opacity: 1, y: 0,
+                  transition: { duration: 0.4, delay: 0.1 },
+                },
+              }}
+              className="text-[10px] text-white/50 mt-2 text-center tracking-[0.3em] uppercase"
+            >
+              Khas Aceh
             </motion.p>
           </motion.div>
 
@@ -5320,17 +5366,24 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.0, duration: 0.5, ease: 'easeOut' }}
-            className="relative z-10 mt-16 w-56 flex flex-col items-center"
+            transition={{ delay: 0.9, duration: 0.5, ease: 'easeOut' }}
+            className="relative z-10 mt-12 w-60 flex flex-col items-center"
           >
-            {/* Thin progress bar */}
-            <div className="w-full h-[2px] rounded-full overflow-hidden mb-6" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            {/* Progress bar with shimmer */}
+            <div className="w-full h-[2.5px] bg-white/15 rounded-full overflow-hidden mb-6">
               <motion.div
-                className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #dc2626, #f97316)' }}
+                className="h-full rounded-full relative overflow-hidden"
+                style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.9), rgba(255,255,255,0.5))' }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              />
+              >
+                <motion.div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)' }}
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </motion.div>
             </div>
 
             {/* Step indicators */}
@@ -5341,42 +5394,41 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
                 return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.6 }}
                     animate={{
-                      opacity: isActive || isDone ? 1 : 0.25,
+                      opacity: isActive || isDone ? 1 : 0.3,
                       scale: isActive ? 1.1 : 1,
                     }}
                     transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col items-center gap-2"
+                    className="flex flex-col items-center gap-1.5"
                   >
                     <div className="relative">
                       {isActive && (
                         <motion.div
-                          className="absolute -inset-1.5 rounded-full"
-                          style={{ border: '1px solid rgba(220,38,38,0.3)' }}
-                          animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeOut' }}
+                          className="absolute -inset-1.5 rounded-full border-2 border-white/30"
+                          animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }}
                         />
                       )}
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 ${
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 ${
                         isDone
-                          ? 'bg-red-600'
+                          ? 'bg-green-400'
                           : isActive
                             ? 'bg-white'
-                            : ''
-                      }`} style={!isDone && !isActive ? { background: 'rgba(255,255,255,0.08)' } : {}}>
+                            : 'bg-white/15'
+                      }`}>
                         {isDone ? (
                           <motion.div
                             initial={{ scale: 0, rotate: -90 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                           >
-                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                            <Check className="w-4 h-4 text-white" strokeWidth={3} />
                           </motion.div>
                         ) : isActive ? (
-                          <div className="w-3 h-3 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-3.5 h-3.5 border-2.5 border-orange-500 border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} />
+                          <div className="w-2 h-2 rounded-full bg-white/40" />
                         )}
                       </div>
                     </div>
@@ -5386,11 +5438,12 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
                         <motion.p
                           key={`${i}-${isActive}`}
                           initial={{ opacity: 0, y: 6, filter: 'blur(3px)' }}
-                          animate={{ opacity: isActive ? 0.8 : 0.4, y: 0, filter: 'blur(0px)' }}
+                          animate={{ opacity: isActive ? 1 : 0.5, y: 0, filter: 'blur(0px)' }}
                           exit={{ opacity: 0, y: -6, filter: 'blur(3px)' }}
                           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                          className="text-[9px] font-medium whitespace-nowrap tracking-wide"
-                          style={{ color: isActive ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)' }}
+                          className={`text-[9px] font-medium whitespace-nowrap tracking-wide ${
+                            isActive ? 'text-white font-semibold' : 'text-white/50'
+                          }`}
                         >
                           {s.text}
                         </motion.p>
@@ -5407,8 +5460,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5, duration: 0.5 }}
-            className="absolute bottom-10 text-[9px] tracking-[0.2em] uppercase text-center px-4"
-            style={{ color: 'rgba(255,255,255,0.15)' }}
+            className="absolute bottom-10 text-[9px] tracking-[0.2em] uppercase text-center px-4 text-white/30"
           >
             © 2025 Ayam Geprek Sambal Ijo
           </motion.p>
