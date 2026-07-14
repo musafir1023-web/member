@@ -4,8 +4,8 @@
   "description": "Pesan ayam geprek sambal ijo khas Aceh secara online. Rasa autentik, pengiriman cepat.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#dc2626",
+  "background_color": "#f97316",
+  "theme_color": "#f97316",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
