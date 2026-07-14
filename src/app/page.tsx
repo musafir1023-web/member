@@ -75,7 +75,6 @@ import {
   Send,
   Smile,
   BellRing,
-  Volume2,
   Printer,
   ShoppingBag,
   Tag,
