@@ -54,6 +54,8 @@ export interface AppliedVoucher {
   finalTotal: number
 }
 
+export type NotifSoundType = 'default' | 'chime' | 'alert' | 'gentle' | 'ringtone' | 'digital'
+
 interface AppState {
   currentPage: Page
   setPage: (page: Page) => void
@@ -79,6 +81,9 @@ interface AppState {
 
   unreadChats: number
   setUnreadChats: (n: number) => void
+
+  notifSound: NotifSoundType
+  setNotifSound: (sound: NotifSoundType) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -147,6 +152,9 @@ export const useAppStore = create<AppState>()(
 
       unreadChats: 0,
       setUnreadChats: (n) => set({ unreadChats: n }),
+
+      notifSound: 'default' as NotifSoundType,
+      setNotifSound: (sound) => set({ notifSound: sound }),
     }),
     {
       name: 'app-storage',
@@ -154,6 +162,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         user: state.user,
         cart: state.cart,
+        notifSound: state.notifSound,
       }),
     }
   )

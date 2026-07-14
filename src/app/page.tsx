@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore, Component, type ReactNode, type ErrorInfo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher } from '@/lib/store'
+import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher, type NotifSoundType } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -81,6 +81,8 @@ import {
   Tag,
   Copy,
   Check,
+  Music,
+  ChevronLeft,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -111,24 +113,114 @@ const statusLabel: Record<string, string> = {
   cancelled: 'Dibatalkan',
 }
 
-/* ─────────────────────── NOTIFICATION SOUND ─────────────────────── */
-function playNotifSound() {
+/* ─────────────────────── NOTIFICATION SOUND SYSTEM ─────────────────────── */
+const SOUND_PRESETS: { id: NotifSoundType; label: string; desc: string }[] = [
+  { id: 'default', label: 'Default', desc: 'Berulang naik' },
+  { id: 'chime', label: 'Chime', desc: 'Bel kristal' },
+  { id: 'alert', label: 'Alert', desc: 'Peringatan tegas' },
+  { id: 'gentle', label: 'Gentle', desc: 'Lembut menurun' },
+  { id: 'ringtone', label: 'Ringtone', desc: 'Nada telefon' },
+  { id: 'digital', label: 'Digital', desc: 'Bunyi digital' },
+]
+
+function playSoundByType(type: NotifSoundType) {
   try {
     const ctx = new AudioContext()
-    const notes = [880, 1100, 880, 1320]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.15)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.14)
-      osc.start(ctx.currentTime + i * 0.15)
-      osc.stop(ctx.currentTime + i * 0.15 + 0.15)
-    })
+    const now = ctx.currentTime
+
+    switch (type) {
+      case 'default': {
+        // Rising arpeggio
+        [880, 1100, 880, 1320].forEach((freq, i) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'sine'; o.frequency.value = freq
+          g.gain.setValueAtTime(0.15, now + i * 0.15)
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.14)
+          o.start(now + i * 0.15); o.stop(now + i * 0.15 + 0.15)
+        })
+        break
+      }
+      case 'chime': {
+        // Crystal bell - high sine with harmonics
+        [1200, 1500, 1800].forEach((freq, i) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'sine'; o.frequency.value = freq
+          g.gain.setValueAtTime(0.1, now + i * 0.2)
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.2 + 0.35)
+          o.start(now + i * 0.2); o.stop(now + i * 0.2 + 0.4)
+        })
+        break
+      }
+      case 'alert': {
+        // Urgent two-tone alternating
+        for (let r = 0; r < 2; r++) {
+          [600, 900].forEach((freq, i) => {
+            const o = ctx.createOscillator()
+            const g = ctx.createGain()
+            o.connect(g); g.connect(ctx.destination)
+            o.type = 'square'; o.frequency.value = freq
+            const t = now + r * 0.5 + i * 0.15
+            g.gain.setValueAtTime(0.08, t)
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.12)
+            o.start(t); o.stop(t + 0.13)
+          })
+        }
+        break
+      }
+      case 'gentle': {
+        // Soft descending notes
+        [660, 587, 523].forEach((freq, i) => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'triangle'; o.frequency.value = freq
+          g.gain.setValueAtTime(0.12, now + i * 0.25)
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 0.4)
+          o.start(now + i * 0.25); o.stop(now + i * 0.25 + 0.45)
+        })
+        break
+      }
+      case 'ringtone': {
+        // Phone ring pattern
+        for (let r = 0; r < 2; r++) {
+          [440, 520].forEach((freq, i) => {
+            const o = ctx.createOscillator()
+            const g = ctx.createGain()
+            o.connect(g); g.connect(ctx.destination)
+            o.type = 'sine'; o.frequency.value = freq
+            const t = now + r * 0.6 + i * 0.08
+            g.gain.setValueAtTime(0.12, t)
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.25)
+            o.start(t); o.stop(t + 0.3)
+          })
+        }
+        break
+      }
+      case 'digital': {
+        // Digital beep pattern
+        for (let i = 0; i < 3; i++) {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'sawtooth'; o.frequency.value = 1000
+          const t = now + i * 0.15
+          g.gain.setValueAtTime(0.06, t)
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.1)
+          o.start(t); o.stop(t + 0.12)
+        }
+        break
+      }
+    }
   } catch { /* silent */ }
+}
+
+function playNotifSound() {
+  const sound = useAppStore.getState().notifSound
+  playSoundByType(sound)
 }
 
 /* ─────────────────────── TOAST COMPONENT ─────────────────────── */
@@ -4918,11 +5010,16 @@ function AdminChatPanel() {
 function OrderNotificationPopup() {
   const user = useAppStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
-  const [popupQueue, setPopupQueue] = useState<OrderData[]>([])
-  const [currentPopup, setCurrentPopup] = useState<OrderData | null>(null)
+  const notifSound = useAppStore((s) => s.notifSound)
+  const setNotifSound = useAppStore((s) => s.setNotifSound)
+
+  const [allPending, setAllPending] = useState<OrderData[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
   const [actionLoading, setActionLoading] = useState(false)
+  const [showSoundPicker, setShowSoundPicker] = useState(false)
   const knownOrderIds = useRef<Set<string>>(new Set())
   const hasInitialLoaded = useRef(false)
+  const soundRepeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Poll orders every 8 seconds
   useEffect(() => {
@@ -4934,9 +5031,14 @@ function OrderNotificationPopup() {
         if (!Array.isArray(data)) return
 
         if (!hasInitialLoaded.current) {
-          // First load: mark all existing pending orders as "known"
-          data.forEach((o) => knownOrderIds.current.add(o.id))
+          data.filter(o => o.status === 'pending').forEach(o => knownOrderIds.current.add(o.id))
           hasInitialLoaded.current = true
+          // Show existing pending orders immediately
+          const pending = data.filter(o => o.status === 'pending')
+          if (pending.length > 0) {
+            setAllPending(pending)
+            playNotifSound()
+          }
           return
         }
 
@@ -4945,10 +5047,16 @@ function OrderNotificationPopup() {
           (o) => !knownOrderIds.current.has(o.id) && o.status === 'pending'
         )
         if (newOrders.length > 0) {
-          newOrders.forEach((o) => knownOrderIds.current.add(o.id))
+          newOrders.forEach(o => knownOrderIds.current.add(o.id))
           playNotifSound()
-          setPopupQueue((prev) => [...prev, ...newOrders])
+          setAllPending(prev => [...prev, ...newOrders])
         }
+
+        // Sync: remove orders that are no longer pending
+        setAllPending(prev => {
+          const currentIds = new Set(data.filter(o => o.status === 'pending').map(o => o.id))
+          return prev.filter(o => currentIds.has(o.id))
+        })
       } catch { /* silent */ }
     }
 
@@ -4957,23 +5065,33 @@ function OrderNotificationPopup() {
     return () => clearInterval(interval)
   }, [isAdmin])
 
-  // Process queue
+  // Sound repeat every 3 seconds while there are pending orders
   useEffect(() => {
-    if (!currentPopup && popupQueue.length > 0) {
-      setCurrentPopup(popupQueue[0])
-      setPopupQueue((prev) => prev.slice(1))
+    if (!isAdmin || allPending.length === 0) {
+      if (soundRepeatRef.current) { clearInterval(soundRepeatRef.current); soundRepeatRef.current = null }
+      return
     }
-  }, [currentPopup, popupQueue])
-
-  // Repeat sound every 5 seconds while popup is visible (until admin responds)
-  useEffect(() => {
-    if (!currentPopup) return
+    // Play immediately, then every 3 seconds
     playNotifSound()
-    const repeatSound = setInterval(() => {
+    soundRepeatRef.current = setInterval(() => {
       playNotifSound()
-    }, 5000)
-    return () => clearInterval(repeatSound)
-  }, [currentPopup])
+    }, 3000)
+    return () => {
+      if (soundRepeatRef.current) { clearInterval(soundRepeatRef.current); soundRepeatRef.current = null }
+    }
+  }, [isAdmin, allPending.length])
+
+  // Auto-fix activeIndex if out of range
+  useEffect(() => {
+    if (allPending.length === 0) { setActiveIndex(0); return }
+    if (activeIndex >= allPending.length) setActiveIndex(allPending.length - 1)
+  }, [allPending.length, activeIndex])
+
+  const currentOrder = allPending[activeIndex] || null
+
+  const goTo = (idx: number) => {
+    if (idx >= 0 && idx < allPending.length) setActiveIndex(idx)
+  }
 
   const handleAction = async (orderId: string, status: string) => {
     setActionLoading(true)
@@ -4991,7 +5109,8 @@ function OrderNotificationPopup() {
       if (data.pointsInfo?.awarded) {
         useAppStore.getState().addToast(`Pesanan selesai! +${data.pointsInfo.points} poin untuk pelanggan`, 'success')
       }
-      setCurrentPopup(null)
+      // Remove from pending list
+      setAllPending(prev => prev.filter(o => o.id !== orderId))
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal mengupdate status'
       useAppStore.getState().addToast(msg, 'error')
@@ -5001,17 +5120,25 @@ function OrderNotificationPopup() {
   }
 
   const handleGoToOrders = () => {
-    setCurrentPopup(null)
+    setAllPending([])
     useAppStore.getState().setPage('profile')
-    // Navigate to admin tab — we need to trigger a custom event
     window.dispatchEvent(new CustomEvent('admin-goto-orders'))
   }
 
-  if (!currentPopup) return null
+  const handlePreviewSound = (id: NotifSoundType) => {
+    playSoundByType(id)
+  }
+
+  const handleChangeSound = (id: NotifSoundType) => {
+    setNotifSound(id)
+    setShowSoundPicker(false)
+    handlePreviewSound(id)
+  }
+
+  if (!currentOrder) return null
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      {/* Backdrop — not dismissible */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <motion.div
@@ -5020,7 +5147,7 @@ function OrderNotificationPopup() {
         exit={{ opacity: 0, scale: 0.85, y: 30 }}
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
       >
-        {/* Header — white background */}
+        {/* Header */}
         <div className="bg-white border-b border-gray-100 p-4 relative overflow-hidden">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -5030,75 +5157,155 @@ function OrderNotificationPopup() {
               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-base text-gray-800">Pesanan Baru!</h3>
-              <p className="text-xs text-gray-400">Menunggu tindakan Anda</p>
+              <h3 className="font-bold text-base text-gray-800">
+                {allPending.length > 1 ? `${allPending.length} Pesanan Baru!` : 'Pesanan Baru!'}
+              </h3>
+              <p className="text-xs text-gray-400">Suara berbunyi setiap 3 detik</p>
             </div>
-            <div className="flex items-center gap-1 text-xs bg-orange-100 text-orange-600 rounded-full px-2.5 py-1 font-medium">
-              <Volume2 className="w-3 h-3" />
-              {popupQueue.length > 0 ? `+${popupQueue.length} lagi` : 'Baru saja'}
-            </div>
+            {/* Sound picker toggle */}
+            <button
+              onClick={() => setShowSoundPicker(!showSoundPicker)}
+              className="flex items-center gap-1.5 text-xs bg-orange-100 text-orange-600 rounded-full px-2.5 py-1.5 font-medium hover:bg-orange-200 transition-colors"
+              title="Ganti suara notifikasi"
+            >
+              <Music className="w-3.5 h-3.5" />
+              {SOUND_PRESETS.find(s => s.id === notifSound)?.label}
+            </button>
           </div>
+
+          {/* Sound picker dropdown */}
+          <AnimatePresence>
+            {showSoundPicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -5 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -5 }}
+                className="overflow-hidden mt-3"
+              >
+                <div className="bg-gray-50 rounded-xl p-2 grid grid-cols-2 gap-1.5">
+                  {SOUND_PRESETS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleChangeSound(s.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-xs ${
+                        notifSound === s.id
+                          ? 'bg-orange-500 text-white shadow-sm'
+                          : 'bg-white text-gray-600 hover:bg-orange-50 border border-gray-200'
+                      }`}
+                    >
+                      <Music className="w-3.5 h-3.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{s.label}</p>
+                        <p className={`text-[10px] truncate ${notifSound === s.id ? 'text-white/70' : 'text-gray-400'}`}>{s.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1.5 text-center">Klik untuk memilih & mendengar preview</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Order details */}
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-gray-400">#{currentPopup.id.slice(-6)}</span>
-            <Badge className="bg-yellow-100 text-yellow-800 text-xs">{statusLabel[currentPopup.status]}</Badge>
-          </div>
-
-          <div className="flex items-center gap-3 bg-orange-50 rounded-xl p-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-              <ShoppingBag className="w-5 h-5 text-orange-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 truncate">{currentPopup.customerName}</p>
-              <p className="text-xs text-gray-500">
-                <Phone className="w-3 h-3 inline mr-0.5" />{currentPopup.customerPhone}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-gray-600">Item Pesanan:</p>
-            <div className="max-h-32 overflow-y-auto card-scrollbar space-y-1">
-              {currentPopup.items.map((item) => (
-                <div key={item.id} className="flex justify-between text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
-                  <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
-                  <span className="flex-shrink-0 font-medium">{fmt(item.subtotal)}</span>
-                </div>
+        {/* Carousel navigation for multiple orders */}
+        {allPending.length > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-100">
+            <button
+              onClick={() => goTo(activeIndex - 1)}
+              disabled={activeIndex === 0}
+              className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <div className="flex items-center gap-1.5">
+              {allPending.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={`h-2 rounded-full transition-all ${
+                    i === activeIndex ? 'w-5 bg-orange-500' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
               ))}
             </div>
+            <button
+              onClick={() => goTo(activeIndex + 1)}
+              disabled={activeIndex === allPending.length - 1}
+              className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
+        )}
 
-          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
-            <div className="text-xs text-gray-400">
-              <MapPin className="w-3 h-3 inline mr-0.5" />
-              <span className="truncate max-w-[200px] inline-block align-bottom">{currentPopup.customerAddress}</span>
+        {/* Order details */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentOrder.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="p-4 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono text-gray-400">#{currentOrder.id.slice(-6)}</span>
+              <Badge className="bg-yellow-100 text-yellow-800 text-xs">{statusLabel[currentOrder.status]}</Badge>
             </div>
-          </div>
 
-          {currentPopup.notes && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <p className="text-xs text-amber-700">
-                <Bell className="w-3 h-3 inline mr-1" />
-                <strong>Catatan:</strong> {currentPopup.notes}
-              </p>
+            <div className="flex items-center gap-3 bg-orange-50 rounded-xl p-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <ShoppingBag className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-800 truncate">{currentOrder.customerName}</p>
+                <p className="text-xs text-gray-500">
+                  <Phone className="w-3 h-3 inline mr-0.5" />{currentOrder.customerPhone}
+                </p>
+              </div>
             </div>
-          )}
 
-          <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-            <span className="text-sm text-gray-500">Total Pembayaran</span>
-            <span className="text-lg font-extrabold text-orange-600">{fmt(currentPopup.total)}</span>
-          </div>
-        </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-gray-600">Item Pesanan:</p>
+              <div className="max-h-32 overflow-y-auto card-scrollbar space-y-1">
+                {currentOrder.items.map((item) => (
+                  <div key={item.id} className="flex justify-between text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                    <span className="truncate mr-2">{item.productName} x{item.quantity}</span>
+                    <span className="flex-shrink-0 font-medium">{fmt(item.subtotal)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-        {/* Action buttons — NOT dismissible without action */}
+            <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+              <div className="text-xs text-gray-400">
+                <MapPin className="w-3 h-3 inline mr-0.5" />
+                <span className="truncate max-w-[200px] inline-block align-bottom">{currentOrder.customerAddress}</span>
+              </div>
+            </div>
+
+            {currentOrder.notes && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-xs text-amber-700">
+                  <Bell className="w-3 h-3 inline mr-1" />
+                  <strong>Catatan:</strong> {currentOrder.notes}
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+              <span className="text-sm text-gray-500">Total Pembayaran</span>
+              <span className="text-lg font-extrabold text-orange-600">{fmt(currentOrder.total)}</span>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Action buttons */}
         <div className="p-4 pt-0 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
             <Button
               className="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold"
-              onClick={() => handleAction(currentPopup.id, 'confirmed')}
+              onClick={() => handleAction(currentOrder.id, 'confirmed')}
               disabled={actionLoading}
             >
               {actionLoading ? (
@@ -5109,7 +5316,7 @@ function OrderNotificationPopup() {
             </Button>
             <Button
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold"
-              onClick={() => handleAction(currentPopup.id, 'preparing')}
+              onClick={() => handleAction(currentOrder.id, 'preparing')}
               disabled={actionLoading}
             >
               {actionLoading ? (
@@ -5130,15 +5337,15 @@ function OrderNotificationPopup() {
             <Button
               variant="outline"
               className="border-red-200 text-red-500 hover:bg-red-50 text-sm"
-              onClick={() => handleAction(currentPopup.id, 'cancelled')}
+              onClick={() => handleAction(currentOrder.id, 'cancelled')}
               disabled={actionLoading}
             >
               <XCircle className="w-4 h-4 mr-1" /> Tolak
             </Button>
           </div>
-          {popupQueue.length > 0 && (
+          {allPending.length > 1 && (
             <p className="text-center text-xs text-gray-400">
-              {popupQueue.length} pesanan lain menunggu di antrian
+              Pesanan {activeIndex + 1} dari {allPending.length} — geser untuk lihat lainnya
             </p>
           )}
         </div>
