@@ -56,6 +56,18 @@ export interface AppliedVoucher {
 
 export type NotifSoundType = 'default' | 'chime' | 'alert' | 'gentle' | 'ringtone' | 'digital'
 
+export type TopNotifType = 'order' | 'chat' | 'general' | 'success' | 'error'
+
+export interface TopNotif {
+  id: string
+  type: TopNotifType
+  title: string
+  message: string
+  action?: { label: string; page?: Page }
+  duration?: number
+  createdAt: number
+}
+
 interface AppState {
   currentPage: Page
   setPage: (page: Page) => void
@@ -84,6 +96,10 @@ interface AppState {
 
   notifSound: NotifSoundType
   setNotifSound: (sound: NotifSoundType) => void
+
+  topNotifs: TopNotif[]
+  addTopNotif: (notif: Omit<TopNotif, 'id' | 'createdAt'>) => string
+  dismissTopNotif: (id: string) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -155,6 +171,21 @@ export const useAppStore = create<AppState>()(
 
       notifSound: 'default' as NotifSoundType,
       setNotifSound: (sound) => set({ notifSound: sound }),
+
+      topNotifs: [],
+      addTopNotif: (notif) => {
+        const id = `tn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+        const entry: TopNotif = { ...notif, id, createdAt: Date.now() }
+        set({ topNotifs: [...get().topNotifs.slice(-4), entry] }) // Keep max 5
+        const duration = notif.duration ?? 5000
+        setTimeout(() => {
+          get().dismissTopNotif(id)
+        }, duration)
+        return id
+      },
+      dismissTopNotif: (id) => {
+        set({ topNotifs: get().topNotifs.filter((n) => n.id !== id) })
+      },
     }),
     {
       name: 'app-storage',

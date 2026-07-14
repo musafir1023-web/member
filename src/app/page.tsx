@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore, Component, type ReactNode, type ErrorInfo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher, type NotifSoundType } from '@/lib/store'
+import { useAppStore, type CartItem, type OrderData, type Page, type AppliedVoucher, type NotifSoundType, type TopNotifType } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -243,6 +243,109 @@ function ToastContainer() {
             {t.message}
           </motion.div>
         ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ─────────────────────── TOP NOTIFICATION BANNER ─────────────────────── */
+const TOP_NOTIF_CONFIG: Record<TopNotifType, { gradient: string; icon: typeof Bell; iconColor: string; progressColor: string }> = {
+  order: { gradient: 'bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500', icon: ShoppingBag, iconColor: 'text-white', progressColor: 'bg-white/30' },
+  chat: { gradient: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500', icon: MessageCircle, iconColor: 'text-white', progressColor: 'bg-white/30' },
+  general: { gradient: 'bg-gradient-to-r from-slate-700 via-slate-600 to-slate-500', icon: Info, iconColor: 'text-white', progressColor: 'bg-white/30' },
+  success: { gradient: 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500', icon: CheckCircle2, iconColor: 'text-white', progressColor: 'bg-white/30' },
+  error: { gradient: 'bg-gradient-to-r from-red-500 via-rose-500 to-pink-500', icon: XCircle, iconColor: 'text-white', progressColor: 'bg-white/30' },
+}
+
+function TopNotificationBanner() {
+  const topNotifs = useAppStore((s) => s.topNotifs)
+  const dismissTopNotif = useAppStore((s) => s.dismissTopNotif)
+  const setPage = useAppStore((s) => s.setPage)
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+
+  if (!mounted || topNotifs.length === 0) return null
+
+  const handleAction = (notifId: string, page?: Page) => {
+    dismissTopNotif(notifId)
+    if (page) setPage(page)
+  }
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[200] flex flex-col pointer-events-none">
+      <AnimatePresence>
+        {topNotifs.map((notif, idx) => {
+          const config = TOP_NOTIF_CONFIG[notif.type]
+          const IconComp = config.icon
+          const elapsed = Date.now() - notif.createdAt
+          const duration = notif.duration ?? 5000
+          const progress = Math.min(elapsed / duration, 1)
+
+          return (
+            <motion.div
+              key={notif.id}
+              initial={{ height: 0, opacity: 0, y: -20 }}
+              animate={{ height: 'auto', opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -20 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              style={{ marginTop: idx > 0 ? 2 : 0 }}
+              className="pointer-events-auto overflow-hidden shadow-xl"
+            >
+              <div className={`${config.gradient} relative`}>
+                {/* Subtle pattern overlay */}
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.1) 4px, rgba(255,255,255,0.1) 8px)' }} />
+
+                <div className="relative flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3">
+                  {/* Icon */}
+                  <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/25">
+                    <IconComp className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-white font-bold text-xs sm:text-sm truncate">{notif.title}</h4>
+                      {/* Type badge */}
+                      <span className="flex-shrink-0 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/20 text-white/90">
+                        {notif.type === 'order' ? 'Pesanan' : notif.type === 'chat' ? 'Chat' : notif.type === 'success' ? 'Berhasil' : notif.type === 'error' ? 'Gagal' : 'Info'}
+                      </span>
+                    </div>
+                    <p className="text-white/85 text-[11px] sm:text-xs mt-0.5 truncate">{notif.message}</p>
+                  </div>
+
+                  {/* Action button */}
+                  {notif.action && (
+                    <button
+                      onClick={() => handleAction(notif.id, notif.action?.page)}
+                      className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-white/25 transition-all active:scale-95"
+                    >
+                      {notif.action.label}
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  {/* Dismiss */}
+                  <button
+                    onClick={() => dismissTopNotif(notif.id)}
+                    className="flex-shrink-0 p-1.5 rounded-full hover:bg-white/20 transition-colors active:scale-90"
+                    aria-label="Tutup notifikasi"
+                  >
+                    <X className="w-4 h-4 text-white/80 hover:text-white" />
+                  </button>
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-[3px] bg-black/10">
+                  <motion.div
+                    className={`h-full ${config.progressColor}`}
+                    initial={{ width: '100%' }}
+                    animate={{ width: `${Math.max(0, (1 - progress) * 100)}%` }}
+                    transition={{ duration: 0.3, ease: 'linear' }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
       </AnimatePresence>
     </div>
   )
@@ -1749,6 +1852,13 @@ function CheckoutForm({ onCancel }: { onCancel: () => void }) {
       setReceipt(data)
       clearCart()
       addToast('Pesanan berhasil dibuat!', 'success')
+      useAppStore.getState().addTopNotif({
+        type: 'success',
+        title: 'Pesanan Berhasil!',
+        message: `Total ${fmt(data.total)} · Menunggu konfirmasi admin`,
+        action: { label: 'Lihat', page: 'receipt' },
+        duration: 7000,
+      })
       setPage('receipt')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal membuat pesanan'
@@ -2005,13 +2115,33 @@ function OrdersPage() {
   const { user, setPage, setReceipt, addToast } = useAppStore()
   const [orders, setOrders] = useState<OrderData[]>([])
   const [loading, setLoading] = useState(true)
+  const knownStatuses = useRef<Record<string, string>>({})
 
   const loadOrders = useCallback(async () => {
     try {
       const url = user?.id ? `/api/orders?userId=${user.id}` : '/api/orders'
       const res = await fetch(url)
       const data = await res.json()
-      setOrders(Array.isArray(data) ? data : [])
+      const arr = Array.isArray(data) ? data : []
+      setOrders(arr)
+      // Detect status changes for top notification
+      arr.forEach((o: OrderData) => {
+        const prev = knownStatuses.current[o.id]
+        if (prev && prev !== o.status) {
+          const label = statusLabel[o.status] || o.status
+          const notifType = o.status === 'completed' || o.status === 'delivered' ? 'success' as const
+            : o.status === 'cancelled' ? 'error' as const
+            : 'order' as const
+          useAppStore.getState().addTopNotif({
+            type: notifType,
+            title: `Pesanan #${o.id.slice(-6)} Diperbarui`,
+            message: `Status: ${label}`,
+            action: o.status === 'completed' || o.status === 'delivered' ? { label: 'Lihat', page: 'receipt' } : undefined,
+            duration: 7000,
+          })
+        }
+        knownStatuses.current[o.id] = o.status
+      })
     } catch {
       addToast('Gagal memuat pesanan', 'error')
     } finally {
@@ -2020,6 +2150,12 @@ function OrdersPage() {
   }, [user, addToast])
 
   useEffect(() => { loadOrders() }, [loadOrders])
+
+  // Poll every 10s for status changes
+  useEffect(() => {
+    const iv = setInterval(loadOrders, 10000)
+    return () => clearInterval(iv)
+  }, [loadOrders])
 
   return (
     <div className="min-h-screen">
@@ -2351,6 +2487,12 @@ function LoginPage() {
       if (!res.ok) throw new Error(data.error)
       setUser(data)
       addToast(`Selamat datang, ${data.name}!`)
+      useAppStore.getState().addTopNotif({
+        type: 'success',
+        title: `Selamat Datang, ${data.name}!`,
+        message: data.role === 'admin' ? 'Anda login sebagai Admin' : 'Login berhasil, selamat berbelanja',
+        duration: 4000,
+      })
       setPage('home')
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : 'Login gagal', 'error')
@@ -2922,6 +3064,12 @@ function ProfilePage() {
       setUser({ ...user!, points: data.pointsRemaining })
       setRedeemResult({ code: data.voucher.code, value: data.voucher.value, expiresAt: data.voucher.expiresAt })
       addToast(`${pts} poin berhasil ditukar menjadi voucher!`, 'success')
+      useAppStore.getState().addTopNotif({
+        type: 'success',
+        title: 'Voucher Berhasil Diclaim!',
+        message: `Kode: ${data.voucher.code} · Diskon ${data.voucher.value}%`,
+        duration: 6000,
+      })
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : 'Gagal menukar poin', 'error')
     } finally {
@@ -4448,6 +4596,17 @@ function CustomerChatPanel() {
       })
       // Auto-scroll
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      // Top notification for admin reply
+      if (msg.senderRole === 'admin') {
+        const preview = msg.content.length > 60 ? msg.content.slice(0, 60) + '...' : msg.content
+        useAppStore.getState().addTopNotif({
+          type: 'chat',
+          title: 'Pesan Baru dari Admin',
+          message: preview,
+          action: { label: 'Balas', page: 'profile' },
+          duration: 6000,
+        })
+      }
     }
 
     const handleRead = () => {
@@ -4767,6 +4926,17 @@ function AdminChatPanel() {
         )
       )
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      // Top notification for customer message in a different room
+      if (msg.senderRole === 'customer' && msg.roomId !== selectedRoom) {
+        const preview = msg.content.length > 50 ? msg.content.slice(0, 50) + '...' : msg.content
+        useAppStore.getState().addTopNotif({
+          type: 'chat',
+          title: `Pesan dari ${msg.senderName || 'Pelanggan'}`,
+          message: preview,
+          action: { label: 'Lihat', page: 'profile' },
+          duration: 6000,
+        })
+      }
     }
 
     const handleRead = () => {
@@ -5037,6 +5207,16 @@ function OrderNotificationPopup() {
           if (pending.length > 0) {
             setAllPending(pending)
             playNotifSound()
+            // Top notification for existing pending on load
+            useAppStore.getState().addTopNotif({
+              type: 'order',
+              title: `${pending.length} Pesanan Menunggu`,
+              message: pending.length === 1
+                ? `Dari ${pending[0].customerName} · ${fmt(pending[0].total)}`
+                : `${pending.length} pesanan belum diproses`,
+              action: { label: 'Proses', page: 'profile' },
+              duration: 7000,
+            })
           }
           return
         }
@@ -5049,6 +5229,16 @@ function OrderNotificationPopup() {
           newOrders.forEach(o => knownOrderIds.current.add(o.id))
           playNotifSound()
           setAllPending(prev => [...prev, ...newOrders])
+          // Top notification for each new order
+          newOrders.forEach(o => {
+            useAppStore.getState().addTopNotif({
+              type: 'order',
+              title: `Pesanan Baru dari ${o.customerName}`,
+              message: `${o.items.length} item · ${fmt(o.total)} · ${o.paymentMethod}`,
+              action: { label: 'Lihat', page: 'profile' },
+              duration: 7000,
+            })
+          })
         }
 
         // Sync: remove orders that are no longer pending
@@ -5752,6 +5942,7 @@ export default function AppPage() {
         </main>
         <BottomNav />
       </div>
+      <TopNotificationBanner />
       <ToastContainer />
       <OrderNotificationPopup />
     </motion.div>
