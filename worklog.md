@@ -1401,3 +1401,33 @@ Stage Summary:
 - Store supports max 5 stacked notifications with auto-dismiss
 - All existing features (upload, sounds, modal popup) remain intact
 
+---
+Task ID: 5
+Agent: Main Agent
+Task: Build admin settings - connected apps link manager
+
+Work Log:
+- Added AppLink model to Prisma schema (name, url, description, icon, color, active, sortOrder)
+- Pushed schema to SQLite database via prisma db push
+- Created GET/POST /api/app-links route
+- Created PATCH/DELETE /api/app-links/[id] route
+- Built AppLinkManager component (~230 lines) with:
+  - Full CRUD: add, edit, delete, toggle active
+  - 16 color presets + custom color picker
+  - 15 icon label presets (Link, Store, Truck, Package, etc.)
+  - Live preview card
+  - Bottom sheet modal (mobile) / centered dialog (desktop)
+  - External link button to open connected app
+  - Drag handle visual for future reorder
+- Inserted AppLinkManager in Settings tab, admin-only
+- Added Link2, ExternalLink, Power, PowerOff, GripVertical icon imports
+- Restored accidentally deleted upload route
+- Lint clean, page compiles successfully
+- Pushed to GitHub (commit 372b833)
+
+Stage Summary:
+- Admin can now manage connected application links in Settings
+- All apps share the same database (data pesanan, produk, pelanggan tersinkronisasi)
+- 5 files changed, 520 insertions
+- Commit: 372b833
+
