@@ -82,6 +82,11 @@ import {
   Check,
   Music,
   ChevronLeft,
+  Link2,
+  ExternalLink,
+  Power,
+  PowerOff,
+  GripVertical,
 } from 'lucide-react'
 import JsBarcode from 'jsbarcode'
 
@@ -2885,6 +2890,409 @@ function RegisterPage() {
   )
 }
 
+/* ─────────────────────── APP LINK MANAGER (Admin) ─────────────────────── */
+const ICON_PRESETS = [
+  'Link', 'Store', 'Truck', 'Package', 'ReceiptText', 'BarChart3', 'Database', 'Globe',
+  'Monitor', 'Smartphone', 'Calculator', 'Warehouse', 'ClipboardList', 'ScanLine', 'QrCode',
+]
+const COLOR_PRESETS = [
+  '#f97316', '#ef4444', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b',
+  '#6366f1', '#06b6d4', '#84cc16', '#d946ef', '#0ea5e9', '#f43f5e', '#10b981', '#a855f7',
+]
+
+interface AppLinkData {
+  id: string
+  name: string
+  url: string
+  description: string
+  icon: string
+  color: string
+  active: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+function AppLinkManager() {
+  const addToast = useAppStore((s) => s.addToast)
+  const [links, setLinks] = useState<AppLinkData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ name: '', url: '', description: '', icon: 'Link', color: '#f97316' })
+
+  const loadLinks = useCallback(async () => {
+    try {
+      const res = await fetch('/api/app-links')
+      const data = await res.json()
+      setLinks(Array.isArray(data) ? data : [])
+    } catch {
+      addToast('Gagal memuat link aplikasi', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [addToast])
+
+  useEffect(() => { loadLinks() }, [loadLinks])
+
+  const resetForm = () => {
+    setForm({ name: '', url: '', description: '', icon: 'Link', color: '#f97316' })
+    setEditId(null)
+    setShowForm(false)
+  }
+
+  const startEdit = (link: AppLinkData) => {
+    setForm({ name: link.name, url: link.url, description: link.description, icon: link.icon, color: link.color })
+    setEditId(link.id)
+    setShowForm(true)
+  }
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.url.trim()) {
+      addToast('Nama dan URL wajib diisi', 'error')
+      return
+    }
+    setSaving(true)
+    try {
+      if (editId) {
+        const res = await fetch(`/api/app-links/${encodeURIComponent(editId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+        if (!res.ok) throw new Error()
+        addToast('Link berhasil diperbarui', 'success')
+      } else {
+        const res = await fetch('/api/app-links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+        if (!res.ok) throw new Error()
+        addToast('Link berhasil ditambahkan', 'success')
+      }
+      resetForm()
+      loadLinks()
+    } catch {
+      addToast(editId ? 'Gagal memperbarui link' : 'Gagal menambahkan link', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/app-links/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      addToast('Link berhasil dihapus', 'success')
+      loadLinks()
+    } catch {
+      addToast('Gagal menghapus link', 'error')
+    }
+  }
+
+  const handleToggle = async (link: AppLinkData) => {
+    try {
+      const res = await fetch(`/api/app-links/${encodeURIComponent(link.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !link.active }),
+      })
+      if (!res.ok) throw new Error()
+      loadLinks()
+    } catch {
+      addToast('Gagal mengubah status', 'error')
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-orange-500" />
+            Aplikasi Terhubung
+          </h3>
+          <button
+            onClick={() => { resetForm(); setShowForm(true) }}
+            className="flex items-center gap-1.5 text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors active:scale-95 shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Tambah
+          </button>
+        </div>
+        <p className="text-[11px] text-gray-400 mt-1 text-justify leading-relaxed">
+          Hubungkan aplikasi lain yang menggunakan database yang sama. Semua data pesanan, produk, dan pelanggan akan tersinkronisasi.
+        </p>
+      </div>
+
+      {/* Connected Apps Display */}
+      <div className="divide-y divide-gray-50">
+        {loading ? (
+          <div className="p-6 space-y-3">
+            {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+          </div>
+        ) : links.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-3">
+              <Link2 className="w-7 h-7 text-orange-300" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-1">Belum ada aplikasi terhubung</p>
+            <p className="text-[11px] text-gray-400 text-justify max-w-xs mx-auto leading-relaxed">
+              Tambahkan link aplikasi lain untuk mengakses layanan terintegrasi dari satu database.
+            </p>
+          </div>
+        ) : (
+          links.map((link, idx) => (
+            <motion.div
+              key={link.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className={`flex items-center gap-3 p-3.5 transition-colors ${link.active ? 'hover:bg-orange-50/50' : 'opacity-50 bg-gray-50'}`}
+            >
+              {/* Drag handle */}
+              <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+
+              {/* App icon */}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm"
+                style={{ backgroundColor: link.color }}
+              >
+                {link.name.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{link.name}</p>
+                  {!link.active && (
+                    <span className="text-[9px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">Nonaktif</span>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400 truncate">{link.url}</p>
+                {link.description && (
+                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{link.description}</p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => handleToggle(link)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  title={link.active ? 'Nonaktifkan' : 'Aktifkan'}
+                >
+                  {link.active
+                    ? <Power className="w-4 h-4 text-green-500" />
+                    : <PowerOff className="w-4 h-4 text-gray-400" />
+                  }
+                </button>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg hover:bg-orange-50 transition-colors"
+                  title="Buka aplikasi"
+                >
+                  <ExternalLink className="w-4 h-4 text-orange-500" />
+                </a>
+                <button
+                  onClick={() => startEdit(link)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  title="Edit"
+                >
+                  <Edit3 className="w-4 h-4 text-gray-500" />
+                </button>
+                <button
+                  onClick={() => handleDelete(link.id)}
+                  className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                  title="Hapus"
+                >
+                  <Trash2 className="w-4 h-4 text-red-400" />
+                </button>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* Add/Edit Form Dialog */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={resetForm} />
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="relative bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto shadow-2xl"
+            >
+              {/* Handle bar (mobile) */}
+              <div className="flex justify-center pt-3 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </div>
+
+              <div className="p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center">
+                      {editId
+                        ? <Edit3 className="w-5 h-5 text-orange-500" />
+                        : <Plus className="w-5 h-5 text-orange-500" />
+                      }
+                    </div>
+                    <span className="text-base">{editId ? 'Edit Aplikasi' : 'Tambah Aplikasi'}</span>
+                  </h3>
+                  <button onClick={resetForm} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Form Fields */}
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div>
+                    <Label htmlFor="al-name" className="text-xs text-gray-600 font-medium">Nama Aplikasi *</Label>
+                    <Input
+                      id="al-name"
+                      value={form.name}
+                      onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="contoh: Kasir POS"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* URL */}
+                  <div>
+                    <Label htmlFor="al-url" className="text-xs text-gray-600 font-medium">URL Aplikasi *</Label>
+                    <Input
+                      id="al-url"
+                      value={form.url}
+                      onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
+                      placeholder="https://pos.contoh.com"
+                      className="mt-1"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">Masukkan URL lengkap aplikasi yang akan dihubungkan</p>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <Label htmlFor="al-desc" className="text-xs text-gray-600 font-medium">Deskripsi</Label>
+                    <Textarea
+                      id="al-desc"
+                      value={form.description}
+                      onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                      placeholder="Aplikasi kasir untuk mengelola transaksi"
+                      className="mt-1 min-h-[70px] resize-none"
+                    />
+                  </div>
+
+                  {/* Color Picker */}
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium">Warna Ikon</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {COLOR_PRESETS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setForm((p) => ({ ...p, color: c }))}
+                          className={`w-8 h-8 rounded-lg transition-all active:scale-90 ${
+                            form.color === c ? 'ring-2 ring-offset-2 ring-gray-800 scale-110' : 'hover:scale-110'
+                          }`}
+                          style={{ backgroundColor: c }}
+                          title={c}
+                        />
+                      ))}
+                      {/* Custom color */}
+                      <div className="relative">
+                        <input
+                          type="color"
+                          value={form.color}
+                          onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
+                          className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+                        />
+                        <div className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                          <Plus className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Icon Preset */}
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium">Ikon Label</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {ICON_PRESETS.map((icon) => (
+                        <button
+                          key={icon}
+                          onClick={() => setForm((p) => ({ ...p, icon }))}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                            form.icon === icon
+                              ? 'bg-orange-500 text-white shadow-sm'
+                              : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                          }`}
+                        >
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium mb-2 block">Preview</Label>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
+                        style={{ backgroundColor: form.color }}
+                      >
+                        {form.name ? form.name.charAt(0).toUpperCase() : '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{form.name || 'Nama Aplikasi'}</p>
+                        <p className="text-[11px] text-gray-400 truncate">{form.url || 'https://...'}</p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-2 mt-6">
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving || !form.name.trim() || !form.url.trim()}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm disabled:opacity-50"
+                  >
+                    {saving
+                      ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      : editId
+                        ? <><Check className="w-4 h-4 mr-1.5" /> Simpan Perubahan</>
+                        : <><Plus className="w-4 h-4 mr-1.5" /> Tambah Aplikasi</>
+                    }
+                  </Button>
+                  <Button onClick={resetForm} variant="outline" className="flex-1 border-gray-200 text-gray-600 text-sm hover:bg-gray-50">
+                    Batal
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 /* ─────────────────────── PROFILE PAGE (Customer + Admin) ─────────────────────── */
 function ProfilePage() {
   const { user, setUser, setPage, logout, setReceipt, addToast } = useAppStore()
@@ -4190,6 +4598,9 @@ function ProfilePage() {
                 </div>
               )}
             </div>
+
+            {/* Connected Apps (Admin Only) */}
+            {isAdmin && <AppLinkManager />}
 
             {/* Preferences */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">

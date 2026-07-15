@@ -136,3 +136,16 @@ model ChatMessage {
   createdAt DateTime @default(now())
   room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
+
+model AppLink {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  description String   @default("")
+  icon        String   @default("Link")
+  color       String   @default("#f97316")
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
