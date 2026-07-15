@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, ensureMigrated } from '@/lib/db'
 
 export async function GET() {
   try {
+    await ensureMigrated()
     const links = await db.appLink.findMany({
       orderBy: { sortOrder: 'asc' },
     })
     return NextResponse.json(links)
-  } catch {
+  } catch (err) {
+    console.error('[app-links GET]', err)
     return NextResponse.json({ error: 'Gagal memuat data' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureMigrated()
     const body = await request.json()
     const { name, url, description, icon, color, active } = body
 
@@ -37,7 +40,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(link, { status: 201 })
-  } catch {
+  } catch (err) {
+    console.error('[app-links POST]', err)
     return NextResponse.json({ error: 'Gagal menambahkan link' }, { status: 500 })
   }
 }

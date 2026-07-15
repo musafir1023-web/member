@@ -21,7 +21,7 @@ export const db = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
 
-// Ensure VoucherProduct + PointRedemption tables exist on Turso (blocking — call with await)
+// Ensure VoucherProduct + PointRedemption + AppLink tables exist on Turso (blocking — call with await)
 let _migrated = false
 export async function ensureMigrated() {
   if (_migrated) return
@@ -37,9 +37,10 @@ export async function ensureMigrated() {
         const { createClient } = await import('@libsql/client')
         const libsql = createClient({ url: databaseUrl })
 
-        const [vpResult, prResult] = await Promise.all([
+        const [vpResult, prResult, alResult] = await Promise.all([
           libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='VoucherProduct'"),
           libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='PointRedemption'"),
+          libsql.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='AppLink'"),
         ])
 
         if (vpResult.rows.length === 0) {
@@ -55,6 +56,22 @@ export async function ensureMigrated() {
           await libsql.execute('CREATE INDEX idx_pointredemption_userId ON PointRedemption(userId)')
           await libsql.execute('CREATE INDEX idx_pointredemption_voucherId ON PointRedemption(voucherId)')
           console.log('[DB] PointRedemption table created')
+        }
+
+        if (alResult.rows.length === 0) {
+          await libsql.execute(`CREATE TABLE AppLink (
+            id TEXT NOT NULL PRIMARY KEY,
+            name TEXT NOT NULL,
+            url TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            icon TEXT NOT NULL DEFAULT 'Link',
+            color TEXT NOT NULL DEFAULT '#f97316',
+            active INTEGER NOT NULL DEFAULT 1,
+            sortOrder INTEGER NOT NULL DEFAULT 0,
+            createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )`)
+          console.log('[DB] AppLink table created')
         }
       } catch (e) {
         console.error('[DB] Auto-migration failed:', e)

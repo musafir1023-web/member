@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, ensureMigrated } from '@/lib/db'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await ensureMigrated()
     const { id } = await params
     const body = await request.json()
     const { name, url, description, icon, color, active, sortOrder } = body
@@ -29,7 +30,8 @@ export async function PATCH(
     })
 
     return NextResponse.json(updated)
-  } catch {
+  } catch (err) {
+    console.error('[app-links PATCH]', err)
     return NextResponse.json({ error: 'Gagal mengupdate link' }, { status: 500 })
   }
 }
@@ -39,6 +41,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await ensureMigrated()
     const { id } = await params
     const existing = await db.appLink.findUnique({ where: { id } })
     if (!existing) {
@@ -47,7 +50,8 @@ export async function DELETE(
 
     await db.appLink.delete({ where: { id } })
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('[app-links DELETE]', err)
     return NextResponse.json({ error: 'Gagal menghapus link' }, { status: 500 })
   }
 }
