@@ -3617,8 +3617,9 @@ function ProfilePage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal mengunggah gambar')
       setProductImage(data.url)
-    } catch (err: any) {
-      addToast(err.message || 'Gagal mengunggah gambar', 'error')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah gambar'
+      addToast(msg, 'error')
     } finally {
       setUploading(false)
     }
